@@ -64,7 +64,7 @@ public class ConceptService {
         this.conceptDao = conceptDao;
     }
 
-    public static String modifyMultipleMatchKeyword(String query, String purpose) {
+    public static String modifyMultipleMatchKeyword(String query) {
         // This function modifies the keyword to match all the words if multiple words are present(by adding + before each word to indicate match that matching each word is essential)
         if (query == null || query.trim().isEmpty()) {
             return null;
@@ -82,11 +82,7 @@ public class ConceptService {
                     if (key.length() < 3) {
                         temp.add(key);
                     } else {
-                        if (purpose.equalsIgnoreCase("survey_counts")) {
-                            temp.add(new String("+" + key + "*"));
-                        } else {
-                            temp.add(new String("+" + key));
-                        }
+                        temp.add(new String("+" + key + "*"));
                     }
                 }
             }
@@ -122,7 +118,7 @@ public class ConceptService {
                     nonStandardConceptPredicates.add(criteriaBuilder.notEqual(root.get("standardConcept"),
                             criteriaBuilder.literal(CLASSIFICATION_CONCEPT_CODE)));
 
-                    final String keyword = modifyMultipleMatchKeyword(query, "concept_search");
+                    final String keyword = modifyMultipleMatchKeyword(query);
 
                     if (keyword != null) {
                       Expression<Double> matchExp = criteriaBuilder.function("matchConcept", Double.class,
