@@ -116,3 +116,7 @@
 .answer-text {
     cursor: pointer;
 }
+
+.sub-question {
+    overflow: auto;
+}

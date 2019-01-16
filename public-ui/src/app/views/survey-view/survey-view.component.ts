@@ -40,6 +40,7 @@ export class SurveyViewComponent implements OnInit, OnDestroy {
   questions: any = [];
   searchText: FormControl = new FormControl();
   searchMethod = 'or';
+  selectedGraph = 'biological_sex';
 
   /* Show answers toggle */
   showAnswer = {};
@@ -65,7 +66,8 @@ export class SurveyViewComponent implements OnInit, OnDestroy {
       this.searchText.setValue('');
     }
 
-    this.subscriptions.push(this.api.getSurveyResults(this.surveyConceptId.toString()).subscribe({
+    this.subscriptions.push(this.api.getSurveyResults(this.surveyConceptId.toString(),
+      this.searchText.value).subscribe({
       next: x => {
         this.surveyResult = x;
         this.survey = this.surveyResult.survey;
@@ -77,6 +79,29 @@ export class SurveyViewComponent implements OnInit, OnDestroy {
           // Todo -- add this to api maybe
           let didNotAnswerCount  = this.survey.participantCount;
           for (const a of q.countAnalysis.results) {
+            if (q.subQuestions) {
+              let matchedQuestionConcepts: QuestionConcept[] = [];
+              matchedQuestionConcepts = q.subQuestions.filter(
+                w => w.conceptName.toLowerCase() === a.stratum4.toLowerCase());
+              if (matchedQuestionConcepts.length === 0) {
+                const missingQuestionConcept = {
+                  conceptId: a.stratum3,
+                  conceptName: a.stratum4,
+                  domainId: 'ppi',
+                  conceptCode: '',
+                  countValue: a.countValue,
+                  prevalence: 0.00,
+                  subQuestionCount: 0,
+                  countAnalysis: this.makeAnalysis(q.countAnalysis),
+                  genderAnalysis: this.makeAnalysis(q.genderAnalysis),
+                  ageAnalysis: this.makeAnalysis(q.ageAnalysis),
+                  genderIdentityAnalysis: this.makeAnalysis(q.genderIdentityAnalysis),
+                  subQuestions: null
+                };
+                q.subQuestions.push(missingQuestionConcept);
+                q.subQuestionCount = q.subQuestionCount + 1;
+              }
+            }
             didNotAnswerCount = didNotAnswerCount - a.countValue;
             a.countPercent = this.countPercentage(a.countValue);
           }
@@ -95,7 +120,6 @@ export class SurveyViewComponent implements OnInit, OnDestroy {
           };
           q.countAnalysis.results.push(didNotAnswerResult);
         }
-
         this.questions = this.surveyResult.items;
         // Sort count value desc
         for (const q of this.questions ) {
@@ -154,8 +178,9 @@ export class SurveyViewComponent implements OnInit, OnDestroy {
     // If doing an and search match all words
     if (this.searchMethod === 'and') {
       for (const w of words) {
-        if (q.conceptName.toLowerCase().indexOf(w.toLowerCase()) === -1  &&
-          q.countAnalysis.results.filter(r =>
+        if ((q.conceptName.toLowerCase().indexOf(w.toLowerCase()) === -1 ||
+            q.conceptCode.toLowerCase().indexOf(w.toLowerCase()) === -1)
+          && q.countAnalysis.results.filter(r =>
             r.stratum4.toLowerCase().indexOf(w.toLowerCase()) === -1 )) {
           return false;
         }
@@ -172,7 +197,7 @@ export class SurveyViewComponent implements OnInit, OnDestroy {
     if (results.length > 0) {
       return true;
     }
-
+    console.log('electronicsmoking_test'.includes('smoking'));
     return false ;
   }
 
@@ -219,6 +244,30 @@ export class SurveyViewComponent implements OnInit, OnDestroy {
   }
   public convertToNum(s) {
     return Number(s);
+  }
+  public makeAnalysis (a) {
+    const analysis = {
+      analysisId: a.analysisId,
+      analysisName: a.analysisName,
+      stratum1Name: a.stratum1Name,
+      stratum2Name: a.stratum2Name,
+      stratum3Name: a.stratum3Name,
+      stratum4Name: a.stratum4Name,
+      stratum5Name: a.stratum5Name,
+      chartType: a.chartType,
+      dataType: a.dataType,
+      results: a.results.filter(w => w.stratum3 === a.stratum3)
+    };
+    return analysis;
+  }
+  public selectGraph(g) {
+    if (g.toLowerCase() === 'gender identity') {
+      this.selectedGraph = 'gender_identity';
+    } else if (g.toLowerCase() === 'age') {
+      this.selectedGraph = 'age';
+    } else if (g.toLowerCase() === 'biological_sex') {
+      this.selectedGraph = 'biological_sex';
+    }
   }
 
 }
