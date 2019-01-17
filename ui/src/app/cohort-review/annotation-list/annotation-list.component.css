@@ -17,3 +17,9 @@ div > h4 {
   font-weight: bold;
   padding-bottom: 0.3rem;
 }
+
+.info-icon {
+  color: #2691D0;
+  cursor: pointer;
+  margin-left: 0.5rem;
+}

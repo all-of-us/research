@@ -19,7 +19,18 @@
     </div>
   </div>
 
-  <h4 class="participant-color">Participant Status</h4>
+  <h4 class="participant-color">Participant Status
+    <clr-tooltip>
+      <clr-icon clrTooltipTrigger class="is-solid info-icon" shape="info-standard" size="18"></clr-icon>
+      <clr-tooltip-content class ="test" clrPosition="bottom-left" clrSize="lg" *clrIfOpen>
+            <span>
+              Within the the Review Set, you can review
+              individual participant records and choose to
+              include, exclude, or mark them for further review.
+            </span>
+      </clr-tooltip-content>
+    </clr-tooltip>
+  </h4>
   <app-participant-status [participant]="participant">
   </app-participant-status>
 

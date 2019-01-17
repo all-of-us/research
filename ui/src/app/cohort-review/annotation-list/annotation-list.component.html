@@ -12,6 +12,18 @@
           class="btn btn-icon btn-link">
     Edit
   </button>
+  <clr-tooltip>
+    <clr-icon clrTooltipTrigger class="is-solid info-icon" shape="info-standard" size="18"></clr-icon>
+    <clr-tooltip-content class ="test" clrPosition="bottom-left" clrSize="lg" *clrIfOpen>
+            <span>
+             Within the Review Set, you have the option of creating a
+              cohort-wide annotation or set of annotations. Annotations
+              allow you to add an explanation (text), date, number (integer),
+              selection from a specified list (enumeration) or checkbox
+              (boolean) to each participant record.
+            </span>
+    </clr-tooltip-content>
+  </clr-tooltip>
 </div>
 <app-annotation-item
   *ngFor="let anno of (annotations$ | async)"

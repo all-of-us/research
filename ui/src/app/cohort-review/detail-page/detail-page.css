@@ -36,7 +36,7 @@
 .sidebar-content {
   width: 0;
   transition: 0.5s;
-  overflow-x: hidden;
+  /*overflow-x: hidden;*/
   flex: 1;
   padding-top:0.35rem;
 }

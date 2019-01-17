@@ -16,6 +16,7 @@
   color: #224F83;
   font-weight: bold;
   padding-bottom: 0.3rem;
+  margin-right: 0.4rem;
 }
 
 .sidebar-content .participant-info {
@@ -24,4 +25,10 @@
 
 .sidebar-content .participant-flex {
   display: flex;
+}
+
+.info-icon {
+  color: #2691D0;
+  cursor: pointer;
+  margin-left: 0.5rem;
 }
