@@ -44,7 +44,7 @@ export const DOMAIN_TYPES = [
   },
   {
     name: 'Visits', type: TreeType.VISIT, fullTree: true,
-    tooltip:'Visits refer to the type of facility at which the participant ' +
+    tooltip: 'Visits refer to the type of facility at which the participant ' +
       'received medical care (e.g. emergency room, outpatient, inpatient). '
   }
 ];

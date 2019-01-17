@@ -2,6 +2,16 @@
   <section class="form-block">
     <div class="modifier-header">
       The following modifiers are optional and apply to all selected criteria
+      <clr-tooltip>
+        <clr-icon clrTooltipTrigger class="is-solid info-icon" shape="info-standard" size="18"></clr-icon>
+        <clr-tooltip-content clrSize="lg" *clrIfOpen>
+            <span>Modifiers allow you to specify the age at event, date
+              of event and/or number of occurrences for a selected criteria.
+              Privacy preserving methods in our curated data set require that all
+              dates are consistently shifted within a particular participants record.
+            </span>
+        </clr-tooltip-content>
+      </clr-tooltip>
     </div>
     <div *ngIf="preview.get('error')" class="alert alert-danger alert-sm">
       <div class="alert-items">
