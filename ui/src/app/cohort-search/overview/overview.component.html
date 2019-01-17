@@ -7,13 +7,13 @@
       </span>
       <span class="count-header" *ngIf="!(isRequesting$ | async)">
         {{ total$ | async | number }}
-        <a href="..." role="tooltip" aria-haspopup="true" class="tooltip tooltip-lg tooltip-right">
-         <clr-icon class="is-solid nfo-icon" shape="info-standard" size="22"></clr-icon>
-         <span  class="tooltip-content">
-           The total count displays the number of participant records if all of the criteria
-           joined by the AND operator are true.
-        </span>
-        </a>
+        <clr-tooltip>
+          <clr-icon clrTooltipTrigger class="is-solid info-icon" shape="info-standard" size="18"></clr-icon>
+          <clr-tooltip-content clrPosition="bottom-right" clrSize="md" *clrIfOpen>
+            <span> The total count displays the number of participant records if all of the criteria
+           joined by the AND operator are true.</span>
+          </clr-tooltip-content>
+        </clr-tooltip>
       </span>
       <span *ngIf="(error$ | async)">
         <clr-icon

@@ -53,7 +53,14 @@
           type="button"
           [disabled]="criteria.disabled"
           (click)="launchWizard(criteria)"
-          clrDropdownItem>{{criteria.name}}</button>
+          clrDropdownItem>{{criteria.name}}
+          <clr-tooltip>
+            <clr-icon clrTooltipTrigger class="is-solid info-icon" shape="info-standard" size="18"></clr-icon>
+            <clr-tooltip-content clrSize="lg" *clrIfOpen>
+              <span>{{criteria?.tooltip}}</span>
+            </clr-tooltip-content>
+          </clr-tooltip>
+        </button>
         <div class="dropdown-divider"></div>
         <h4 class="dropdown-header">Domains</h4>
         <button *ngFor="let criteria of domainTypes"
@@ -62,7 +69,14 @@
           type="button"
           [disabled]="criteria.disabled"
           (click)="launchWizard(criteria)"
-          clrDropdownItem>{{criteria.name}}</button>
+          clrDropdownItem>{{criteria.name}}
+          <clr-tooltip>
+            <clr-icon clrTooltipTrigger class="is-solid info-icon" shape="info-standard" size="18"></clr-icon>
+            <clr-tooltip-content clrSize="lg" *clrIfOpen>
+              <span>{{criteria?.tooltip}}</span>
+            </clr-tooltip-content>
+          </clr-tooltip>
+        </button>
       </clr-dropdown-menu>
     </clr-dropdown>
   </div>
@@ -128,13 +142,13 @@
 
         <span *ngIf="!isRequesting">
           {{ group.get('count') | number }}
-           <a href="..." role="tooltip" aria-haspopup="true" class="tooltip tooltip-lg tooltip-right">
-             <clr-icon class="is-solid nfo-icon" shape="info-standard" size="22"></clr-icon>
-             <span  class="tooltip-content">
-               The group count displays the number of participant records if any of the
-               criteria joined by the OR operator are true.
-            </span>
-          </a>
+          <clr-tooltip>
+            <clr-icon clrTooltipTrigger class="is-solid info-icon" shape="info-standard" size="18"></clr-icon>
+            <clr-tooltip-content clrSize="lg" *clrIfOpen>
+              <span>The group count displays the number of participant records if any of the
+               criteria joined by the OR operator are true.</span>
+            </clr-tooltip-content>
+          </clr-tooltip>
         </span>
         <span *ngIf="error">
           <clr-icon
@@ -160,13 +174,13 @@
     </span>
     <span *ngIf="!isRequesting">
       {{ group.get('count') | number }}
-       <a href="..." role="tooltip" aria-haspopup="true" class="tooltip tooltip-lg tooltip-right">
-         <clr-icon class="is-solid nfo-icon" shape="info-standard" size="22"></clr-icon>
-         <span  class="tooltip-content">
-           The group count displays the number of participant records if any of the
-           criteria joined by the OR operator are true.
-        </span>
-      </a>
+       <clr-tooltip>
+          <clr-icon clrTooltipTrigger class="is-solid info-icon" shape="info-standard" size="18"></clr-icon>
+          <clr-tooltip-content clrSize="lg" *clrIfOpen>
+            <span>The group count displays the number of participant records if any of the
+             criteria joined by the OR operator are true.</span>
+          </clr-tooltip-content>
+        </clr-tooltip>
     </span>
     <span *ngIf="error">
       <clr-icon

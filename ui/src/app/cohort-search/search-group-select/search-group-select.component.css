@@ -16,3 +16,9 @@
 .card {
   border-color: rgba(215, 215, 215, 0.5);
 }
+
+.info-icon {
+  color: #2691D0;
+  cursor: pointer;
+  margin-left: 0.2rem;
+}

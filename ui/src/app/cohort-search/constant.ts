@@ -1,28 +1,52 @@
 import { Operator, TreeSubType, TreeType } from 'generated';
 
 export const PROGRAM_TYPES = [
-  { name: 'Surveys',    type: TreeType.PPI },
-  { name: 'Physical Measurements',    type: TreeType.PM, fullTree: true },
+  {
+    name: 'Surveys', type: TreeType.PPI,
+    tooltip: 'Questions and associated response options for participant completed surveys.'
+  },
+  {
+    name: 'Physical Measurements',    type: TreeType.PM, fullTree: true,
+    tooltip: 'Measurements taken at the time of participant enrollment, including blood pressure,' +
+      ' heart rate, height, weight, body mass index (BMI), waist and hip circumference, ' +
+      'pregnancy status and wheelchair use. '
+  },
 ];
 
 export const DOMAIN_TYPES = [
-  {name: 'Demographics', type: TreeType.DEMO},
+  {name: 'Demographics', type: TreeType.DEMO,
+    tooltip: 'Age, gender, race, ethnicity and deceased status.'},
   {
-    name: 'Conditions', type: TreeType.CONDITION, codes: [
+    name: 'Conditions', type: TreeType.CONDITION,
+    tooltip: 'Conditions listed by ICD9 or ICD10 orSNOMED standard codes.',
+    codes: [
       {name: 'ICD9 Codes', type: TreeType.ICD9, subtype: TreeSubType.CM},
       {name: 'ICD10 Codes', type: TreeType.ICD10, subtype: TreeSubType.CM}
     ]
   },
   {
-    name: 'Procedures', type: TreeType.PROCEDURE, codes: [
+    name: 'Procedures', type: TreeType.PROCEDURE,
+    tooltip: 'Procedures are listed by ICD9, ICD10, or CPT or SNOMED standard codes. ',
+    codes: [
       {name: 'ICD9 Codes', type: TreeType.ICD9, subtype: TreeSubType.PROC},
       {name: 'ICD10 Codes', type: TreeType.ICD10, subtype: TreeSubType.PCS},
       {name: 'CPT Codes', type: TreeType.CPT, subtype: null}
     ]
   },
-  {name: 'Drugs', type: TreeType.DRUG},
-  {name: 'Measurements', type: TreeType.MEAS},
-  {name: 'Visits', type: TreeType.VISIT, fullTree: true}
+  {
+    name: 'Drugs', type: TreeType.DRUG,
+    tooltip: 'Drugs or medications are listed by ingredient and organized by therapeutic uses.'
+  },
+  {
+    name: 'Measurements', type: TreeType.MEAS,
+    tooltip: 'Measurements refer to laboratory tests and vital signs and are organized ' +
+      'in the LOINC (Logical Observation Identifiers Names and Codes) code hierarchy. '
+  },
+  {
+    name: 'Visits', type: TreeType.VISIT, fullTree: true,
+    tooltip:'Visits refer to the type of facility at which the participant ' +
+      'received medical care (e.g. emergency room, outpatient, inpatient). '
+  }
 ];
 
 export const PM_UNITS = {

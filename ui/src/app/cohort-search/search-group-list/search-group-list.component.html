@@ -2,20 +2,20 @@
   <div class="col-header">
     <h2 class="participant-header">{{ title | titlecase }}</h2>
 
-    <a href="..." role="tooltip" aria-haspopup="true" class="tooltip tooltip-lg tooltip-right">
-      <clr-icon class="is-solid nfo-icon" shape="info-standard" size="22"></clr-icon>
-      <span *ngIf= "role === 'excludes'; else inclide" class="tooltip-content">
-        The EXCLUDE Participants WHERE clause is used to remove
+    <clr-tooltip>
+      <clr-icon clrTooltipTrigger class="is-solid info-icon" shape="info-standard" size="18"></clr-icon>
+      <clr-tooltip-content clrSize="lg" *clrIfOpen>
+            <span *ngIf= "role === 'excludes'; else inclide">  The EXCLUDE Participants WHERE clause is used to remove
         those participant records that fulfill a specified
-        condition / procedure / demographic / drug / etc.
-      </span>
-      <ng-template #inclide>
-         <span  class="tooltip-content">The INCLUDE Participants WHERE clause is
+        condition / procedure / demographic / drug / etc.</span>
+        <ng-template #inclide>
+         <span>The INCLUDE Participants WHERE clause is
           used to extract only those participant records that fulfill a specified
           condition / procedure / demographic / drug / etc.
         </span>
-      </ng-template>
-    </a>
+        </ng-template>
+      </clr-tooltip-content>
+    </clr-tooltip>
   </div>
 
   <!-- .size, not .length => this is an immutable.js list -->
