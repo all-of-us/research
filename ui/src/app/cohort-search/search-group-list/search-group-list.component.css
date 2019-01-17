@@ -26,6 +26,7 @@ h2 {
 .participant-header {
   font-weight: bold;
   font-size: 16px;
+  padding-right: 0.3rem;
 }
 
 .btn.btn-info-outline.btn-sm {

@@ -1,12 +1,19 @@
 <div>
   <div class="overview-header">
     <h2 class="count-header" id="total-count">
-      Total Count:
+       Total Count:
       <span *ngIf="(isRequesting$ | async)" class="spinner spinner-sm">
         Loading...
       </span>
       <span class="count-header" *ngIf="!(isRequesting$ | async)">
         {{ total$ | async | number }}
+        <a href="..." role="tooltip" aria-haspopup="true" class="tooltip tooltip-lg tooltip-right">
+         <clr-icon class="is-solid nfo-icon" shape="info-standard" size="22"></clr-icon>
+         <span  class="tooltip-content">
+           The total count displays the number of participant records if all of the criteria
+           joined by the AND operator are true.
+        </span>
+        </a>
       </span>
       <span *ngIf="(error$ | async)">
         <clr-icon

@@ -128,6 +128,13 @@
 
         <span *ngIf="!isRequesting">
           {{ group.get('count') | number }}
+           <a href="..." role="tooltip" aria-haspopup="true" class="tooltip tooltip-lg tooltip-right">
+             <clr-icon class="is-solid nfo-icon" shape="info-standard" size="22"></clr-icon>
+             <span  class="tooltip-content">
+               The group count displays the number of participant records if any of the
+               criteria joined by the OR operator are true.
+            </span>
+          </a>
         </span>
         <span *ngIf="error">
           <clr-icon
@@ -153,6 +160,13 @@
     </span>
     <span *ngIf="!isRequesting">
       {{ group.get('count') | number }}
+       <a href="..." role="tooltip" aria-haspopup="true" class="tooltip tooltip-lg tooltip-right">
+         <clr-icon class="is-solid nfo-icon" shape="info-standard" size="22"></clr-icon>
+         <span  class="tooltip-content">
+           The group count displays the number of participant records if any of the
+           criteria joined by the OR operator are true.
+        </span>
+      </a>
     </span>
     <span *ngIf="error">
       <clr-icon
