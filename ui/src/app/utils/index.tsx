@@ -109,7 +109,7 @@ export const withWindowSize = () => WrappedComponent => {
 
     render() {
       const { windowSize } = this.state;
-      return React.createElement(WrappedComponent, { windowSize, ...this.props });
+      return <WrappedComponent windowSize={windowSize} {...this.props} />;
     }
   }
   return Wrapper as any;
@@ -188,8 +188,7 @@ export function reactStyles<T extends {[key: string]: React.CSSProperties}>(t: T
 export class ReactWrapperBase implements OnChanges, OnInit, OnDestroy {
   @ViewChild('root') rootElement: ElementRef;
 
-  constructor(private wrapped: (new (...args: any[]) => React.Component)|React.FunctionComponent,
-              private propNames: string[]) {}
+  constructor(private WrappedComponent: React.ComponentType, private propNames: string[]) {}
 
   ngOnInit(): void {
     this.renderComponent();
@@ -204,11 +203,9 @@ export class ReactWrapperBase implements OnChanges, OnInit, OnDestroy {
   }
 
   renderComponent(): void {
+    const {WrappedComponent, propNames} = this;
     ReactDOM.render(
-      React.createElement(
-        this.wrapped,
-        fp.fromPairs(this.propNames.map(name => [name, this[name]]))
-      ),
+      <WrappedComponent {...fp.fromPairs(propNames.map(name => [name, this[name]]))} />,
       this.rootElement.nativeElement
     );
   }
@@ -222,4 +219,3 @@ export function decamelize(str: string, separator: string) {
       .replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1' + separator + '$2')
       .toLowerCase();
 }
-
