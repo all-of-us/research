@@ -54,7 +54,7 @@
           [disabled]="criteria.disabled"
           (click)="launchWizard(criteria)"
           clrDropdownItem>{{criteria.name}}
-          <clr-tooltip>
+          <clr-tooltip class="show-tooltip">
             <clr-icon clrTooltipTrigger class="is-solid info-icon" shape="info-standard" size="18"></clr-icon>
             <clr-tooltip-content clrSize="lg" *clrIfOpen>
               <span>{{criteria?.tooltip}}</span>
@@ -70,7 +70,7 @@
           [disabled]="criteria.disabled"
           (click)="launchWizard(criteria)"
           clrDropdownItem>{{criteria.name}}
-          <clr-tooltip>
+          <clr-tooltip class="show-tooltip">
             <clr-icon clrTooltipTrigger class="is-solid info-icon" shape="info-standard" size="18"></clr-icon>
             <clr-tooltip-content clrSize="lg" *clrIfOpen>
               <span>{{criteria?.tooltip}}</span>

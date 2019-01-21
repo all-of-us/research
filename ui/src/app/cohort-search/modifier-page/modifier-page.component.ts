@@ -46,7 +46,7 @@ export class ModifierPageComponent implements OnInit, OnDestroy, AfterContentChe
 
   readonly modifiers = [{
     name: 'ageAtEvent',
-    label: 'Age At Event',
+    label: 'Age At Occurrence',
     inputType: 'number',
     min: 1,
     max: 120,
@@ -88,7 +88,7 @@ export class ModifierPageComponent implements OnInit, OnDestroy, AfterContentChe
     }]
   }, {
     name: 'hasOccurrences',
-    label: 'Has Occurrences',
+    label: 'Number of Occurrences',
     inputType: 'number',
     min: 1,
     max: 99,

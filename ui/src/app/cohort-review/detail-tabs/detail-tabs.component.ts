@@ -339,10 +339,15 @@ export class DetailTabsComponent implements OnChanges, OnInit, OnDestroy {
       const getParticipantsDomainData = this.reviewAPI.getParticipantChartData(ns, wsid, cid, cdrid,
         this.participantsId , domainName, limit)
         .subscribe(data => {
-          const participantsData = data;
-          this.chartData[domainName].items = participantsData.items;
-          this.chartData[domainName].conditionTitle = typeToTitle(domainName);
-          this.chartData[domainName].loading = false;
+          // if(data.items.length) {
+            const participantsData = data;
+            this.chartData[domainName].items = participantsData.items;
+            this.chartData[domainName].conditionTitle = typeToTitle(domainName);
+            this.chartData[domainName].loading = false;
+          // }
+          // else {
+          //   this.chartData[domainName].loading = false;
+          // }
         });
       this.subscription.add(getParticipantsDomainData);
     });

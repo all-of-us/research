@@ -22,3 +22,11 @@
   cursor: pointer;
   margin-left: 0.2rem;
 }
+
+.dropdown-item:hover .show-tooltip{
+  visibility: visible;
+}
+
+.dropdown-item .show-tooltip{
+  visibility: hidden;
+}
