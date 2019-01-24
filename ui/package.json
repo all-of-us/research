@@ -5,12 +5,14 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "dev-up": "yarn run codegen && yarn start",
     "build": "ng build",
     "test": "ng test --source-map=false",
+    "test-react": "jest",
     "lint": "ng lint --type-check",
     "e2e": "ng e2e",
     "codegen": "yarn run merge-swagger && yarn run codegen-clean && yarn run codegen-swagger && yarn run codegen-swagger-fetch && yarn run post-codegen && yarn run notebooks-codegen-swagger && yarn run notebooks-post-codegen",
-    "merge-swagger": "../api/build.rb merge-yaml",
+    "merge-swagger": "../api/build.rb merge-yaml --no-docker",
     "codegen-clean": "rm -rf src/generated src/notebooks-generated",
     "codegen-swagger": "java -jar ../aou-utils/swagger-codegen-cli.jar generate --lang typescript-angular --input-spec ../api/src/main/resources/merged.yaml --output src/generated --additional-properties ngVersion=2",
     "codegen-swagger-fetch": "java -jar ../aou-utils/swagger-codegen-cli.jar generate --lang typescript-fetch --input-spec ../api/src/main/resources/merged.yaml --output src/generated/fetch",
@@ -24,6 +26,7 @@
       "./test-shim.js",
       "./test-setup.js"
     ],
+    "setupTestFrameworkScriptFile": "./test-setup-script.js",
     "moduleFileExtensions": [
       "ts",
       "tsx",
@@ -31,7 +34,8 @@
       "spec.ts"
     ],
     "moduleDirectories": [
-      "node_modules"
+      "node_modules",
+      "src"
     ],
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
@@ -41,13 +45,7 @@
     ],
     "globals": {
       "ts-jest": {
-        "diagnostics": {
-          "warnOnly": true
-        },
-        "tsConfig": {
-          "module": "commonjs",
-          "jsx": "react"
-        }
+        "tsConfig": "src/tsconfig.jest.json"
       }
     }
   },
@@ -72,8 +70,8 @@
     "@types/lodash": "^4.14.119",
     "@types/react": "^16.7.12",
     "@types/react-dom": "^16.0.11",
-    "@types/react-onclickoutside": "^6.7.0",
     "@types/react-modal": "^3.8.0",
+    "@types/react-onclickoutside": "^6.7.0",
     "@webcomponents/custom-elements": "^1.0.0",
     "angular2-highcharts": "^0.5.5",
     "bootstrap": "4.1.2",
@@ -81,9 +79,8 @@
     "d3": "^4.12.2",
     "dom-to-image": "^2.6.0",
     "enhanced-resolve": "3.3.0",
-    "enzyme": "^3.7.0",
-    "enzyme-adapter-react-16": "^1.7.0",
     "highcharts": "^6.2.0",
+    "highcharts-react-official": "^2.0.0",
     "immutable": "^4.0.0-rc.9",
     "lodash": "^4.17.11",
     "moment": "^2.20.1",
@@ -96,6 +93,7 @@
     "react": "^16.6.3",
     "react-addons-test-utils": "^15.6.2",
     "react-dom": "^16.6.3",
+    "react-interactive": "^0.8.1",
     "react-modal": "^3.8.1",
     "react-onclickoutside": "^6.7.1",
     "react-paginating": "^1.0.3-react16.0",
@@ -106,6 +104,7 @@
     "stacktrace-js": "^2.0.0",
     "ts-jest": "^23.10.5",
     "tslib": "^1.9.0",
+    "validate.js": "^0.12.0",
     "yarn": "^1.12.3",
     "zone.js": "0.8.26"
   },
@@ -139,6 +138,8 @@
     "react-test-renderer": "^16.6.3",
     "ts-node": "~3.0.4",
     "tslint": "^5.9.1",
+    "tslint-eslint-rules": "^5.4.0",
+    "tslint-microsoft-contrib": "^6.0.0",
     "typescript": ">=3.1.1 <3.2"
   }
 }

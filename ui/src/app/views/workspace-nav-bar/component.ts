@@ -1,11 +1,9 @@
 import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
-import {Subscription} from 'rxjs/Subscription';
 
 import {WorkspaceData} from 'app/resolvers/workspace';
 
 import {BugReportComponent} from 'app/views/bug-report/component';
-import {ConfirmDeleteModalComponent} from 'app/views/confirm-delete-modal/component';
 import {WorkspaceShareComponent} from 'app/views/workspace-share/component';
 
 import {
@@ -17,16 +15,13 @@ import {
 @Component({
   selector: 'app-workspace-nav-bar',
   styleUrls: ['../../styles/buttons.css',
-              '../../styles/headers.css',
-              './component.css'],
+    '../../styles/headers.css',
+    './component.css'],
   templateUrl: './component.html',
 })
 export class WorkspaceNavBarComponent implements OnInit, OnDestroy {
   @ViewChild(WorkspaceShareComponent)
   shareModal: WorkspaceShareComponent;
-
-  @ViewChild(ConfirmDeleteModalComponent)
-  deleteModal: ConfirmDeleteModalComponent;
 
   workspace: Workspace;
   wsId: string;
@@ -36,6 +31,7 @@ export class WorkspaceNavBarComponent implements OnInit, OnDestroy {
   workspaceDeletionError = false;
   tabPath: string;
   display = true;
+  confirmDeleting = false;
 
   @ViewChild(BugReportComponent)
   bugReportComponent: BugReportComponent;
@@ -105,17 +101,21 @@ export class WorkspaceNavBarComponent implements OnInit, OnDestroy {
     this.workspacesService.deleteWorkspace(
       workspace.namespace, workspace.id).subscribe(() => {
         this.router.navigate(['/workspaces']);
-    }, () => {
-      this.workspaceDeletionError = true;
-    });
+      }, () => {
+        this.workspaceDeletionError = true;
+      });
   }
 
-  receiveDelete($event): void {
-    this.delete($event);
+  receiveDelete(): void {
+    this.delete(this.workspace);
   }
 
-  confirmDelete(): void {
-    this.deleteModal.open();
+  openConfirmDelete(): void {
+    this.confirmDeleting = true;
+  }
+
+  closeConfirmDelete(): void {
+    this.confirmDeleting = false;
   }
 
   share(): void {

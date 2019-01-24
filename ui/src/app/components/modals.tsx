@@ -1,6 +1,8 @@
 import * as React from 'react';
 import * as ReactModal from 'react-modal';
 
+import {withStyle} from 'app/utils/index';
+
 const styles = {
   modal: {
     borderRadius: 8, position: 'relative',
@@ -16,18 +18,31 @@ const styles = {
   modalTitle: {
     fontSize: '20px',
     color: '#302973',
+    fontWeight: 600,
     marginBottom: '1rem'
   },
 
   modalBody: {
     fontSize: '14px',
     lineHeight: '.8rem',
+    marginTop: '3%',
+    fontWeight: 400
+
   },
 
   modalFooter: {
     display: 'flex' as 'flex',
     justifyContent: 'flex-end' as 'flex-end',
     marginTop: '1rem'
+  },
+
+  modalInput: {
+    fontWeight: 400,
+    width: '100%',
+    borderRadius: '5px',
+    height: '1.5rem',
+    border: '1px solid #9a9a9a',
+    padding: '.25rem'
   }
 };
 
@@ -41,9 +56,7 @@ export const Modal = ({width = 450, ...props}) => {
   />;
 };
 
-export const ModalTitle = ({style = {}, ...props}) =>
-  <div {...props} style={{...styles.modalTitle, ...style}} />;
-export const ModalBody = ({style = {}, ...props}) =>
-  <div {...props} style={{...styles.modalBody, ...style}} />;
-export const ModalFooter = ({style = {}, ...props}) =>
-  <div {...props} style={{...styles.modalFooter, ...style}} />;
+export const ModalTitle = withStyle(styles.modalTitle)('div');
+export const ModalBody = withStyle(styles.modalBody)('div');
+export const ModalFooter = withStyle(styles.modalFooter)('div');
+export const ModalInput = withStyle(styles.modalInput)('input');

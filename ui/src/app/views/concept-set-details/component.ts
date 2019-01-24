@@ -1,16 +1,11 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
-import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 
 import {ConceptTableComponent} from 'app/views/concept-table/component';
-import {ConfirmDeleteModalComponent} from 'app/views/confirm-delete-modal/component';
 
 import {
   ConceptSet,
   ConceptSetsService,
-  Domain,
-  DomainInfo,
-  StandardConceptFilter,
   WorkspaceAccessLevel,
 } from 'generated';
 
@@ -24,7 +19,6 @@ import {
   templateUrl: './component.html',
 })
 export class ConceptSetDetailsComponent {
-  @ViewChild(ConfirmDeleteModalComponent) deleteModal;
   @ViewChild(ConceptTableComponent) conceptTable;
 
   wsNamespace: string;
@@ -33,13 +27,13 @@ export class ConceptSetDetailsComponent {
   conceptSet: ConceptSet;
 
   editing = false;
-  editHover = false;
   editSubmitting = false;
   editName: string;
   editDescription: string;
 
   removing = false;
   removeSubmitting = false;
+  confirmDeleting = false;
 
   constructor(
     private conceptSetsService: ConceptSetsService,
@@ -77,11 +71,15 @@ export class ConceptSetDetailsComponent {
     });
   }
 
+  closeConfirmDelete(): void {
+    this.confirmDeleting = false;
+  }
+
   receiveDelete() {
     this.conceptSetsService.deleteConceptSet(this.wsNamespace, this.wsId, this.conceptSet.id)
       .subscribe(() => {
         this.router.navigate(['workspaces', this.wsNamespace, this.wsId, 'concepts', 'sets']);
-        this.deleteModal.close();
+        this.closeConfirmDelete();
       });
   }
 
