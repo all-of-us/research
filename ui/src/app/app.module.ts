@@ -79,6 +79,7 @@ import {
   Configuration as LeoConfiguration,
 } from 'notebooks-generated';
 import { HighlightSearchComponent } from './highlight-search/highlight-search.component';
+import {EraCommonComponent} from './views/eraCommons/component';
 import {ToolTipComponent} from './views/tooltip/component';
 
 // Unfortunately stackdriver-errors-js doesn't properly declare dependencies, so
@@ -145,6 +146,7 @@ export function getLeoConfiguration(signInService: SignInService): LeoConfigurat
     ConceptTableComponent,
     ConceptSetListComponent,
     ConfirmDeleteModalComponent,
+    EraCommonComponent,
     ErrorHandlerComponent,
     InitialErrorComponent,
     NewNotebookModalComponent,

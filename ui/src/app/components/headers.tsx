@@ -29,6 +29,15 @@ export const styles = {
     fontWeight: 600,
     marginTop: '0.5rem',
     marginBottom: '0.125rem'
+  },
+  workbenchlabel: {
+    height: '34px',
+    width: '342px',
+    color: '#FFFFFF',
+    fontFamily: 'Montserrat',
+    fontSize: '28px',
+    fontWeight: '600',
+    lineHeight: '34px'
   }
 };
 
@@ -36,3 +45,4 @@ export const BolderHeader = withStyle(styles.h1)('h1');
 export const BoldHeader = withStyle(styles.h2)('h2');
 export const Header = withStyle(styles.h3)('h3');
 export const SmallHeader = withStyle(styles.h4)('h4');
+export const WorkbenchLabel = withStyle(styles.workbenchlabel);

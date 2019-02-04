@@ -29,8 +29,10 @@ import {ConceptSetResolver} from './resolvers/concept-set';
 import {WorkspaceResolver} from './resolvers/workspace';
 
 import {environment} from 'environments/environment';
+import {EraCommonGuard} from './guards/era-common-gaurd.service';
 import {NavStore} from './utils/navigation';
 import {SignInComponent} from './views/sign-in/component';
+import {EraCommonComponent} from './views/eraCommons/component';
 
 declare let gtag: Function;
 
@@ -43,7 +45,7 @@ const routes: Routes = [
     path: '',
     component: SignedInComponent,
     canActivate: [SignInGuard],
-    canActivateChild: [SignInGuard, RegistrationGuard],
+    canActivateChild: [SignInGuard, RegistrationGuard, EraCommonGuard],
     runGuardsAndResolvers: 'always',
     children: [
       {
@@ -55,6 +57,12 @@ const routes: Routes = [
         component: UnregisteredComponent,
         data: {
           title: 'Awaiting ID Verification'
+        }
+      },  {
+        path: 'eraCommon',
+        component: EraCommonComponent,
+        data: {
+          title: 'Awaiting Era commons'
         }
       }, {
         path: 'nih-callback',
@@ -265,6 +273,7 @@ const routes: Routes = [
   exports: [RouterModule],
   providers: [
     ConceptSetResolver,
+    EraCommonGuard,
     RegistrationGuard,
     SignInGuard,
     WorkspaceResolver,
