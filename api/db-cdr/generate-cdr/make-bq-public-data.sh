@@ -93,6 +93,17 @@ set count_value =
     end
 where count_value > 0"
 
+# achilles_results
+bq --quiet --project=$PUBLIC_PROJECT query --nouse_legacy_sql \
+"Update  \`$PUBLIC_PROJECT.$PUBLIC_DATASET.achilles_results\`
+set stratum_5 =
+    case when cast(stratum_5 as int64) < ${BIN_SIZE}
+        then cast(${BIN_SIZE} as string)
+    else
+        cast(cast(CEIL(cast(stratum_5 as int64) / ${BIN_SIZE}) * ${BIN_SIZE} as int64) as string)
+    end
+where analysis_id = 3000 and cast(stratum_5 as int64) > 0"
+
 
 #delete concepts with 0 count / source count value
 

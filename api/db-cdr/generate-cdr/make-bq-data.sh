@@ -615,5 +615,7 @@ bq --quiet --project=$BQ_PROJECT query --nouse_legacy_sql \
 "update \`$OUTPUT_PROJECT.$OUTPUT_DATASET.achilles_results\` ar
 set ar.stratum_5=cast((select sum(distinct ar1.count_value) from \`$OUTPUT_PROJECT.$OUTPUT_DATASET.achilles_results\` ar1 join
 \`$BQ_PROJECT.$BQ_DATASET.concept_ancestor\` ca on cast(ca.descendant_concept_id as string)=ar1.stratum_1
-where ar1.analysis_id=3000 and ca.ancestor_concept_id != ca.descendant_concept_id and cast(ca.ancestor_concept_id as string)=ar.stratum_1) as string)
+join \`$BQ_PROJECT.$BQ_DATASET.concept\` c on c.concept_id = ca.descendant_concept_id
+where ar1.analysis_id=3000 and ca.ancestor_concept_id != ca.descendant_concept_id
+and c.domain_id=ar.stratum_3 and cast(ca.ancestor_concept_id as string)=ar.stratum_1) as string)
 where ar.analysis_id=3000";
