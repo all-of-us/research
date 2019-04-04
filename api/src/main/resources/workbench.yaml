@@ -942,6 +942,22 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
 
+  /v1/cron/findUsersExceedingFreeTierBilling:
+    get:
+      security: []
+      tags:
+        - billing
+        - cron
+      description: Find users that have have exceeded their free credits but are still on free tier billing
+      operationId: findUsersExceedingFreeTierBilling
+      responses:
+        200:
+          description: Users matching the description are logged
+        500:
+          description: Internal Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
   /v1/workspaces/{workspaceNamespace}/{workspaceId}/share:
     parameters:
       - $ref: '#/parameters/workspaceNamespace'

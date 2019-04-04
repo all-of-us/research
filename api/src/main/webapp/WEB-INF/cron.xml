@@ -24,4 +24,10 @@
     <description>Daily sync of eRA Commons linkage status (via FireCloud API)</description>
     <schedule>every 24 hours</schedule>
   </cron>
+  <cron>
+    <url>/v1/cron/findUsersExceedingFreeTierBilling</url>
+    <target>api</target>
+    <description>Find users that have have exceeded their free credits but are still on free tier billing</description>
+    <schedule>every 24 hours</schedule>
+  </cron>
 </cronentries>
