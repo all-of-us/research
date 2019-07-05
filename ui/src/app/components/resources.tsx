@@ -6,6 +6,7 @@ import {PopupTrigger} from 'app/components/popups';
 import {switchCase} from 'app/utils';
 import {ResourceType} from 'app/utils/resourceActionsReact';
 import {environment} from 'environments/environment';
+import {navigate} from '../utils/navigation';
 
 export const ResourceCardMenu: React.FunctionComponent<{
   disabled: boolean, resourceType: ResourceType, onRenameNotebook?: Function,
@@ -30,6 +31,8 @@ export const ResourceCardMenu: React.FunctionComponent<{
             <MenuItem onClick={onCloneResource}>Duplicate</MenuItem>
             <MenuItem onClick={onCopyResource}>Copy to another Workspace</MenuItem>
             <MenuItem onClick={onDeleteResource}>Delete</MenuItem>
+            <MenuItem onClick={navigate()}>Open Edit Mode</MenuItem>
+            <MenuItem onClick={}>Open Playground Mode</MenuItem>
             {
               environment.enableJupyterLab &&
               /*

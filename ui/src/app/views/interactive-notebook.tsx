@@ -1,5 +1,6 @@
 import {Component, Input} from '@angular/core';
 import * as Cookies from 'js-cookie';
+import * as fp from 'lodash';
 import * as React from 'react';
 
 import {ClrIcon} from 'app/components/icons';
@@ -9,8 +10,8 @@ import {PlaygroundModeIcon} from 'app/icons/playground-mode-icon';
 import {notebooksClusterApi} from 'app/services/notebooks-swagger-fetch-clients';
 import {clusterApi, workspacesApi} from 'app/services/swagger-fetch-clients';
 import colors, {colorWithWhiteness} from 'app/styles/colors';
-import {reactStyles, ReactWrapperBase, withCurrentWorkspace} from 'app/utils';
-import {navigate, urlParamsStore} from 'app/utils/navigation';
+import {reactStyles, ReactWrapperBase, withCurrentWorkspace, withUrlParams} from 'app/utils';
+import {navigate, queryParamsStore} from 'app/utils/navigation';
 import {WorkspaceData} from 'app/utils/workspace-data';
 import {WorkspacePermissionsUtil} from 'app/utils/workspace-permissions';
 import {ConfirmPlaygroundModeModal} from 'app/views/confirm-playground-mode-modal';
@@ -74,7 +75,12 @@ interface State {
   showPlaygroundModeModal: boolean;
 }
 
-export const InteractiveNotebook = withCurrentWorkspace()(
+export const Modes = {
+  EDIT: 'edit',
+  PLAYGROUND: 'playground'
+};
+
+export const InteractiveNotebook = fp.flow(withUrlParams(), withCurrentWorkspace())(
   class extends React.Component<Props, State> {
 
     constructor(props) {
@@ -93,6 +99,13 @@ export const InteractiveNotebook = withCurrentWorkspace()(
         .then(html => {
           this.setState({html: html.html});
         });
+
+      const startMode = queryParamsStore.getValue().startMode;
+      if (startMode === Modes.EDIT) {
+        this.startEditMode();
+      } else if (startMode === Modes.PLAYGROUND) {
+        this.onPlaygroundModeClick();
+      }
     }
 
     private runCluster(onClusterReady: Function): void {
@@ -219,11 +232,7 @@ export const InteractiveNotebook = withCurrentWorkspace()(
   template: '<div #root></div>'
 })
 export class InteractiveNotebookComponent extends ReactWrapperBase {
-  @Input() billingProjectId = urlParamsStore.getValue().ns;
-  @Input() workspaceName = urlParamsStore.getValue().wsid;
-  @Input() notebookName = urlParamsStore.getValue().nbName;
-
   constructor() {
-    super(InteractiveNotebook, ['billingProjectId', 'workspaceName', 'notebookName']);
+    super(InteractiveNotebook, []);
   }
 }
