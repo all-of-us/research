@@ -14,6 +14,7 @@ import {
   currentCohortStore,
   currentConceptSetStore,
   currentWorkspaceStore,
+  queryParamsStore,
   routeConfigDataStore,
   urlParamsStore,
   userProfileStore
@@ -318,6 +319,11 @@ export const withUrlParams = () => {
 // HOC that provides a 'routeConfigData' prop with current route's data object
 export const withRouteConfigData = () => {
   return connectBehaviorSubject(routeConfigDataStore, 'routeConfigData');
+};
+
+// HOC that provides a 'queryParams' prop with current query params
+export const withQueryParams = () => {
+  return connectBehaviorSubject(queryParamsStore, 'queryParams');
 };
 
 // Temporary method for converting generated/models/Domain to generated/models/fetch/Domain

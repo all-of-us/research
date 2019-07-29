@@ -9,7 +9,7 @@ import {Observable} from 'rxjs/Observable';
 
 import {NotebookComponent} from 'app/icons/notebook/component';
 import {ReminderComponent} from 'app/icons/reminder';
-import {NotebookRedirectComponent} from 'app/pages/analysis/notebook-redirect/component';
+import {NotebookRedirectComponent} from 'app/pages/analysis/notebook-redirect/notebook-redirect';
 import {queryParamsStore, serverConfigStore, urlParamsStore} from 'app/utils/navigation';
 import {Kernels} from 'app/utils/notebook-kernels';
 import {environment} from 'environments/environment';
