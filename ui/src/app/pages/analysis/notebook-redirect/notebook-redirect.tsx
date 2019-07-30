@@ -1,34 +1,13 @@
-import {Location} from '@angular/common';
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import * as React from 'react';
+import {Component} from '@angular/core';
 import * as fp from 'lodash/fp';
-import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {Observable} from 'rxjs/Observable';
-import {timer} from 'rxjs/observable/timer';
-import {mapTo} from 'rxjs/operators';
-import {Subscription} from 'rxjs/Subscription';
+import * as React from 'react';
 
 import {
-  queryParamsStore,
-  serverConfigStore,
-  urlParamsStore,
-  userProfileStore
+  urlParamsStore
 } from 'app/utils/navigation';
-import {Kernels} from 'app/utils/notebook-kernels';
-import {environment} from 'environments/environment';
 
-import {
-  Cluster,
-  ClusterService,
-  ClusterStatus
-} from 'generated';
-import {
-  ClusterService as LeoClusterService,
-  JupyterService,
-  NotebooksService,
-} from 'notebooks-generated';
-import {ReactWrapperBase, withCurrentWorkspace, withQueryParams} from "../../../utils";
-import {WorkspaceData} from "../../../utils/workspace-data";
+import {ReactWrapperBase, withCurrentWorkspace, withQueryParams} from '../../../utils';
+import {WorkspaceData} from '../../../utils/workspace-data';
 
 enum Progress {
   Unknown,
@@ -93,49 +72,50 @@ const pyNotebookMetadata = {
 };
 
 export const NotebookRedirect = fp.flow(withCurrentWorkspace(), withQueryParams())(
-  class extends React.Component<{workspace: WorkspaceData},
-    {creating: boolean, progress: Progress, playgroundMode: boolean, jupyterLabMode: boolean,
-      notebookName: string, fullNotebookName: string}> {
-  constructor(props) {
-    super(props);
-    this.state = {
-      progress: Progress.Unknown,
-      creating: !!props.queryParams.creating,
-      playgroundMode: props.queryParams.playgroundMode === true,
-      jupyterLabMode: props.queryParams.jupyterLabMode === true,
-      notebookName: '',
-      fullNotebookName: ''
-    };
-  }
+  class extends React.Component<{workspace: WorkspaceData, queryParams: any},
+  {creating: boolean, progress: Progress, playgroundMode: boolean, jupyterLabMode: boolean,
+    notebookName: string, fullNotebookName: string}> {
 
-  componentDidMount() {
-    this.setNotebookNames();
-
-  }
-
-  // this maybe overkill, but should handle all situations
-  setNotebookNames(): void {
-    const {nbName} = urlParamsStore.getValue();
-    this.setState({notebookName: decodeURIComponent(nbName)});
-    if (nbName.endsWith('.ipynb')) {
-      this.setState({fullNotebookName: decodeURIComponent(nbName)}, () => {
-        this.setState({notebookName: this.state.fullNotebookName.replace('.ipynb$', '')});
-      });
-    } else {
-      this.setState({notebookName: decodeURIComponent(nbName)}, () => {
-        this.setState({fullNotebookName: this.state.notebookName + '.ipynb'});
-      });
+    constructor(props) {
+      super(props);
+      this.state = {
+        progress: Progress.Unknown,
+        creating: !!props.queryParams.creating,
+        playgroundMode: props.queryParams.playgroundMode === true,
+        jupyterLabMode: props.queryParams.jupyterLabMode === true,
+        notebookName: '',
+        fullNotebookName: ''
+      };
     }
-  }
 
-  render() {
-    console.log(this.props.queryParams);
-    console.log(this.state);
-    return <React.Fragment>
-      blahhh
-    </React.Fragment>;
-  }
-});
+    componentDidMount() {
+      this.setNotebookNames();
+
+    }
+
+    // this maybe overkill, but should handle all situations
+    setNotebookNames(): void {
+      const {nbName} = urlParamsStore.getValue();
+      this.setState({notebookName: decodeURIComponent(nbName)});
+      if (nbName.endsWith('.ipynb')) {
+        this.setState({fullNotebookName: decodeURIComponent(nbName)}, () => {
+          this.setState({notebookName: this.state.fullNotebookName.replace('.ipynb$', '')});
+        });
+      } else {
+        this.setState({notebookName: decodeURIComponent(nbName)}, () => {
+          this.setState({fullNotebookName: this.state.notebookName + '.ipynb'});
+        });
+      }
+    }
+
+    render() {
+      console.log(this.props.queryParams);
+      console.log(this.state);
+      return <React.Fragment>
+        blahhh
+      </React.Fragment>;
+    }
+  });
 
 @Component({
   template: '<div #root></div>'
