@@ -619,13 +619,17 @@ public class WorkspacesController implements WorkspacesApiDelegate {
   // We can add pagination in the DAO by returning Slice<Workspace> if we want the method to return
   // pagination information (e.g. are there more workspaces to get), and Page<Workspace> if we
   // want the method to return both pagination information and a total count.
+  // TODO eric: test this
   @Override
   @AuthorityRequired({Authority.REVIEW_RESEARCH_PURPOSE})
   public ResponseEntity<WorkspaceListResponse> getWorkspacesForReview() {
     WorkspaceListResponse response = new WorkspaceListResponse();
     List<org.pmiops.workbench.db.model.Workspace> workspaces = workspaceService.findForReview();
     response.setItems(
-        workspaces.stream().map(workspaceMapper::toApiWorkspace).collect(Collectors.toList()));
+        workspaces.stream().map(workspace ->
+            workspaceMapper.toApiWorkspace(workspace,
+                fireCloudService.getWorkspace(workspace.getWorkspaceNamespace(), workspace.getFirecloudName()).getWorkspace()))
+            .collect(Collectors.toList()));
     return ResponseEntity.ok(response);
   }
 

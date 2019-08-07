@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
 import org.pmiops.workbench.api.Etags;
-import org.pmiops.workbench.db.model.FirecloudWorkspaceId;
 import org.pmiops.workbench.firecloud.model.WorkspaceAccessEntry;
 import org.pmiops.workbench.model.ResearchPurpose;
 import org.pmiops.workbench.model.UserRole;
@@ -21,31 +20,6 @@ public class WorkspaceMapper {
     } else {
       return WorkspaceAccessLevel.fromValue(firecloudAccessLevel);
     }
-  }
-
-  public Workspace toApiWorkspace(org.pmiops.workbench.db.model.Workspace workspace) {
-    ResearchPurpose researchPurpose = createResearchPurpose(workspace);
-    FirecloudWorkspaceId workspaceId = workspace.getFirecloudWorkspaceId();
-
-    Workspace result =
-        new Workspace()
-            .etag(Etags.fromVersion(workspace.getVersion()))
-            .lastModifiedTime(workspace.getLastModifiedTime().getTime())
-            .creationTime(workspace.getCreationTime().getTime())
-            .dataAccessLevel(workspace.getDataAccessLevelEnum())
-            .name(workspace.getName())
-            .id(workspaceId.getWorkspaceName())
-            .namespace(workspaceId.getWorkspaceNamespace())
-            .published(workspace.getPublished())
-            .researchPurpose(researchPurpose);
-    if (workspace.getCreator() != null) {
-      result.setCreator(workspace.getCreator().getEmail());
-    }
-    if (workspace.getCdrVersion() != null) {
-      result.setCdrVersionId(String.valueOf(workspace.getCdrVersion().getCdrVersionId()));
-    }
-
-    return result;
   }
 
   public Workspace toApiWorkspace(

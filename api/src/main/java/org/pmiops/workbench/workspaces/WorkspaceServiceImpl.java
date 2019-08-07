@@ -136,10 +136,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 dbWorkspace.getWorkspaceActiveStatusEnum() == WorkspaceActiveStatus.ACTIVE)
         .map(
             dbWorkspace -> {
-              String fcWorkspaceAccessLevel =
-                  fcWorkspaces.get(dbWorkspace.getFirecloudUuid()).getAccessLevel();
+              org.pmiops.workbench.firecloud.model.WorkspaceResponse fcWorkspace =
+                  fcWorkspaces.get(dbWorkspace.getFirecloudUuid());
+              String fcWorkspaceAccessLevel =fcWorkspace.getAccessLevel();
               WorkspaceResponse currentWorkspace = new WorkspaceResponse();
-              currentWorkspace.setWorkspace(workspaceMapper.toApiWorkspace(dbWorkspace));
+              currentWorkspace.setWorkspace(workspaceMapper.toApiWorkspace(dbWorkspace, fcWorkspace.getWorkspace()));
               currentWorkspace.setAccessLevel(
                   workspaceMapper.toApiWorkspaceAccessLevel(fcWorkspaceAccessLevel));
               return currentWorkspace;
@@ -147,6 +148,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         .collect(Collectors.toList());
   }
 
+  //TODO: Inconsistent - Single workspace fetch will set some fields from the FC object while
+  // getWorkspaces() set almost all from the database
   @Transactional
   @Override
   public WorkspaceResponse getWorkspace(String workspaceNamespace, String workspaceId) {
@@ -268,6 +271,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     saveWithLastModified(workspace, now);
   }
 
+  // TODO eric: this has no public users
   @Override
   public WorkspaceACLUpdate updateFirecloudAclsOnUser(
       WorkspaceAccessLevel updatedAccess, WorkspaceACLUpdate currentUpdate) {
