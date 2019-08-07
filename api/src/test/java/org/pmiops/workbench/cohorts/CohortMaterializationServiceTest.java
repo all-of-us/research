@@ -73,7 +73,6 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-@EntityScan
 @Import({
   LiquibaseAutoConfiguration.class,
   FieldSetQueryBuilder.class,

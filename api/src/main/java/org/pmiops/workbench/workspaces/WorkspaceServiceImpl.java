@@ -148,8 +148,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         .collect(Collectors.toList());
   }
 
-  //TODO: Inconsistent - Single workspace fetch will set some fields from the FC object while
-  // getWorkspaces() set almost all from the database
   @Transactional
   @Override
   public WorkspaceResponse getWorkspace(String workspaceNamespace, String workspaceId) {
