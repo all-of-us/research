@@ -105,6 +105,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
   private final BillingProjectBufferService billingProjectBufferService;
   private final WorkspaceService workspaceService;
   private final WorkspaceMapper workspaceMapper;
+  private final POJOJavaMapper pojoJavaMapper;
   private final CdrVersionDao cdrVersionDao;
   private final UserDao userDao;
   private Provider<User> userProvider;
@@ -120,6 +121,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
       BillingProjectBufferService billingProjectBufferService,
       WorkspaceService workspaceService,
       WorkspaceMapper workspaceMapper,
+      POJOJavaMapper pojoJavaMapper,
       CdrVersionDao cdrVersionDao,
       UserDao userDao,
       Provider<User> userProvider,
@@ -132,6 +134,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     this.billingProjectBufferService = billingProjectBufferService;
     this.workspaceService = workspaceService;
     this.workspaceMapper = workspaceMapper;
+    this.pojoJavaMapper = pojoJavaMapper;
     this.cdrVersionDao = cdrVersionDao;
     this.userDao = userDao;
     this.userProvider = userProvider;
@@ -292,7 +295,8 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     dbWorkspace.setName(reqWorkspace.getName());
 
     // Ignore incoming fields pertaining to review status; clients can only request a review.
-    workspaceMapper.setResearchPurposeDetails(dbWorkspace, workspace.getResearchPurpose());
+    pojoJavaMapper.mergeResearchPurposeIntoWorkspace(dbWorkspace, workspace.getResearchPurpose());
+
     if (reqWorkspace.getReviewRequested()) {
       // Use a consistent timestamp.
       dbWorkspace.setTimeRequested(now);
@@ -369,12 +373,10 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     }
     ResearchPurpose researchPurpose = request.getWorkspace().getResearchPurpose();
     if (researchPurpose != null) {
-      workspaceMapper.setResearchPurposeDetails(dbWorkspace, researchPurpose);
+      pojoJavaMapper.mergeResearchPurposeIntoWorkspace(dbWorkspace, researchPurpose);
       if (researchPurpose.getReviewRequested()) {
-        Timestamp now = new Timestamp(clock.instant().toEpochMilli());
-        dbWorkspace.setTimeRequested(now);
+        dbWorkspace.setTimeRequested(new Timestamp(clock.instant().toEpochMilli()));
       }
-      dbWorkspace.setReviewRequested(researchPurpose.getReviewRequested());
     }
     // The version asserted on save is the same as the one we read via
     // getRequired() above, see RW-215 for details.
@@ -496,12 +498,11 @@ public class WorkspacesController implements WorkspacesApiDelegate {
 
     dbWorkspace.setName(body.getWorkspace().getName());
     ResearchPurpose researchPurpose = body.getWorkspace().getResearchPurpose();
-    workspaceMapper.setResearchPurposeDetails(dbWorkspace, researchPurpose);
+    pojoJavaMapper.mergeResearchPurposeIntoWorkspace(dbWorkspace, researchPurpose);
     if (researchPurpose.getReviewRequested()) {
       // Use a consistent timestamp.
       dbWorkspace.setTimeRequested(now);
     }
-    dbWorkspace.setReviewRequested(researchPurpose.getReviewRequested());
 
     // Clone CDR version from the source, by default.
     String reqCdrVersionId = body.getWorkspace().getCdrVersionId();

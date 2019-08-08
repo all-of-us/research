@@ -150,14 +150,15 @@ class Workspace {
     @ElementCollection(fetch = FetchType.LAZY)
     @JoinColumn(name = "workspace_id")
     @Column(name = "specific_population")
-    private var populationDetails: Set<Short> = HashSet()
+    private var populationDetails: MutableSet<Short> = HashSet()
 
     fun getSpecificPopulationsEnum(): Set<SpecificPopulationEnum> {
         return populationDetails.map { s -> StorageEnums.specificPopulationFromStorage(s) }.toSet()
     }
 
     fun setSpecificPopulationsEnum(enums: Set<SpecificPopulationEnum>) {
-        populationDetails = enums.map { s -> StorageEnums.specificPopulationToStorage(s) }.toSet()
+        populationDetails.clear()
+        populationDetails.addAll(enums.map { s -> StorageEnums.specificPopulationToStorage(s) })
     }
 
     @Column(name = "active_status")

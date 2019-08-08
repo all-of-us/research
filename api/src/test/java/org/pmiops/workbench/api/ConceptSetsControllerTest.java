@@ -32,6 +32,7 @@ import org.pmiops.workbench.db.dao.ConceptSetDao;
 import org.pmiops.workbench.db.dao.UserDao;
 import org.pmiops.workbench.db.dao.UserRecentResourceService;
 import org.pmiops.workbench.db.dao.UserService;
+import org.pmiops.workbench.workspaces.POJOJavaMapper;
 import org.pmiops.workbench.workspaces.WorkspaceDao;
 import org.pmiops.workbench.db.model.CdrVersion;
 import org.pmiops.workbench.db.model.User;
@@ -196,6 +197,8 @@ public class ConceptSetsControllerTest {
 
   @Autowired ConceptBigQueryService conceptBigQueryService;
 
+  @Autowired POJOJavaMapper pojoJavaMapper;
+
   @Mock Provider<User> userProvider;
 
   @Autowired Provider<WorkbenchConfig> workbenchConfigProvider;
@@ -220,7 +223,8 @@ public class ConceptSetsControllerTest {
     NotebooksService.class,
     UserRecentResourceService.class,
     ComplianceService.class,
-    DirectoryService.class
+    DirectoryService.class,
+    POJOJavaMapper.class
   })
   static class Configuration {
     @Bean
@@ -259,6 +263,7 @@ public class ConceptSetsControllerTest {
             billingProjectBufferService,
             workspaceService,
             workspaceMapper,
+            pojoJavaMapper,
             cdrVersionDao,
             userDao,
             userProvider,

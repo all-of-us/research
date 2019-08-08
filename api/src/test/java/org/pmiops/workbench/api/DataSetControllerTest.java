@@ -87,6 +87,8 @@ import org.pmiops.workbench.test.FakeClock;
 import org.pmiops.workbench.test.FakeLongRandom;
 import org.pmiops.workbench.test.SearchRequests;
 import org.pmiops.workbench.test.TestBigQueryCdrSchemaConfig;
+import org.pmiops.workbench.workspaces.POJOJavaMapper;
+import org.pmiops.workbench.workspaces.POJOJavaMapperImpl;
 import org.pmiops.workbench.workspaces.WorkspaceMapper;
 import org.pmiops.workbench.workspaces.WorkspaceService;
 import org.pmiops.workbench.workspaces.WorkspaceServiceImpl;
@@ -174,6 +176,8 @@ public class DataSetControllerTest {
 
   @Autowired UserDao userDao;
 
+  @Autowired POJOJavaMapper pojoJavaMapper;
+
   @Mock Provider<User> userProvider;
 
   @Autowired Provider<WorkbenchConfig> workbenchConfigProvider;
@@ -196,7 +200,8 @@ public class DataSetControllerTest {
     UserService.class,
     WorkspacesController.class,
     WorkspaceMapper.class,
-    WorkspaceServiceImpl.class
+    WorkspaceServiceImpl.class,
+    POJOJavaMapperImpl.class
   })
   @MockBean({
     BillingProjectBufferService.class,
@@ -268,6 +273,7 @@ public class DataSetControllerTest {
             billingProjectBufferService,
             workspaceService,
             workspaceMapper,
+            pojoJavaMapper,
             cdrVersionDao,
             userDao,
             userProvider,

@@ -651,10 +651,8 @@ public class WorkspacesControllerTest {
   }
 
   @Test
-  public void testUpdateWorkspace() throws Exception {
+  public void testUpdateWorkspace() {
     Workspace ws = createWorkspace();
-    ws.getResearchPurpose().setPopulation(true);
-    ws.getResearchPurpose().setPopulationDetails(Collections.singletonList(AGE_GROUPS));
     ws = workspacesController.createWorkspace(ws).getBody();
 
     ws.setName("updated-name");
@@ -664,7 +662,6 @@ public class WorkspacesControllerTest {
         workspacesController.updateWorkspace(ws.getNamespace(), ws.getId(), request).getBody();
     ws.setEtag(updated.getEtag());
     assertThat(updated).isEqualTo(ws);
-    assertThat(updated.getResearchPurpose().getPopulationDetails().get(0)).isEqualTo(AGE_GROUPS);
 
     ws.setName("updated-name2");
     updated =
@@ -674,6 +671,18 @@ public class WorkspacesControllerTest {
     Workspace got =
         workspacesController.getWorkspace(ws.getNamespace(), ws.getId()).getBody().getWorkspace();
     assertThat(got).isEqualTo(ws);
+  }
+
+  @Test
+  public void mappingPopulationDetails() {
+    Workspace ws = createWorkspace();
+    ws.getResearchPurpose().setPopulation(true);
+    ws.getResearchPurpose().setPopulationDetails(Collections.singletonList(AGE_GROUPS));
+    workspacesController.createWorkspace(ws);
+
+    org.pmiops.workbench.model.WorkspaceResponse wsr = workspacesController
+        .getWorkspace(ws.getNamespace(), ws.getId()).getBody();
+    assertThat(wsr.getWorkspace().getResearchPurpose().getPopulationDetails().get(0)).isEqualTo(AGE_GROUPS);
   }
 
   @Test

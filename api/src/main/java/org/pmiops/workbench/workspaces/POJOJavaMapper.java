@@ -2,6 +2,7 @@ package org.pmiops.workbench.workspaces;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.mapstruct.AfterMapping;
@@ -24,6 +25,9 @@ public interface POJOJavaMapper {
 
   ResearchPurpose workspaceToResearchPurpose(Workspace workspace);
 
+  @Mapping(target = "approved", ignore = true)
+  void mergeResearchPurposeIntoWorkspace(@MappingTarget Workspace workspace, ResearchPurpose researchPurpose);
+
   default Long timestamp(Timestamp timestamp) {
     if (timestamp != null) {
       return timestamp.getTime();
@@ -32,10 +36,25 @@ public interface POJOJavaMapper {
     return null;
   }
 
+  default Timestamp timestamp(Long timestamp) {
+    if (timestamp != null) {
+      return new Timestamp(timestamp);
+    }
+
+    return null;
+  }
+
   @AfterMapping
-  default void afterResearchPurpose(@MappingTarget ResearchPurpose researchPurpose, Workspace workspace) {
-    if (researchPurpose.getPopulation()) {
+  default void afterWorkspaceIntoResearchPurpose(@MappingTarget ResearchPurpose researchPurpose, Workspace workspace) {
+    if (workspace.getPopulation()) {
       researchPurpose.setPopulationDetails(new ArrayList<>(workspace.getSpecificPopulationsEnum()));
+    }
+  }
+
+  @AfterMapping
+  default void afterResearchPurposeIntoWorkspace(@MappingTarget Workspace workspace, ResearchPurpose researchPurpose) {
+    if (researchPurpose.getPopulation()) {
+      workspace.setSpecificPopulationsEnum(new HashSet<>(researchPurpose.getPopulationDetails()));
     }
   }
 }
