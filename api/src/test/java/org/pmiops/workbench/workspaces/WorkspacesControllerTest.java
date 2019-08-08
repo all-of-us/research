@@ -17,6 +17,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.pmiops.workbench.api.ConceptsControllerTest.makeConcept;
+import static org.pmiops.workbench.model.SpecificPopulationEnum.AGE_GROUPS;
 
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.TableResult;
@@ -115,6 +116,7 @@ import org.pmiops.workbench.model.ParticipantCohortStatuses;
 import org.pmiops.workbench.model.ResearchPurpose;
 import org.pmiops.workbench.model.ResearchPurposeReviewRequest;
 import org.pmiops.workbench.model.ShareWorkspaceRequest;
+import org.pmiops.workbench.model.SpecificPopulationEnum;
 import org.pmiops.workbench.model.UpdateConceptSetRequest;
 import org.pmiops.workbench.model.UpdateWorkspaceRequest;
 import org.pmiops.workbench.model.UserRole;
@@ -650,6 +652,8 @@ public class WorkspacesControllerTest {
   @Test
   public void testUpdateWorkspace() throws Exception {
     Workspace ws = createWorkspace();
+    ws.getResearchPurpose().setPopulation(true);
+    ws.getResearchPurpose().setPopulationDetails(Collections.singletonList(AGE_GROUPS));
     ws = workspacesController.createWorkspace(ws).getBody();
 
     ws.setName("updated-name");
@@ -659,6 +663,7 @@ public class WorkspacesControllerTest {
         workspacesController.updateWorkspace(ws.getNamespace(), ws.getId(), request).getBody();
     ws.setEtag(updated.getEtag());
     assertThat(updated).isEqualTo(ws);
+    assertThat(updated.getResearchPurpose().getPopulationDetails().get(0)).isEqualTo(AGE_GROUPS);
 
     ws.setName("updated-name2");
     updated =
