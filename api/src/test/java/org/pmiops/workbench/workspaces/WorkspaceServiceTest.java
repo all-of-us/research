@@ -147,36 +147,5 @@ public class WorkspaceServiceTest {
                 assertThat(mockDbWorkspace("1", "1", status).getWorkspaceActiveStatusEnum())
                     .isEqualTo(status));
   }
-//
-//  @Test
-//  public void map() {
-//    POJOSource source = new POJOSource("name", "dest");
-//
-//    POJODest dest = pojoMapper.sourceToDestination(source);
-//    assertThat(dest.getDesc()).isEqualTo("dest");
-//    assertThat(dest.getName()).isEqualTo("name");
-//
-//    assertThat(pojoMapper.destinationToSource(dest).getName()).isEqualTo("name");
-//    assertThat(pojoMapper.destinationToSource(dest).getDesc()).isEqualTo("dest");
-//  }
-//
-//  @Test
-//  public void multiSource() {
-//    POJOSource source = new POJOSource("name", "dest");
-//    POJOSourceKey key = new POJOSourceKey("key", "overwrite");
-//
-//    assertThat(pojoMapper.multiSource(source, key).getName()).isEqualTo("overwrite");
-//    assertThat(pojoMapper.multiSource(source, key).getDesc()).isEqualTo("dest");
-//    assertThat(pojoMapper.multiSource(source, key).getKey()).isEqualTo("key");
-//  }
-//
-//  @Test
-//  public void superSource() {
-//    POJOSource source = new POJOSource("name", "dest");
-//    POJOSuperSource superSource = new POJOSuperSource(source, "123");
-//
-//    assertThat(pojoMapper.transform(superSource).getSuperField()).isEqualTo("123");
-//    assertThat(pojoMapper.transform(superSource).getSub().getName()).isEqualTo("name");
-//    assertThat(pojoMapper.transform(superSource).getSub().getDesc()).isEqualTo("dest");
-//  }
+
 }
