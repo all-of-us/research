@@ -41,6 +41,7 @@ import org.pmiops.workbench.model.SearchConceptsRequest;
 import org.pmiops.workbench.model.StandardConceptFilter;
 import org.pmiops.workbench.model.VocabularyCount;
 import org.pmiops.workbench.model.WorkspaceAccessLevel;
+import org.pmiops.workbench.workspaces.WorkspaceMapperImpl;
 import org.pmiops.workbench.workspaces.WorkspaceService;
 import org.pmiops.workbench.workspaces.WorkspaceServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -223,6 +224,7 @@ public class ConceptsControllerTest {
     CohortCloningService.class,
     ConceptSetService.class,
     ConceptBigQueryService.class,
+    WorkspaceMapperImpl.class,
     Clock.class
   })
   static class Configuration {}

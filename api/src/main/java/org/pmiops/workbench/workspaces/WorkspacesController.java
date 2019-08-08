@@ -286,6 +286,9 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     dbWorkspace.setWorkspaceActiveStatusEnum(WorkspaceActiveStatus.ACTIVE);
     setCdrVersionId(dbWorkspace, workspace.getCdrVersionId());
 
+    // Ignore incoming fields pertaining to review status; clients can only request a review.
+    workspaceMapper.mergeResearchPurposeIntoWorkspace(dbWorkspace, workspace.getResearchPurpose());
+
     // TODO: enforce data access level authorization
     dbWorkspace.setDataAccessLevelEnum(workspace.getDataAccessLevel());
     dbWorkspace.setName(workspace.getName());
@@ -294,9 +297,6 @@ public class WorkspacesController implements WorkspacesApiDelegate {
       dbWorkspace.setTimeRequested(now);
     }
     dbWorkspace.setReviewRequested(workspace.getResearchPurpose().getReviewRequested());
-
-    // Ignore incoming fields pertaining to review status; clients can only request a review.
-    workspaceMapper.mergeResearchPurposeIntoWorkspace(dbWorkspace, workspace.getResearchPurpose());
 
     if (useBillingProjectBuffer) {
       dbWorkspace.setBillingMigrationStatusEnum(BillingMigrationStatus.NEW);
