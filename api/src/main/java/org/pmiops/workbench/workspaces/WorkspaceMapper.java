@@ -1,33 +1,90 @@
 package org.pmiops.workbench.workspaces;
 
-import org.pmiops.workbench.model.Workspace;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
+import org.pmiops.workbench.api.Etags;
+import org.pmiops.workbench.db.dao.UserDao;
+import org.pmiops.workbench.db.model.CdrVersion;
+import org.pmiops.workbench.db.model.User;
+import org.pmiops.workbench.db.model.Workspace;
+import org.pmiops.workbench.model.ResearchPurpose;
+import org.pmiops.workbench.model.SpecificPopulationEnum;
+import org.pmiops.workbench.model.UserRole;
+import org.pmiops.workbench.model.WorkspaceAccessLevel;
 
-@Service
-public class WorkspaceMapper {
+@Mapper(componentModel = "spring")
+public interface WorkspaceMapper {
 
-  private POJOJavaMapper mapper;
+  UserRole userToUserRole(User user);
 
-  @Autowired
-  public WorkspaceMapper(POJOJavaMapper pojoJavaMapper) {
-    this.mapper = pojoJavaMapper;
+  ResearchPurpose workspaceToResearchPurpose(Workspace workspace);
+
+  @Mapping(target = "researchPurpose", source="dbWorkspace")
+  @Mapping(target = "etag", source="dbWorkspace.version", qualifiedByName = "etag")
+  @Mapping(target = "dataAccessLevel", source="dbWorkspace.dataAccessLevelEnum")
+  @Mapping(target = "name", source="dbWorkspace.name")
+  @Mapping(target = "id", source="fcWorkspace.name")
+  @Mapping(target = "googleBucketName", source="fcWorkspace.bucketName")
+  @Mapping(target = "creator", source="fcWorkspace.createdBy")
+  @Mapping(target = "cdrVersionId", source="dbWorkspace.cdrVersion")
+  org.pmiops.workbench.model.Workspace toApiWorkspace(Workspace dbWorkspace,
+      org.pmiops.workbench.firecloud.model.Workspace fcWorkspace);
+
+  @Mapping(target = "approved", ignore = true)
+  void mergeResearchPurposeIntoWorkspace(@MappingTarget Workspace workspace, ResearchPurpose researchPurpose);
+
+  @Named("etag")
+  default String etag(int version) {
+    return Etags.fromVersion(version);
   }
 
-  public org.pmiops.workbench.db.model.Workspace toDbWorkspace(Workspace workspace) {
-    org.pmiops.workbench.db.model.Workspace result = new org.pmiops.workbench.db.model.Workspace();
-
-    if (workspace.getDataAccessLevel() != null) {
-      result.setDataAccessLevelEnum(workspace.getDataAccessLevel());
-    }
-
-    result.setName(workspace.getName());
-
-    if (workspace.getResearchPurpose() != null) {
-      mapper.mergeResearchPurposeIntoWorkspace(result, workspace.getResearchPurpose());
-    }
-
-    return result;
+  default String cdrVersionId(CdrVersion cdrVersion) {
+    return String.valueOf(cdrVersion.getCdrVersionId());
   }
 
+  default WorkspaceAccessLevel fromFcAccessLevel(String firecloudAccessLevel) {
+    if (firecloudAccessLevel.equals(WorkspaceService.PROJECT_OWNER_ACCESS_LEVEL)) {
+      return WorkspaceAccessLevel.OWNER;
+    } else {
+      return WorkspaceAccessLevel.fromValue(firecloudAccessLevel);
+    }
+  }
+
+  default Long timestamp(Timestamp timestamp) {
+    if (timestamp != null) {
+      return timestamp.getTime();
+    }
+
+    return null;
+  }
+
+  default Timestamp timestamp(Long timestamp) {
+    if (timestamp != null) {
+      return new Timestamp(timestamp);
+    }
+
+    return null;
+  }
+
+  @AfterMapping
+  default void afterWorkspaceIntoResearchPurpose(@MappingTarget ResearchPurpose researchPurpose, Workspace workspace) {
+    if (workspace.getPopulation()) {
+      researchPurpose.setPopulationDetails(new ArrayList<>(workspace.getSpecificPopulationsEnum()));
+    }
+  }
+
+  @AfterMapping
+  default void afterResearchPurposeIntoWorkspace(@MappingTarget Workspace workspace, ResearchPurpose researchPurpose) {
+    if (researchPurpose.getPopulation()) {
+      workspace.setSpecificPopulationsEnum(new HashSet<>(researchPurpose.getPopulationDetails()));
+    }
+  }
 }

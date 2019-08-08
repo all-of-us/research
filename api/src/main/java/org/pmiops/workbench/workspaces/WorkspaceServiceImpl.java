@@ -62,7 +62,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   private UserDao userDao;
   private WorkspaceDao workspaceDao;
   private WorkspaceMapper workspaceMapper;
-  private POJOJavaMapper pojoJavaMapper;
 
   private FireCloudService fireCloudService;
   private Clock clock;
@@ -75,8 +74,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
       FireCloudService fireCloudService,
       UserDao userDao,
       WorkspaceDao workspaceDao,
-      WorkspaceMapper workspaceMapper,
-      POJOJavaMapper pojoJavaMapper) {
+      WorkspaceMapper workspaceMapper) {
     this.clock = clock;
     this.cohortCloningService = cohortCloningService;
     this.conceptSetService = conceptSetService;
@@ -84,7 +82,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     this.userDao = userDao;
     this.workspaceDao = workspaceDao;
     this.workspaceMapper = workspaceMapper;
-    this.pojoJavaMapper = pojoJavaMapper;
   }
 
   /**
@@ -143,8 +140,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                   fcWorkspaces.get(dbWorkspace.getFirecloudUuid());
               String fcWorkspaceAccessLevel =fcWorkspace.getAccessLevel();
               WorkspaceResponse currentWorkspace = new WorkspaceResponse();
-              currentWorkspace.setWorkspace(pojoJavaMapper.toApiWorkspace(dbWorkspace, fcWorkspace.getWorkspace()));
-              currentWorkspace.setAccessLevel(pojoJavaMapper.fromFcAccessLevel(fcWorkspaceAccessLevel));
+              currentWorkspace.setWorkspace(workspaceMapper.toApiWorkspace(dbWorkspace, fcWorkspace.getWorkspace()));
+              currentWorkspace.setAccessLevel(workspaceMapper.fromFcAccessLevel(fcWorkspaceAccessLevel));
               return currentWorkspace;
             })
         .collect(Collectors.toList());
@@ -173,7 +170,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         throw new ServerErrorException("Unsupported access level: " + fcResponse.getAccessLevel());
       }
     }
-    response.setWorkspace(pojoJavaMapper.toApiWorkspace(dbWorkspace, fcWorkspace));
+    response.setWorkspace(workspaceMapper.toApiWorkspace(dbWorkspace, fcWorkspace));
 
     return response;
   }
@@ -456,7 +453,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
       if (user == null) {
         log.log(Level.WARNING, "No user found for " + entry.getKey());
       } else {
-        UserRole userRole = pojoJavaMapper.userToUserRole(user);
+        UserRole userRole = workspaceMapper.userToUserRole(user);
         userRole.setRole(WorkspaceAccessLevel.fromValue(entry.getValue().getAccessLevel()));
         userRoles.add(userRole);
       }

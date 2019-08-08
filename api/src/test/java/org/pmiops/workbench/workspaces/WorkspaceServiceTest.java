@@ -36,8 +36,7 @@ public class WorkspaceServiceTest {
 
   @TestConfiguration
   @Import({
-      POJOJavaMapperImpl.class,
-      WorkspaceMapper.class
+      WorkspaceMapperImpl.class
   })
   static class Configuration {}
 
@@ -45,11 +44,10 @@ public class WorkspaceServiceTest {
   @Mock private ConceptSetService conceptSetService;
   @Mock private WorkspaceDao workspaceDao;
   @Mock private UserDao userDao;
-  @Autowired private WorkspaceMapper workspaceMapper;
   @Mock private FireCloudService fireCloudService;
   @Mock private Clock clock;
 
-  @Autowired private POJOJavaMapper pojoMapper;
+  @Autowired private WorkspaceMapper pojoMapper;
 
   private WorkspaceService workspaceService;
 
@@ -67,7 +65,6 @@ public class WorkspaceServiceTest {
             fireCloudService,
             userDao,
             workspaceDao,
-            workspaceMapper,
             pojoMapper);
 
     doReturn(workspaceResponses).when(fireCloudService).getWorkspaces();

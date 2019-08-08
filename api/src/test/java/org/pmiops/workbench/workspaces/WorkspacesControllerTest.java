@@ -116,7 +116,6 @@ import org.pmiops.workbench.model.ParticipantCohortStatuses;
 import org.pmiops.workbench.model.ResearchPurpose;
 import org.pmiops.workbench.model.ResearchPurposeReviewRequest;
 import org.pmiops.workbench.model.ShareWorkspaceRequest;
-import org.pmiops.workbench.model.SpecificPopulationEnum;
 import org.pmiops.workbench.model.UpdateConceptSetRequest;
 import org.pmiops.workbench.model.UpdateWorkspaceRequest;
 import org.pmiops.workbench.model.UserRole;
@@ -213,7 +212,6 @@ public class WorkspacesControllerTest {
     NotebooksServiceImpl.class,
     WorkspacesController.class,
     WorkspaceServiceImpl.class,
-    WorkspaceMapper.class,
     CohortsController.class,
     CohortFactoryImpl.class,
     CohortCloningService.class,
@@ -223,7 +221,7 @@ public class WorkspacesControllerTest {
     ReviewQueryBuilder.class,
     ConceptSetService.class,
     ConceptSetsController.class,
-    POJOJavaMapperImpl.class
+    WorkspaceMapperImpl.class
   })
   @MockBean({
     BillingProjectBufferService.class,

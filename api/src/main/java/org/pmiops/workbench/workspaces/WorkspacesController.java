@@ -105,7 +105,6 @@ public class WorkspacesController implements WorkspacesApiDelegate {
   private final BillingProjectBufferService billingProjectBufferService;
   private final WorkspaceService workspaceService;
   private final WorkspaceMapper workspaceMapper;
-  private final POJOJavaMapper pojoJavaMapper;
   private final CdrVersionDao cdrVersionDao;
   private final UserDao userDao;
   private Provider<User> userProvider;
@@ -121,7 +120,6 @@ public class WorkspacesController implements WorkspacesApiDelegate {
       BillingProjectBufferService billingProjectBufferService,
       WorkspaceService workspaceService,
       WorkspaceMapper workspaceMapper,
-      POJOJavaMapper pojoJavaMapper,
       CdrVersionDao cdrVersionDao,
       UserDao userDao,
       Provider<User> userProvider,
@@ -134,7 +132,6 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     this.billingProjectBufferService = billingProjectBufferService;
     this.workspaceService = workspaceService;
     this.workspaceMapper = workspaceMapper;
-    this.pojoJavaMapper = pojoJavaMapper;
     this.cdrVersionDao = cdrVersionDao;
     this.userDao = userDao;
     this.userProvider = userProvider;
@@ -289,19 +286,17 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     dbWorkspace.setWorkspaceActiveStatusEnum(WorkspaceActiveStatus.ACTIVE);
     setCdrVersionId(dbWorkspace, workspace.getCdrVersionId());
 
-    org.pmiops.workbench.db.model.Workspace reqWorkspace = workspaceMapper.toDbWorkspace(workspace);
     // TODO: enforce data access level authorization
-    dbWorkspace.setDataAccessLevelEnum(reqWorkspace.getDataAccessLevelEnum());
-    dbWorkspace.setName(reqWorkspace.getName());
-
-    // Ignore incoming fields pertaining to review status; clients can only request a review.
-    pojoJavaMapper.mergeResearchPurposeIntoWorkspace(dbWorkspace, workspace.getResearchPurpose());
-
-    if (reqWorkspace.getReviewRequested()) {
+    dbWorkspace.setDataAccessLevelEnum(workspace.getDataAccessLevel());
+    dbWorkspace.setName(workspace.getName());
+    if (workspace.getResearchPurpose().getReviewRequested()) {
       // Use a consistent timestamp.
       dbWorkspace.setTimeRequested(now);
     }
-    dbWorkspace.setReviewRequested(reqWorkspace.getReviewRequested());
+    dbWorkspace.setReviewRequested(workspace.getResearchPurpose().getReviewRequested());
+
+    // Ignore incoming fields pertaining to review status; clients can only request a review.
+    workspaceMapper.mergeResearchPurposeIntoWorkspace(dbWorkspace, workspace.getResearchPurpose());
 
     if (useBillingProjectBuffer) {
       dbWorkspace.setBillingMigrationStatusEnum(BillingMigrationStatus.NEW);
@@ -311,7 +306,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
 
     dbWorkspace = workspaceService.getDao().save(dbWorkspace);
 
-    return ResponseEntity.ok(pojoJavaMapper.toApiWorkspace(dbWorkspace, fcWorkspace));
+    return ResponseEntity.ok(workspaceMapper.toApiWorkspace(dbWorkspace, fcWorkspace));
   }
 
   @Override
@@ -373,7 +368,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     }
     ResearchPurpose researchPurpose = request.getWorkspace().getResearchPurpose();
     if (researchPurpose != null) {
-      pojoJavaMapper.mergeResearchPurposeIntoWorkspace(dbWorkspace, researchPurpose);
+      workspaceMapper.mergeResearchPurposeIntoWorkspace(dbWorkspace, researchPurpose);
       if (researchPurpose.getReviewRequested()) {
         dbWorkspace.setTimeRequested(new Timestamp(clock.instant().toEpochMilli()));
       }
@@ -381,7 +376,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     // The version asserted on save is the same as the one we read via
     // getRequired() above, see RW-215 for details.
     dbWorkspace = workspaceService.saveWithLastModified(dbWorkspace);
-    return ResponseEntity.ok(pojoJavaMapper.toApiWorkspace(dbWorkspace, fcWorkspace));
+    return ResponseEntity.ok(workspaceMapper.toApiWorkspace(dbWorkspace, fcWorkspace));
   }
 
   @Override
@@ -498,7 +493,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
 
     dbWorkspace.setName(body.getWorkspace().getName());
     ResearchPurpose researchPurpose = body.getWorkspace().getResearchPurpose();
-    pojoJavaMapper.mergeResearchPurposeIntoWorkspace(dbWorkspace, researchPurpose);
+    workspaceMapper.mergeResearchPurposeIntoWorkspace(dbWorkspace, researchPurpose);
     if (researchPurpose.getReviewRequested()) {
       // Use a consistent timestamp.
       dbWorkspace.setTimeRequested(now);
@@ -544,7 +539,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     }
     return ResponseEntity.ok(
         new CloneWorkspaceResponse()
-            .workspace(pojoJavaMapper.toApiWorkspace(savedWorkspace, toFcWorkspace)));
+            .workspace(workspaceMapper.toApiWorkspace(savedWorkspace, toFcWorkspace)));
   }
 
   // A retry period is needed because the permission to copy files into the cloned workspace is not
@@ -628,7 +623,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     List<org.pmiops.workbench.db.model.Workspace> workspaces = workspaceService.findForReview();
     response.setItems(
         workspaces.stream().map(workspace ->
-            pojoJavaMapper.toApiWorkspace(workspace,
+            workspaceMapper.toApiWorkspace(workspace,
                 fireCloudService.getWorkspace(workspace.getWorkspaceNamespace(), workspace.getFirecloudName()).getWorkspace()))
             .collect(Collectors.toList()));
     return ResponseEntity.ok(response);

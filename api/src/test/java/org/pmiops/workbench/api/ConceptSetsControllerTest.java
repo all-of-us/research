@@ -32,7 +32,7 @@ import org.pmiops.workbench.db.dao.ConceptSetDao;
 import org.pmiops.workbench.db.dao.UserDao;
 import org.pmiops.workbench.db.dao.UserRecentResourceService;
 import org.pmiops.workbench.db.dao.UserService;
-import org.pmiops.workbench.workspaces.POJOJavaMapper;
+import org.pmiops.workbench.workspaces.WorkspaceMapper;
 import org.pmiops.workbench.workspaces.WorkspaceDao;
 import org.pmiops.workbench.db.model.CdrVersion;
 import org.pmiops.workbench.db.model.User;
@@ -56,7 +56,6 @@ import org.pmiops.workbench.model.WorkspaceAccessLevel;
 import org.pmiops.workbench.notebooks.NotebooksService;
 import org.pmiops.workbench.test.FakeClock;
 import org.pmiops.workbench.test.FakeLongRandom;
-import org.pmiops.workbench.workspaces.WorkspaceMapper;
 import org.pmiops.workbench.workspaces.WorkspaceService;
 import org.pmiops.workbench.workspaces.WorkspaceServiceImpl;
 import org.pmiops.workbench.workspaces.WorkspacesController;
@@ -167,8 +166,6 @@ public class ConceptSetsControllerTest {
 
   @Autowired WorkspaceService workspaceService;
 
-  @Autowired WorkspaceMapper workspaceMapper;
-
   @Autowired ConceptSetDao conceptSetDao;
 
   @Autowired CdrVersionDao cdrVersionDao;
@@ -197,7 +194,8 @@ public class ConceptSetsControllerTest {
 
   @Autowired ConceptBigQueryService conceptBigQueryService;
 
-  @Autowired POJOJavaMapper pojoJavaMapper;
+  @Autowired
+  WorkspaceMapper workspaceMapper;
 
   @Mock Provider<User> userProvider;
 
@@ -206,7 +204,6 @@ public class ConceptSetsControllerTest {
   @TestConfiguration
   @Import({
     WorkspaceServiceImpl.class,
-    WorkspaceMapper.class,
     CohortCloningService.class,
     CohortFactoryImpl.class,
     UserService.class,
@@ -224,7 +221,7 @@ public class ConceptSetsControllerTest {
     UserRecentResourceService.class,
     ComplianceService.class,
     DirectoryService.class,
-    POJOJavaMapper.class
+    WorkspaceMapper.class
   })
   static class Configuration {
     @Bean
@@ -263,7 +260,6 @@ public class ConceptSetsControllerTest {
             billingProjectBufferService,
             workspaceService,
             workspaceMapper,
-            pojoJavaMapper,
             cdrVersionDao,
             userDao,
             userProvider,
