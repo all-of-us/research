@@ -35,8 +35,8 @@ public class WorkspaceServiceTest {
 
   @TestConfiguration
   @Import({
-      WorkspaceMapper.class,
-      POJOJavaMapperImpl.class
+      POJOJavaMapperImpl.class,
+      WorkspaceMapper.class
   })
   static class Configuration {}
 

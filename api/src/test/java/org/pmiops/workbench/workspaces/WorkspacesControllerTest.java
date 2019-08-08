@@ -222,7 +222,8 @@ public class WorkspacesControllerTest {
     CohortReviewServiceImpl.class,
     ReviewQueryBuilder.class,
     ConceptSetService.class,
-    ConceptSetsController.class
+    ConceptSetsController.class,
+    POJOJavaMapperImpl.class
   })
   @MockBean({
     BillingProjectBufferService.class,

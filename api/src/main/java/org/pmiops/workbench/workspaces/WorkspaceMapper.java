@@ -9,10 +9,18 @@ import org.pmiops.workbench.model.ResearchPurpose;
 import org.pmiops.workbench.model.UserRole;
 import org.pmiops.workbench.model.Workspace;
 import org.pmiops.workbench.model.WorkspaceAccessLevel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class WorkspaceMapper {
+
+  private POJOJavaMapper mapper;
+
+  @Autowired
+  public WorkspaceMapper(POJOJavaMapper pojoJavaMapper) {
+    this.mapper = pojoJavaMapper;
+  }
 
   public WorkspaceAccessLevel toApiWorkspaceAccessLevel(String firecloudAccessLevel) {
     if (firecloudAccessLevel.equals(WorkspaceService.PROJECT_OWNER_ACCESS_LEVEL)) {
@@ -25,7 +33,7 @@ public class WorkspaceMapper {
   public Workspace toApiWorkspace(
       org.pmiops.workbench.db.model.Workspace workspace,
       org.pmiops.workbench.firecloud.model.Workspace fcWorkspace) {
-    ResearchPurpose researchPurpose = createResearchPurpose(workspace);
+    ResearchPurpose researchPurpose = mapper.workspaceToResearchPurpose(workspace);
     if (workspace.getPopulation()) {
       researchPurpose.setPopulationDetails(new ArrayList<>(workspace.getSpecificPopulationsEnum()));
     }
@@ -42,6 +50,7 @@ public class WorkspaceMapper {
             .researchPurpose(researchPurpose)
             .published(workspace.getPublished())
             .googleBucketName(fcWorkspace.getBucketName());
+
     if (fcWorkspace.getCreatedBy() != null) {
       result.setCreator(fcWorkspace.getCreatedBy());
     }
@@ -112,33 +121,4 @@ public class WorkspaceMapper {
     dbWorkspace.setOtherPopulationDetails(purpose.getOtherPopulationDetails());
   }
 
-  private final ResearchPurpose createResearchPurpose(
-      org.pmiops.workbench.db.model.Workspace workspace) {
-    ResearchPurpose researchPurpose =
-        new ResearchPurpose()
-            .diseaseFocusedResearch(workspace.getDiseaseFocusedResearch())
-            .diseaseOfFocus(workspace.getDiseaseOfFocus())
-            .methodsDevelopment(workspace.getMethodsDevelopment())
-            .controlSet(workspace.getControlSet())
-            .ancestry(workspace.getAncestry())
-            .commercialPurpose(workspace.getCommercialPurpose())
-            .socialBehavioral(workspace.getSocialBehavioral())
-            .educational(workspace.getEducational())
-            .drugDevelopment(workspace.getDrugDevelopment())
-            .populationHealth(workspace.getPopulationHealth())
-            .otherPurpose(workspace.getOtherPurpose())
-            .otherPurposeDetails(workspace.getOtherPurposeDetails())
-            .population(workspace.getPopulation())
-            .reasonForAllOfUs(workspace.getReasonForAllOfUs())
-            .intendedStudy(workspace.getIntendedStudy())
-            .anticipatedFindings(workspace.getAnticipatedFindings())
-            .additionalNotes(workspace.getAdditionalNotes())
-            .reviewRequested(workspace.getReviewRequested())
-            .approved(workspace.getApproved())
-            .otherPopulationDetails(workspace.getOtherPopulationDetails());
-    if (workspace.getTimeRequested() != null) {
-      researchPurpose.timeRequested(workspace.getTimeRequested().getTime());
-    }
-    return researchPurpose;
-  }
 }
