@@ -17,40 +17,10 @@ public class WorkspaceMapper {
     this.mapper = pojoJavaMapper;
   }
 
-  public WorkspaceAccessLevel toApiWorkspaceAccessLevel(String firecloudAccessLevel) {
-    if (firecloudAccessLevel.equals(WorkspaceService.PROJECT_OWNER_ACCESS_LEVEL)) {
-      return WorkspaceAccessLevel.OWNER;
-    } else {
-      return WorkspaceAccessLevel.fromValue(firecloudAccessLevel);
-    }
-  }
-
   public Workspace toApiWorkspace(
       org.pmiops.workbench.db.model.Workspace workspace,
       org.pmiops.workbench.firecloud.model.Workspace fcWorkspace) {
-    ResearchPurpose researchPurpose = mapper.workspaceToResearchPurpose(workspace);
-
-    Workspace result =
-        new Workspace()
-            .etag(Etags.fromVersion(workspace.getVersion()))
-            .lastModifiedTime(workspace.getLastModifiedTime().getTime())
-            .creationTime(workspace.getCreationTime().getTime())
-            .dataAccessLevel(workspace.getDataAccessLevelEnum())
-            .name(workspace.getName())
-            .id(fcWorkspace.getName())
-            .namespace(fcWorkspace.getNamespace())
-            .researchPurpose(researchPurpose)
-            .published(workspace.getPublished())
-            .googleBucketName(fcWorkspace.getBucketName());
-
-    if (fcWorkspace.getCreatedBy() != null) {
-      result.setCreator(fcWorkspace.getCreatedBy());
-    }
-    if (workspace.getCdrVersion() != null) {
-      result.setCdrVersionId(String.valueOf(workspace.getCdrVersion().getCdrVersionId()));
-    }
-
-    return result;
+    return mapper.toApiWorkspace(workspace, fcWorkspace);
   }
 
   public org.pmiops.workbench.db.model.Workspace toDbWorkspace(Workspace workspace) {

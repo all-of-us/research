@@ -144,8 +144,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
               String fcWorkspaceAccessLevel =fcWorkspace.getAccessLevel();
               WorkspaceResponse currentWorkspace = new WorkspaceResponse();
               currentWorkspace.setWorkspace(workspaceMapper.toApiWorkspace(dbWorkspace, fcWorkspace.getWorkspace()));
-              currentWorkspace.setAccessLevel(
-                  workspaceMapper.toApiWorkspaceAccessLevel(fcWorkspaceAccessLevel));
+              currentWorkspace.setAccessLevel(pojoJavaMapper.fromFcAccessLevel(fcWorkspaceAccessLevel));
               return currentWorkspace;
             })
         .collect(Collectors.toList());

@@ -19,6 +19,7 @@ import org.mockito.MockitoAnnotations;
 import org.pmiops.workbench.cohorts.CohortCloningService;
 import org.pmiops.workbench.conceptset.ConceptSetService;
 import org.pmiops.workbench.db.dao.UserDao;
+import org.pmiops.workbench.db.model.CdrVersion;
 import org.pmiops.workbench.db.model.FirecloudWorkspaceId;
 import org.pmiops.workbench.firecloud.FireCloudService;
 import org.pmiops.workbench.firecloud.model.Workspace;
@@ -99,6 +100,7 @@ public class WorkspaceServiceTest {
     doReturn(mock(Timestamp.class)).when(workspace).getCreationTime();
     doReturn(name).when(workspace).getName();
     workspace.setWorkspaceActiveStatusEnum(activeStatus);
+    doReturn(mock(CdrVersion.class)).when(workspace).getCdrVersion();
     doReturn(mock(FirecloudWorkspaceId.class)).when(workspace).getFirecloudWorkspaceId();
     doReturn(firecloudUuid).when(workspace).getFirecloudUuid();
     return workspace;
