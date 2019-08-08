@@ -62,6 +62,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   private UserDao userDao;
   private WorkspaceDao workspaceDao;
   private WorkspaceMapper workspaceMapper;
+  private POJOJavaMapper pojoJavaMapper;
 
   private FireCloudService fireCloudService;
   private Clock clock;
@@ -74,7 +75,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
       FireCloudService fireCloudService,
       UserDao userDao,
       WorkspaceDao workspaceDao,
-      WorkspaceMapper workspaceMapper) {
+      WorkspaceMapper workspaceMapper,
+      POJOJavaMapper pojoJavaMapper) {
     this.clock = clock;
     this.cohortCloningService = cohortCloningService;
     this.conceptSetService = conceptSetService;
@@ -82,6 +84,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     this.userDao = userDao;
     this.workspaceDao = workspaceDao;
     this.workspaceMapper = workspaceMapper;
+    this.pojoJavaMapper = pojoJavaMapper;
   }
 
   /**
@@ -454,7 +457,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
       if (user == null) {
         log.log(Level.WARNING, "No user found for " + entry.getKey());
       } else {
-        userRoles.add(workspaceMapper.toApiUserRole(user, entry.getValue()));
+        UserRole userRole = pojoJavaMapper.userToUserRole(user);
+        userRole.setRole(WorkspaceAccessLevel.fromValue(entry.getValue().getAccessLevel()));
+        userRoles.add(userRole);
       }
     }
     return userRoles.stream()

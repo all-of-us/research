@@ -1,9 +1,7 @@
 package org.pmiops.workbench.workspaces;
 
 import org.pmiops.workbench.api.Etags;
-import org.pmiops.workbench.firecloud.model.WorkspaceAccessEntry;
 import org.pmiops.workbench.model.ResearchPurpose;
-import org.pmiops.workbench.model.UserRole;
 import org.pmiops.workbench.model.Workspace;
 import org.pmiops.workbench.model.WorkspaceAccessLevel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,16 +66,6 @@ public class WorkspaceMapper {
       mapper.mergeResearchPurposeIntoWorkspace(result, workspace.getResearchPurpose());
     }
 
-    return result;
-  }
-
-  public UserRole toApiUserRole(
-      org.pmiops.workbench.db.model.User user, WorkspaceAccessEntry aclEntry) {
-    UserRole result = new UserRole();
-    result.setEmail(user.getEmail());
-    result.setGivenName(user.getGivenName());
-    result.setFamilyName(user.getFamilyName());
-    result.setRole(WorkspaceAccessLevel.fromValue(aclEntry.getAccessLevel()));
     return result;
   }
 

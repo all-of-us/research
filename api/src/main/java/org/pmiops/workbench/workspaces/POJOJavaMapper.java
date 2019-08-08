@@ -9,19 +9,17 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.pmiops.workbench.db.dao.UserDao;
+import org.pmiops.workbench.db.model.User;
 import org.pmiops.workbench.db.model.Workspace;
 import org.pmiops.workbench.model.ResearchPurpose;
 import org.pmiops.workbench.model.SpecificPopulationEnum;
+import org.pmiops.workbench.model.UserRole;
 
 @Mapper(componentModel = "spring")
 public interface POJOJavaMapper {
-  POJODest sourceToDestination(POJOSource source);
-  POJOSource destinationToSource(POJODest destination);
 
-  @Mapping(source = "key.name", target = "name")
-  POJODest multiSource(POJOSource source, POJOSourceKey key);
-
-  POJOSuperDest transform(POJOSuperSource source);
+  UserRole userToUserRole(User user);
 
   ResearchPurpose workspaceToResearchPurpose(Workspace workspace);
 
