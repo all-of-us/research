@@ -311,7 +311,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
 
     dbWorkspace = workspaceService.getDao().save(dbWorkspace);
 
-    return ResponseEntity.ok(workspaceMapper.toApiWorkspace(dbWorkspace, fcWorkspace));
+    return ResponseEntity.ok(pojoJavaMapper.toApiWorkspace(dbWorkspace, fcWorkspace));
   }
 
   @Override
@@ -381,7 +381,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     // The version asserted on save is the same as the one we read via
     // getRequired() above, see RW-215 for details.
     dbWorkspace = workspaceService.saveWithLastModified(dbWorkspace);
-    return ResponseEntity.ok(workspaceMapper.toApiWorkspace(dbWorkspace, fcWorkspace));
+    return ResponseEntity.ok(pojoJavaMapper.toApiWorkspace(dbWorkspace, fcWorkspace));
   }
 
   @Override
@@ -544,7 +544,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     }
     return ResponseEntity.ok(
         new CloneWorkspaceResponse()
-            .workspace(workspaceMapper.toApiWorkspace(savedWorkspace, toFcWorkspace)));
+            .workspace(pojoJavaMapper.toApiWorkspace(savedWorkspace, toFcWorkspace)));
   }
 
   // A retry period is needed because the permission to copy files into the cloned workspace is not
@@ -628,7 +628,7 @@ public class WorkspacesController implements WorkspacesApiDelegate {
     List<org.pmiops.workbench.db.model.Workspace> workspaces = workspaceService.findForReview();
     response.setItems(
         workspaces.stream().map(workspace ->
-            workspaceMapper.toApiWorkspace(workspace,
+            pojoJavaMapper.toApiWorkspace(workspace,
                 fireCloudService.getWorkspace(workspace.getWorkspaceNamespace(), workspace.getFirecloudName()).getWorkspace()))
             .collect(Collectors.toList()));
     return ResponseEntity.ok(response);
