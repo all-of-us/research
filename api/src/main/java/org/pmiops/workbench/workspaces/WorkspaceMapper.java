@@ -34,9 +34,6 @@ public class WorkspaceMapper {
       org.pmiops.workbench.db.model.Workspace workspace,
       org.pmiops.workbench.firecloud.model.Workspace fcWorkspace) {
     ResearchPurpose researchPurpose = mapper.workspaceToResearchPurpose(workspace);
-    if (workspace.getPopulation()) {
-      researchPurpose.setPopulationDetails(new ArrayList<>(workspace.getSpecificPopulationsEnum()));
-    }
 
     Workspace result =
         new Workspace()

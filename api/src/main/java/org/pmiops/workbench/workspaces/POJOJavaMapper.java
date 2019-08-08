@@ -33,7 +33,7 @@ public interface POJOJavaMapper {
   }
 
   @AfterMapping
-  default void afterResearchPurpose(ResearchPurpose researchPurpose, @MappingTarget Workspace workspace) {
+  default void afterResearchPurpose(@MappingTarget ResearchPurpose researchPurpose, Workspace workspace) {
     if (researchPurpose.getPopulation()) {
       researchPurpose.setPopulationDetails(new ArrayList<>(workspace.getSpecificPopulationsEnum()));
     }
