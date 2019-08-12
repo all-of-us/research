@@ -2,24 +2,21 @@ import {Component} from '@angular/core';
 import * as fp from 'lodash/fp';
 import * as React from 'react';
 
-import {
-  serverConfigStore,
-  urlParamsStore, userProfileStore
-} from 'app/utils/navigation';
+import {serverConfigStore, urlParamsStore} from 'app/utils/navigation';
 
-import {ReactWrapperBase, withCurrentWorkspace, withQueryParams, withUserProfile} from '../../../utils';
-import {WorkspaceData} from '../../../utils/workspace-data';
-import {CdrVersion, ClusterStatus, Profile} from "../../../../generated/fetch";
-import {clusterApi} from "../../../services/swagger-fetch-clients";
-import {TRANSITIONAL_STATUSES} from "../reset-cluster-button";
+import {Button} from 'app/components/buttons';
+import {ClrIcon} from 'app/components/icons';
+import {NotebookIcon} from 'app/icons/notebook-icon';
+import {jupyterApi, notebooksApi, notebooksClusterApi} from 'app/services/notebooks-swagger-fetch-clients';
+import {clusterApi} from 'app/services/swagger-fetch-clients';
+import colors, {colorWithWhiteness} from 'app/styles/colors';
+import {reactStyles, ReactWrapperBase, withCurrentWorkspace, withQueryParams, withUserProfile} from 'app/utils';
+import {Kernels} from 'app/utils/notebook-kernels';
+import {WorkspaceData} from 'app/utils/workspace-data';
+import {Cluster, ClusterStatus, Profile} from 'generated/fetch';
+import {Spinner} from '../../../components/spinners';
 
 
-// TODO: use ClusterStatus in
-/* import {
-  Cluster,
-  ClusterStatus,
-} from 'generated/fetch/api';
- */
 enum Progress {
   Unknown,
   Initializing,
@@ -31,18 +28,26 @@ enum Progress {
   Loaded
 }
 
-// from reset-cluster-button.tsx -- todo: move to common class
-export const TRANSITIONAL_STATUSES = new Set<ClusterStatus>([
-  ClusterStatus.Creating,
-  ClusterStatus.Starting,
-  ClusterStatus.Stopping,
-  ClusterStatus.Deleting,
-]);
+const styles = reactStyles({
+  main: {
+    display: 'flex', flexDirection: 'column', marginLeft: '3rem', paddingTop: '1rem', width: '780px'
+  },
+  progressCard: {
+    height: '180px', width: '195px', borderRadius: '5px', backgroundColor: colors.white,
+    boxShadow: '0 0 2px 0 rgba(0,0,0,0.12), 0 3px 2px 0 rgba(0,0,0,0.12)', display: 'flex',
+    flexDirection: 'column', alignItems: 'center', padding: '1rem'
+  },
+  progressIcon: {
+    height: '46px', width: '46px', marginBottom: '5px',
+    fill: colorWithWhiteness(colors.primary, 0.9)
+  },
+  progressIconDone: {
+    fill: colors.success
+  }
+});
 
 
-
-
-//TODO: Q - props vs these structs
+// TODO: Q - props vs these structs
 const commonNotebookFormat = {
   'cells': [
     {
@@ -94,24 +99,54 @@ const pyNotebookMetadata = {
   }
 };
 
+const progressStateDependencies = [
+  {includes: [Progress.Unknown, Progress.Initializing, Progress.Resuming], icon: 'notebook'},
+  {includes: [Progress.Authenticating], icon: 'success-standard'},
+  {includes: [Progress.Creating, Progress.Copying], icon: 'copy'},
+  {includes: [Progress.Redirecting], icon: 'circle-arrow'}
+];
+
+const ProgressCard: React.FunctionComponent<{progressState: Progress, index: number}> =
+  ({index, progressState}) => {
+    const includesStates = progressStateDependencies[index].includes;
+    const icon = progressStateDependencies[index].icon;
+    const isCurrent = includesStates.includes(progressState);
+    const isComplete = progressState.valueOf() > includesStates.slice(-1).pop().valueOf();
+
+    return <div style={isCurrent ? {...styles.progressCard, backgroundColor: '#F2FBE9'} :
+      styles.progressCard}>
+      {isCurrent ? <Spinner style={{width: '46px', height: '46px'}}/> :
+        <React.Fragment>
+          {icon === 'notebook' ? <NotebookIcon style={styles.progressIcon}/> :
+          <ClrIcon shape={icon} style={isComplete ?
+            {...styles.progressIcon, ...styles.progressIconDone} : styles.progressIcon}/>}
+        </React.Fragment>}
+
+    </div>;
+  };
+
 interface State {
   progress: Progress;
+  progressComplete: Map<Progress, boolean>;
   creating: boolean;
+  cluster: Cluster;
   playgroundMode: boolean;
   jupyterLabMode: boolean;
   notebookName: string;
   fullNotebookName: string;
   useBillingProjectBuffer: boolean;
   freeTierBillingProjectName: string;
+  initialized: boolean;
 }
 
 interface Props {
-  // todo: do queryParams, workspacedata go in here?
+  workspace: WorkspaceData;
+  queryParams: any;
+  profileState: {profile: Profile, reload: Function, updateCache: Function};
 }
 
 export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(), withQueryParams())(
-  class extends React.Component<{workspace: WorkspaceData, queryParams: any,
-    profileState: {profile: Profile, reload: Function, updateCache: Function}}, State> {
+  class extends React.Component<Props, State> {
 
     private pollClusterTimer: NodeJS.Timer;
 
@@ -119,17 +154,19 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
       super(props);
       this.state = {
         progress: Progress.Unknown,
+        progressComplete: new Map<Progress, boolean>(),
         creating: !!props.queryParams.creating,
         playgroundMode: props.queryParams.playgroundMode === true,
         jupyterLabMode: props.queryParams.jupyterLabMode === true,
         notebookName: undefined,
         fullNotebookName: undefined,
         useBillingProjectBuffer: undefined,
-        freeTierBillingProjectName: undefined
+        freeTierBillingProjectName: undefined,
+        cluster: undefined,
+        initialized: false
       };
     }
 
-    // make this async?
     componentDidMount() {
       this.setNotebookNames();
 
@@ -137,41 +174,74 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
       this.setState({
         useBillingProjectBuffer: serverConfigStore.getValue().useBillingProjectBuffer,
         freeTierBillingProjectName: profile.freeTierBillingProjectName
-      }, function() {
-        // initialize
-
-        console.log('this.props.workspace.namespace: ' + this.props.workspace.namespace);
-        console.log('this.state.freeTierBillingProjectName: ' + this.state.freeTierBillingProjectName);
-        console.log('profile.freeTierBillingProjectName: ' + profile.freeTierBillingProjectName);
-
-
+      }, () => {
         if (this.state.useBillingProjectBuffer) {
           this.pollCluster(this.props.workspace.namespace);
         } else {
-          this.pollCluster(this.state.freeTierBillingProject);
+          this.pollCluster(this.state.freeTierBillingProjectName);
         }
-        // angular code for the above line -- todo: why does this use a flatmap?
-        // return  userProfileStore.asObservable()
-        //   .flatMap((profileStore) => {
-        //     return this.clusterService.listClusters(
-        //       profileStore.profile.freeTierBillingProjectName);
-        //   });
-        //
       });
 
+    }
 
-      // const c = resp.defaultCluster;
-      // if (c.status === ClusterStatus.Running) {
-      //   this.incrementProgress(Progress.Unknown);
-      // } else if (c.status === ClusterStatus.Starting ||
-      //   c.status === ClusterStatus.Stopping ||
-      //   c.status === ClusterStatus.Stopped) {
-      //   this.incrementProgress(Progress.Resuming);
-      // } else {
-      //   this.incrementProgress(Progress.Initializing);
-      // }
-      //
+    isClusterInProgress(cluster: Cluster): boolean {
+      return cluster.status === ClusterStatus.Starting ||
+        cluster.status === ClusterStatus.Stopping ||
+        cluster.status === ClusterStatus.Stopped;
+    }
 
+    async pollCluster(billingProjectId) {
+      const repoll = () => {
+        this.pollClusterTimer = setTimeout(() => this.pollCluster(billingProjectId), 15000);
+      };
+
+      try {
+        const resp = await clusterApi().listClusters(billingProjectId);
+        const cluster = resp.defaultCluster;
+        if (!this.state.initialized) {
+          if (cluster.status === ClusterStatus.Running) {
+            this.incrementProgress(Progress.Unknown);
+          } else if (this.isClusterInProgress(cluster)) {
+            this.incrementProgress(Progress.Resuming);
+          } else {
+            this.incrementProgress(Progress.Initializing);
+          }
+          this.setState({initialized: true});
+        }
+        console.log(cluster);
+
+        if (cluster.status === ClusterStatus.Running) {
+          this.setState({cluster: cluster});
+          this.incrementProgress(Progress.Authenticating);
+          await this.initializeNotebookCookies(cluster);
+          // TODO: add retries
+          const localizeRetry = 0;
+          const notebookLocation = await this.loadNotebook();
+
+          // console.log(notebookLocation);
+          // this.incrementProgress(Progress.Redirecting);
+          //
+          //
+          //
+          // setTimeout(() => {
+          //   this.incrementProgress(Progress.Loaded);
+          // }, 1000);
+
+        } else {
+          // If cluster is not running, keep re-polling until it is.
+          if (cluster.status === ClusterStatus.Stopped) {
+            await notebooksClusterApi().startCluster(cluster.clusterNamespace, cluster.clusterName);
+          }
+          await this.timeout(10000);
+          repoll();
+        }
+      } catch (e) {
+        repoll();
+      }
+    }
+
+    timeout(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     // this maybe overkill, but should handle all situations
@@ -189,34 +259,78 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
       }
     }
 
-    // from reset-cluster-button.tsx -- todo: move to common class
-    private pollCluster(billingProjectId): void {
-      const repoll = () => {
-        this.pollClusterTimer = setTimeout(() => this.pollCluster(billingProjectId), 15000);
-      };
-      clusterApi().listClusters(billingProjectId)
-        .then((body) => {
-          const cluster = body.defaultCluster;
-          if (TRANSITIONAL_STATUSES.has(cluster.status)) {
-            repoll();
-            return;
-          }
-          this.setState({cluster: cluster});
-        })
-        .catch(() => {
-          // Also retry on errors
-          repoll();
-        });
+    async initializeNotebookCookies(c: Cluster) {
+      return notebooksApi().setCookie(c.clusterNamespace, c.clusterName, {withCredentials: true});
+    }
+
+    async loadNotebook() {
+      const {fullNotebookName, playgroundMode} = this.state;
+      if (!this.state.creating) {
+        this.incrementProgress(Progress.Copying);
+        const localizedNotebookDir =
+          await this.localizeNotebooks([fullNotebookName], playgroundMode);
+        return `${localizedNotebookDir}/${fullNotebookName}`;
+      } else {
+        this.incrementProgress(Progress.Creating);
+        return this.newNotebook();
+      }
+    }
+
+    async localizeNotebooks(notebookNames: Array<string>, playgroundMode: boolean) {
+      const cluster = this.state.cluster;
+      const {workspace} = this.props;
+      const resp = await clusterApi().localize(cluster.clusterNamespace, cluster.clusterName,
+        {workspaceNamespace: workspace.namespace, workspaceId: workspace.id,
+          notebookNames: notebookNames, playgroundMode: playgroundMode});
+      return resp.clusterLocalDirectory;
+    }
+
+    incrementProgress(p: Progress): void {
+      this.setState({
+        progress: p,
+        progressComplete: this.state.progressComplete.set(p, true)
+      });
+    }
+
+    async newNotebook() {
+      const {cluster, notebookName} = this.state;
+      const fileContent = commonNotebookFormat;
+      const {kernelType} = this.props.queryParams.kernelspec;
+      if (kernelType === Kernels.R.toString()) {
+        fileContent.metadata = rNotebookMetadata;
+      } else {
+        fileContent.metadata = pyNotebookMetadata;
+      }
+      const localizedDir = await this.localizeNotebooks([], false);
+      // Use the Jupyter Server API directly to create a new notebook. This
+      // API handles notebook name collisions and matches the behavior of
+      // clicking 'new notebook' in the Jupyter UI.
+      const workspaceDir = localizedDir.replace(/^workspaces\//, '');
+      const jupyterResp = await jupyterApi().putContents(
+        cluster.clusterNamespace, cluster.clusterName, workspaceDir, notebookName + '.ipynb', {
+          'type': 'file',
+          'format': 'text',
+          'content': JSON.stringify(fileContent)
+        }
+      );
+      return `${localizedDir}/${jupyterResp.name}`;
     }
 
     render() {
-      console.log(this.props.queryParams);
-      console.log(this.state);
+      const {progress} = this.state;
       return <React.Fragment>
-        blahhh<br/>
-        freeTierBillingProject: {this.state.freeTierBillingProjectName}
-        <br/>
-        useBillingProjectBuffer: {this.state.useBillingProjectBuffer}
+        <div style={styles.main}>
+          <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+            <h2>Creating New Notebook: {this.state.notebookName}</h2>
+            <Button type='secondary' onClick={() => window.history.back()}>Cancel</Button>
+          </div>
+          <div style={{display: 'flex', flexDirection: 'row', marginTop: '1rem'}}>
+            {progressStateDependencies.map((_, i) => {
+              return <ProgressCard progressState={progress} index={i}/>;
+            })}
+          </div>
+
+        </div>
       </React.Fragment>;
     }
   });
@@ -230,225 +344,3 @@ export class NotebookRedirectComponent extends ReactWrapperBase {
   }
 }
 
-
-
-
-
-
-///0-0-0=0-0--0
-
-
-//
-// export class NotebookRedirectComponent implements OnInit, OnDestroy {
-//
-//   notebookName: string;
-//   fullNotebookName: string;
-//
-//   creating: boolean;
-//
-//   leoUrl: SafeResourceUrl;
-//
-//   private wsId: string;
-//   private wsNamespace: string;
-//   private jupyterLabMode = false;
-//   private loadingSub: Subscription;
-//   private cluster: Cluster;
-//   private progressComplete = new Map<Progress, boolean>();
-//   private playground = false;
-//
-//
-//   ngOnInit(): void {
-//     const {ns, wsid} = urlParamsStore.getValue();
-//     const {creating, playgroundMode, jupyterLabMode} = queryParamsStore.getValue();
-//     this.wsNamespace = ns;
-//     this.wsId = wsid;
-//     this.creating = creating || false;
-//     this.playground = playgroundMode === 'true';
-//     this.jupyterLabMode = jupyterLabMode === 'true';
-//     this.setNotebookNames();
-//
-//     let initializedProgress = false;
-//     this.loadingSub = serverConfigStore.asObservable()
-//       .flatMap(({useBillingProjectBuffer}) => {
-//         if (useBillingProjectBuffer) {
-//           return this.clusterService.listClusters(this.wsNamespace);
-//         }
-//         return  userProfileStore.asObservable()
-//           .flatMap((profileStore) => {
-//             return this.clusterService.listClusters(
-//               profileStore.profile.freeTierBillingProjectName);
-//           });
-//       })
-//       .do((resp) => {
-//         if (initializedProgress) {
-//           // Only initialize progress once. This callback will re-execute as we
-//           // poll the cluster's status.
-//           return;
-//         }
-//         const c = resp.defaultCluster;
-//         if (c.status === ClusterStatus.Running) {
-//           this.incrementProgress(Progress.Unknown);
-//         } else if (c.status === ClusterStatus.Starting ||
-//             c.status === ClusterStatus.Stopping ||
-//             c.status === ClusterStatus.Stopped) {
-//           this.incrementProgress(Progress.Resuming);
-//         } else {
-//           this.incrementProgress(Progress.Initializing);
-//         }
-//         initializedProgress = true;
-//       })
-//       .flatMap((resp) => {
-//         const c = resp.defaultCluster;
-//         if (c.status === ClusterStatus.Running) {
-//           return Observable.from([c]);
-//         } else if (c.status === ClusterStatus.Stopped) {
-//           // Resume the cluster and continue polling.
-//           return <Observable<Cluster>> this.leoClusterService
-//             .startCluster(c.clusterNamespace, c.clusterName)
-//             .flatMap(_ => {
-//               throw Error('resuming');
-//             });
-//         }
-//         throw Error(`cluster has status ${c.status}`);
-//       })
-//       .retryWhen(errs => this.clusterRetryDelay(errs))
-//       .do((c) => {
-//         this.cluster = c;
-//         this.incrementProgress(Progress.Authenticating);
-//       })
-//       .flatMap(c => this.initializeNotebookCookies(c))
-//       .flatMap(c => {
-//         let localizeObs: Observable<string>;
-//         // This will contain the Jupyter-local path to the localized notebook.
-//         if (!this.creating) {
-//           this.incrementProgress(Progress.Copying);
-//           localizeObs = this.localizeNotebooks([this.notebookName],
-//             this.playground)
-//             .map(localDir => `${localDir}/${this.notebookName}`);
-//         } else {
-//           this.incrementProgress(Progress.Creating);
-//           localizeObs = this.newNotebook();
-//         }
-//         // The cluster may be running, but we've observed some 504s on localize
-//         // right after it comes up. Retry here to mitigate that. The retry must
-//         // be on this inner observable to prevent resubscribing to upstream
-//         // observables (we just want to retry localization).
-//         return localizeObs.retry(3);
-//       })
-//       .subscribe((nbName) => {
-//         this.incrementProgress(Progress.Redirecting);
-//         if (this.creating) {
-//           window.history.replaceState({}, 'Notebook', 'workspaces/' + this.wsNamespace +
-//           '/' + this.wsId + '/notebooks/' + encodeURIComponent(this.fullNotebookName));
-//         }
-//         let url;
-//         if (this.jupyterLabMode) {
-//           url = this.jupyterLabUrl(this.cluster, nbName);
-//         } else {
-//           url = this.notebookUrl(this.cluster, nbName);
-//         }
-//         this.leoUrl = this.sanitizer
-//           .bypassSecurityTrustResourceUrl(url);
-//
-//         // Angular 2 only provides a load hook for iFrames
-//         // the load hook triggers on url definition, not on completion of url load
-//         // so instead just giving it a sec to "redirect"
-//         setTimeout(() => {
-//           this.incrementProgress(Progress.Loaded);
-//         }, 1000);
-//       });
-//   }
-//
-//   ngOnDestroy(): void {
-//     if (this.loadingSub) {
-//       this.loadingSub.unsubscribe();
-//     }
-//   }
-//
-//   // this maybe overkill, but should handle all situations
-//   setNotebookNames(): void {
-//     const {nbName} = urlParamsStore.getValue();
-//     this.notebookName =
-//       decodeURIComponent(nbName);
-//     if (nbName.endsWith('.ipynb')) {
-//       this.fullNotebookName =
-//         decodeURIComponent(nbName);
-//       this.notebookName = this.fullNotebookName.replace('.ipynb$', '');
-//     } else {
-//       this.notebookName =
-//         decodeURIComponent(nbName);
-//       this.fullNotebookName = this.notebookName + '.ipynb';
-//     }
-//   }
-
-//   private clusterRetryDelay(errs: Observable<Error>) {
-//     // Ideally we'd just call .delay(10000), but that doesn't work in
-//     // combination with fakeAsync(). This is a workaround for
-//     // https://github.com/angular/angular/issues/10127
-//     return errs.switchMap(v => timer(10000).pipe(mapTo(v)));
-//   }
-//
-//   private notebookUrl(cluster: Cluster, nbName: string): string {
-//     return encodeURI(
-//       environment.leoApiUrl + '/notebooks/'
-//         + cluster.clusterNamespace + '/'
-//         + cluster.clusterName + '/notebooks/' + nbName);
-//   }
-//
-//   private jupyterLabUrl(cluster: Cluster, nbName: string): string {
-//     return encodeURI(
-//       environment.leoApiUrl + '/notebooks/'
-//       + cluster.clusterNamespace + '/'
-//       + cluster.clusterName + '/lab/tree/' + nbName);
-//   }
-//
-//   private initializeNotebookCookies(c: Cluster): Observable<Cluster> {
-//     return this.leoNotebooksService.setCookieWithHttpInfo(c.clusterNamespace, c.clusterName, {
-//       withCredentials: true
-//     }).map(_ => c);
-//   }
-//
-//   private newNotebook(): Observable<string> {
-//     const fileContent = commonNotebookFormat;
-//     const {kernelType} = queryParamsStore.getValue();
-//     if (kernelType === Kernels.R.toString()) {
-//       fileContent.metadata = rNotebookMetadata;
-//     } else {
-//       fileContent.metadata = pyNotebookMetadata;
-//     }
-//     return this.localizeNotebooks([], false).flatMap((localDir) => {
-//       // Use the Jupyter Server API directly to create a new notebook. This
-//       // API handles notebook name collisions and matches the behavior of
-//       // clicking 'new notebook' in the Jupyter UI.
-//       const workspaceDir = localDir.replace(/^workspaces\//, '');
-//       return this.jupyterService.putContents(
-//         this.cluster.clusterNamespace, this.cluster.clusterName,
-//         workspaceDir, this.notebookName + '.ipynb', {
-//           'type': 'file',
-//           'format': 'text',
-//           'content': JSON.stringify(fileContent)
-//         }).map(resp => `${localDir}/${resp.name}`);
-//     });
-//   }
-//
-//   private localizeNotebooks(notebookNames: Array<string>,
-//     playgroundMode: boolean): Observable<string> {
-//     return this.clusterService
-//       .localize(this.cluster.clusterNamespace, this.cluster.clusterName, {
-//         workspaceNamespace: this.wsNamespace,
-//         workspaceId: this.wsId,
-//         notebookNames: notebookNames,
-//         playgroundMode: playgroundMode
-//       })
-//       .map(resp => resp.clusterLocalDirectory);
-//   }
-//
-//   navigateBack(): void {
-//     this.locationService.back();
-//   }
-//
-//   private incrementProgress(p: Progress): void {
-//     this.progressComplete[p] = true;
-//     this.progress = p;
-//   }
-// }
