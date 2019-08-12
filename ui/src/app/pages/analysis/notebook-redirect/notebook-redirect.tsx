@@ -3,12 +3,23 @@ import * as fp from 'lodash/fp';
 import * as React from 'react';
 
 import {
-  urlParamsStore
+  serverConfigStore,
+  urlParamsStore, userProfileStore
 } from 'app/utils/navigation';
 
-import {ReactWrapperBase, withCurrentWorkspace, withQueryParams} from '../../../utils';
+import {ReactWrapperBase, withCurrentWorkspace, withQueryParams, withUserProfile} from '../../../utils';
 import {WorkspaceData} from '../../../utils/workspace-data';
+import {CdrVersion, ClusterStatus, Profile} from "../../../../generated/fetch";
+import {clusterApi} from "../../../services/swagger-fetch-clients";
+import {TRANSITIONAL_STATUSES} from "../reset-cluster-button";
 
+
+// TODO: use ClusterStatus in
+/* import {
+  Cluster,
+  ClusterStatus,
+} from 'generated/fetch/api';
+ */
 enum Progress {
   Unknown,
   Initializing,
@@ -20,6 +31,18 @@ enum Progress {
   Loaded
 }
 
+// from reset-cluster-button.tsx -- todo: move to common class
+export const TRANSITIONAL_STATUSES = new Set<ClusterStatus>([
+  ClusterStatus.Creating,
+  ClusterStatus.Starting,
+  ClusterStatus.Stopping,
+  ClusterStatus.Deleting,
+]);
+
+
+
+
+//TODO: Q - props vs these structs
 const commonNotebookFormat = {
   'cells': [
     {
@@ -71,10 +94,26 @@ const pyNotebookMetadata = {
   }
 };
 
-export const NotebookRedirect = fp.flow(withCurrentWorkspace(), withQueryParams())(
-  class extends React.Component<{workspace: WorkspaceData, queryParams: any},
-  {creating: boolean, progress: Progress, playgroundMode: boolean, jupyterLabMode: boolean,
-    notebookName: string, fullNotebookName: string}> {
+interface State {
+  progress: Progress;
+  creating: boolean;
+  playgroundMode: boolean;
+  jupyterLabMode: boolean;
+  notebookName: string;
+  fullNotebookName: string;
+  useBillingProjectBuffer: boolean;
+  freeTierBillingProjectName: string;
+}
+
+interface Props {
+  // todo: do queryParams, workspacedata go in here?
+}
+
+export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(), withQueryParams())(
+  class extends React.Component<{workspace: WorkspaceData, queryParams: any,
+    profileState: {profile: Profile, reload: Function, updateCache: Function}}, State> {
+
+    private pollClusterTimer: NodeJS.Timer;
 
     constructor(props) {
       super(props);
@@ -83,13 +122,55 @@ export const NotebookRedirect = fp.flow(withCurrentWorkspace(), withQueryParams(
         creating: !!props.queryParams.creating,
         playgroundMode: props.queryParams.playgroundMode === true,
         jupyterLabMode: props.queryParams.jupyterLabMode === true,
-        notebookName: '',
-        fullNotebookName: ''
+        notebookName: undefined,
+        fullNotebookName: undefined,
+        useBillingProjectBuffer: undefined,
+        freeTierBillingProjectName: undefined
       };
     }
 
+    // make this async?
     componentDidMount() {
       this.setNotebookNames();
+
+      const {profileState: {profile}} = this.props;
+      this.setState({
+        useBillingProjectBuffer: serverConfigStore.getValue().useBillingProjectBuffer,
+        freeTierBillingProjectName: profile.freeTierBillingProjectName
+      }, function() {
+        // initialize
+
+        console.log('this.props.workspace.namespace: ' + this.props.workspace.namespace);
+        console.log('this.state.freeTierBillingProjectName: ' + this.state.freeTierBillingProjectName);
+        console.log('profile.freeTierBillingProjectName: ' + profile.freeTierBillingProjectName);
+
+
+        if (this.state.useBillingProjectBuffer) {
+          this.pollCluster(this.props.workspace.namespace);
+        } else {
+          this.pollCluster(this.state.freeTierBillingProject);
+        }
+        // angular code for the above line -- todo: why does this use a flatmap?
+        // return  userProfileStore.asObservable()
+        //   .flatMap((profileStore) => {
+        //     return this.clusterService.listClusters(
+        //       profileStore.profile.freeTierBillingProjectName);
+        //   });
+        //
+      });
+
+
+      // const c = resp.defaultCluster;
+      // if (c.status === ClusterStatus.Running) {
+      //   this.incrementProgress(Progress.Unknown);
+      // } else if (c.status === ClusterStatus.Starting ||
+      //   c.status === ClusterStatus.Stopping ||
+      //   c.status === ClusterStatus.Stopped) {
+      //   this.incrementProgress(Progress.Resuming);
+      // } else {
+      //   this.incrementProgress(Progress.Initializing);
+      // }
+      //
 
     }
 
@@ -108,11 +189,34 @@ export const NotebookRedirect = fp.flow(withCurrentWorkspace(), withQueryParams(
       }
     }
 
+    // from reset-cluster-button.tsx -- todo: move to common class
+    private pollCluster(billingProjectId): void {
+      const repoll = () => {
+        this.pollClusterTimer = setTimeout(() => this.pollCluster(billingProjectId), 15000);
+      };
+      clusterApi().listClusters(billingProjectId)
+        .then((body) => {
+          const cluster = body.defaultCluster;
+          if (TRANSITIONAL_STATUSES.has(cluster.status)) {
+            repoll();
+            return;
+          }
+          this.setState({cluster: cluster});
+        })
+        .catch(() => {
+          // Also retry on errors
+          repoll();
+        });
+    }
+
     render() {
       console.log(this.props.queryParams);
       console.log(this.state);
       return <React.Fragment>
-        blahhh
+        blahhh<br/>
+        freeTierBillingProject: {this.state.freeTierBillingProjectName}
+        <br/>
+        useBillingProjectBuffer: {this.state.useBillingProjectBuffer}
       </React.Fragment>;
     }
   });
@@ -125,6 +229,15 @@ export class NotebookRedirectComponent extends ReactWrapperBase {
     super(NotebookRedirect, []);
   }
 }
+
+
+
+
+
+
+///0-0-0=0-0--0
+
+
 //
 // export class NotebookRedirectComponent implements OnInit, OnDestroy {
 //
