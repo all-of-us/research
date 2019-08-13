@@ -2725,7 +2725,7 @@ definitions:
     required:
       - dataSetRequest
       - notebookName
-      - newNotebook
+      - createNotebookAndLocalize
     properties:
       dataSetRequest:
         $ref: "#/definitions/DataSetRequest"

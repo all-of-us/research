@@ -1,22 +1,24 @@
 import {Component} from '@angular/core';
 import * as fp from 'lodash/fp';
 import * as React from 'react';
+import Iframe from 'react-iframe';
 
 import {serverConfigStore, urlParamsStore} from 'app/utils/navigation';
 
 import {Button} from 'app/components/buttons';
 import {ClrIcon} from 'app/components/icons';
+import {Modal, ModalBody, ModalFooter, ModalTitle} from 'app/components/modals';
 import {Spinner} from 'app/components/spinners';
 import {NotebookIcon} from 'app/icons/notebook-icon';
-import {ReminderIconComponentReact} from 'app/icons/reminder';
+import {ReminderIcon} from 'app/icons/reminder';
 import {jupyterApi, notebooksApi, notebooksClusterApi} from 'app/services/notebooks-swagger-fetch-clients';
 import {clusterApi} from 'app/services/swagger-fetch-clients';
 import colors, {colorWithWhiteness} from 'app/styles/colors';
 import {reactStyles, ReactWrapperBase, withCurrentWorkspace, withQueryParams, withUserProfile} from 'app/utils';
 import {Kernels} from 'app/utils/notebook-kernels';
 import {WorkspaceData} from 'app/utils/workspace-data';
+import {environment} from 'environments/environment';
 import {Cluster, ClusterStatus, Profile} from 'generated/fetch';
-
 
 enum Progress {
   Unknown,
@@ -112,21 +114,21 @@ const progressCardStates = [
   {includes: [Progress.Redirecting], icon: 'circle-arrow'}
 ];
 
-const ProgressCard: React.FunctionComponent<{progressState: Progress, index: number,
+const ProgressCard: React.FunctionComponent<{currentState: Progress, index: number,
   progressComplete: Map<Progress, boolean>, creating: boolean}> =
-  ({index, progressState, progressComplete, creating}) => {
+  ({index, currentState, progressComplete, creating}) => {
     const includesStates = progressCardStates[index].includes;
     const icon = progressCardStates[index].icon;
-    const isCurrent = includesStates.includes(progressState);
-    const isComplete = progressState.valueOf() > includesStates.slice(-1).pop().valueOf();
+    const isCurrent = includesStates.includes(currentState);
+    const isComplete = currentState.valueOf() > includesStates.slice(-1).pop().valueOf();
 
     // Conditionally render card text
     const renderText = () => {
       switch (index) {
         case 0:
-          if (progressState === Progress.Unknown || progressComplete[Progress.Unknown]) {
+          if (currentState === Progress.Unknown || progressComplete[Progress.Unknown]) {
             return 'Connecting to the notebook server';
-          } else if (progressState === Progress.Initializing ||
+          } else if (currentState === Progress.Initializing ||
             progressComplete[Progress.Initializing]) {
             return 'Initializing notebook server, may take up to 10 minutes';
           } else {
@@ -144,6 +146,8 @@ const ProgressCard: React.FunctionComponent<{progressState: Progress, index: num
           return 'Redirecting to the notebook server';
       }
     };
+
+    // The last icon (Redirect) should be rotated 90 degrees
     const rotateIcon = () => {
       return icon === 'circle-arrow' ? 'rotate(90deg)' : undefined;
     };
@@ -165,17 +169,19 @@ const ProgressCard: React.FunctionComponent<{progressState: Progress, index: num
   };
 
 interface State {
+  cluster: Cluster;
+  creating: boolean;
+  freeTierBillingProjectName: string;
+  fullNotebookName: string;
+  initialized: boolean;
+  jupyterLabMode: boolean;
+  leoUrl: string;
+  localizationError: boolean;
+  notebookName: string;
+  playgroundMode: boolean;
   progress: Progress;
   progressComplete: Map<Progress, boolean>;
-  creating: boolean;
-  cluster: Cluster;
-  playgroundMode: boolean;
-  jupyterLabMode: boolean;
-  notebookName: string;
-  fullNotebookName: string;
   useBillingProjectBuffer: boolean;
-  freeTierBillingProjectName: string;
-  initialized: boolean;
 }
 
 interface Props {
@@ -192,17 +198,19 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
     constructor(props) {
       super(props);
       this.state = {
+        cluster: undefined,
+        creating: !!props.queryParams.creating,
+        freeTierBillingProjectName: undefined,
+        fullNotebookName: undefined,
+        initialized: false,
+        jupyterLabMode: props.queryParams.jupyterLabMode === true,
+        leoUrl: undefined,
+        localizationError: false,
+        notebookName: undefined,
+        playgroundMode: props.queryParams.playgroundMode === true,
         progress: Progress.Unknown,
         progressComplete: new Map<Progress, boolean>(),
-        creating: !!props.queryParams.creating,
-        playgroundMode: props.queryParams.playgroundMode === true,
-        jupyterLabMode: props.queryParams.jupyterLabMode === true,
-        notebookName: undefined,
-        fullNotebookName: undefined,
         useBillingProjectBuffer: undefined,
-        freeTierBillingProjectName: undefined,
-        cluster: undefined,
-        initialized: false
       };
     }
 
@@ -233,6 +241,7 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
       const repoll = () => {
         this.pollClusterTimer = setTimeout(() => this.pollCluster(billingProjectId), 15000);
       };
+      const {workspace} = this.props;
 
       try {
         const resp = await clusterApi().listClusters(billingProjectId);
@@ -252,18 +261,26 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
           this.setState({cluster: cluster});
           this.incrementProgress(Progress.Authenticating);
           await this.initializeNotebookCookies(cluster);
-          // TODO: add retries
-          const localizeRetry = 0;
-          const notebookLocation = await this.loadNotebook();
 
-          // console.log(notebookLocation);
-          // this.incrementProgress(Progress.Redirecting);
-          //
-          //
-          //
-          // setTimeout(() => {
-          //   this.incrementProgress(Progress.Loaded);
-          // }, 1000);
+          const notebookLocation = await this.getNotebookPathAndLocalize();
+          if (this.state.creating) {
+            window.history.replaceState({}, 'Notebook', 'workspaces/' + workspace.namespace
+              + '/' + workspace.id + '/notebooks/' +
+              encodeURIComponent(this.state.fullNotebookName));
+          }
+          let url;
+          if (this.state.jupyterLabMode) {
+            url = this.jupyterLabUrl(cluster, notebookLocation);
+          } else {
+            url = this.notebookUrl(cluster, notebookLocation);
+          }
+          this.setState({leoUrl: url});
+          this.incrementProgress(Progress.Redirecting);
+
+          // give it a second to "redirect"
+          setTimeout(() => {
+            this.incrementProgress(Progress.Loaded);
+          }, 1000);
 
         } else {
           // If cluster is not running, keep re-polling until it is.
@@ -280,6 +297,27 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
 
     timeout(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    incrementProgress(p: Progress): void {
+      this.setState({
+        progress: p,
+        progressComplete: this.state.progressComplete.set(p, true)
+      });
+    }
+
+    notebookUrl(cluster: Cluster, nbName: string): string {
+      return encodeURI(
+        environment.leoApiUrl + '/notebooks/'
+        + cluster.clusterNamespace + '/'
+        + cluster.clusterName + '/notebooks/' + nbName);
+    }
+
+    jupyterLabUrl(cluster: Cluster, nbName: string): string {
+      return encodeURI(
+        environment.leoApiUrl + '/notebooks/'
+        + cluster.clusterNamespace + '/'
+        + cluster.clusterName + '/lab/tree/' + nbName);
     }
 
     // this maybe overkill, but should handle all situations
@@ -301,36 +339,41 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
       return notebooksApi().setCookie(c.clusterNamespace, c.clusterName, {withCredentials: true});
     }
 
-    async loadNotebook() {
+    async getNotebookPathAndLocalize() {
       const {fullNotebookName, playgroundMode} = this.state;
       if (!this.state.creating) {
         this.incrementProgress(Progress.Copying);
         const localizedNotebookDir =
-          await this.localizeNotebooks([fullNotebookName], playgroundMode);
+          await this.localizeNotebooksWithRetry([fullNotebookName], playgroundMode);
         return `${localizedNotebookDir}/${fullNotebookName}`;
       } else {
         this.incrementProgress(Progress.Creating);
-        return this.newNotebook();
+        return this.createNotebookAndLocalize();
       }
     }
 
-    async localizeNotebooks(notebookNames: Array<string>, playgroundMode: boolean) {
+    async localizeNotebooksWithRetry(notebookNames: Array<string>,
+      playgroundMode: boolean, retryCount: number = 0) {
       const cluster = this.state.cluster;
       const {workspace} = this.props;
-      const resp = await clusterApi().localize(cluster.clusterNamespace, cluster.clusterName,
-        {workspaceNamespace: workspace.namespace, workspaceId: workspace.id,
-          notebookNames: notebookNames, playgroundMode: playgroundMode});
-      return resp.clusterLocalDirectory;
+      try {
+        const resp = await clusterApi().localize(cluster.clusterNamespace, cluster.clusterName,
+          {workspaceNamespace: workspace.namespace, workspaceId: workspace.id,
+            notebookNames: notebookNames, playgroundMode: playgroundMode});
+        return resp.clusterLocalDirectory;
+      } catch (error) {
+        retryCount += 1;
+        if (retryCount <= 3) {
+          console.error('retrying notebook localization');
+          this.localizeNotebooksWithRetry(notebookNames, playgroundMode, retryCount);
+        } else {
+          console.error(error);
+          this.setState({localizationError: true});
+        }
+      }
     }
 
-    incrementProgress(p: Progress): void {
-      this.setState({
-        progress: p,
-        progressComplete: this.state.progressComplete.set(p, true)
-      });
-    }
-
-    async newNotebook() {
+    async createNotebookAndLocalize() {
       const {cluster, notebookName} = this.state;
       const fileContent = commonNotebookFormat;
       const {kernelType} = this.props.queryParams.kernelspec;
@@ -339,7 +382,7 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
       } else {
         fileContent.metadata = pyNotebookMetadata;
       }
-      const localizedDir = await this.localizeNotebooks([], false);
+      const localizedDir = await this.localizeNotebooksWithRetry([], false);
       // Use the Jupyter Server API directly to create a new notebook. This
       // API handles notebook name collisions and matches the behavior of
       // clicking 'new notebook' in the Jupyter UI.
@@ -355,9 +398,9 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
     }
 
     render() {
-      const {creating, progress, progressComplete} = this.state;
+      const {creating, localizationError, progress, progressComplete} = this.state;
       return <React.Fragment>
-        <div style={styles.main}>
+        {progress !== Progress.Loaded ? <div style={styles.main}>
           <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
             <h2 style={{lineHeight: 0}}>
               Creating New Notebook: {this.state.notebookName}
@@ -366,25 +409,39 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
           </div>
           <div style={{display: 'flex', flexDirection: 'row', marginTop: '1rem'}}>
             {progressCardStates.map((_, i) => {
-              return <ProgressCard progressState={progress} index={i}
+              return <ProgressCard currentState={progress} index={i}
                                    creating={creating} progressComplete={progressComplete}/>;
             })}
           </div>
           <div style={styles.reminderText}>
-            <ReminderIconComponentReact
+            <ReminderIcon
               style={{height: '80px', width: '80px', marginRight: '0.5rem'}}/>
             It is All of Us data use policy that researchers should not make copies of
             or download individual-level data (including taking screenshots or other means
             of viewing individual-level data) outside of the All of Us research environment
             without approval from All of Us Resource Access Board (RAB).
           </div>
-        </div>
+        </div> : <div style={{height: '100%'}}>
+          <div style={{borderBottom: '5px solid #2691D0', width: '100%'}}/>
+          <Iframe frameBorder={0} url={this.state.leoUrl} width='100%' height='100%'/>
+        </div>}
+        {localizationError && <Modal>
+          <ModalTitle>
+            {creating ? 'Error creating notebook.' : 'Error fetching notebook'}
+          </ModalTitle>
+          <ModalBody>
+            Please refresh and try again.
+          </ModalBody>
+          <ModalFooter>
+            <Button type='secondary' onClick={() => window.history.back()}>Go Back</Button>
+          </ModalFooter>
+        </Modal>}
       </React.Fragment>;
     }
   });
 
 @Component({
-  template: '<div #root></div>'
+  template: '<div #root style="height: 100%"></div>'
 })
 export class NotebookRedirectComponent extends ReactWrapperBase {
   constructor() {
