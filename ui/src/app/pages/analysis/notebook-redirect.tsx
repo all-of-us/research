@@ -14,7 +14,14 @@ import {ReminderIcon} from 'app/icons/reminder';
 import {jupyterApi, notebooksApi, notebooksClusterApi} from 'app/services/notebooks-swagger-fetch-clients';
 import {clusterApi} from 'app/services/swagger-fetch-clients';
 import colors, {colorWithWhiteness} from 'app/styles/colors';
-import {reactStyles, ReactWrapperBase, withCurrentWorkspace, withQueryParams, withUserProfile} from 'app/utils';
+import {
+  reactStyles,
+  ReactWrapperBase,
+  timeout,
+  withCurrentWorkspace,
+  withQueryParams,
+  withUserProfile
+} from 'app/utils';
 import {Kernels} from 'app/utils/notebook-kernels';
 import {WorkspaceData} from 'app/utils/workspace-data';
 import {environment} from 'environments/environment';
@@ -154,7 +161,8 @@ const ProgressCard: React.FunctionComponent<{currentState: Progress, index: numb
 
     return <div style={isCurrent ? {...styles.progressCard, backgroundColor: '#F2FBE9'} :
       styles.progressCard}>
-      {isCurrent ? <Spinner style={{width: '46px', height: '46px'}}/> :
+      {isCurrent ? <Spinner style={{width: '46px', height: '46px'}}
+                            data-test-id={'progress-card-spinner-' + index}/> :
         <React.Fragment>
           {icon === 'notebook' ? <NotebookIcon style={styles.progressIcon}/> :
           <ClrIcon shape={icon} style={isComplete ?
@@ -287,16 +295,12 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
           if (cluster.status === ClusterStatus.Stopped) {
             await notebooksClusterApi().startCluster(cluster.clusterNamespace, cluster.clusterName);
           }
-          await this.timeout(10000);
+          await timeout(10000);
           repoll();
         }
       } catch (e) {
         repoll();
       }
-    }
-
-    timeout(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     incrementProgress(p: Progress): void {
@@ -401,15 +405,17 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
       const {creating, localizationError, progress, progressComplete} = this.state;
       return <React.Fragment>
         {progress !== Progress.Loaded ? <div style={styles.main}>
-          <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+          <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}
+               data-test-id='notebook-redirect'>
             <h2 style={{lineHeight: 0}}>
-              Creating New Notebook: {this.state.notebookName}
+              {creating ? 'Creating New Notebook: ' : 'Loading Notebook: '}
+              {this.state.notebookName}
             </h2>
             <Button type='secondary' onClick={() => window.history.back()}>Cancel</Button>
           </div>
           <div style={{display: 'flex', flexDirection: 'row', marginTop: '1rem'}}>
             {progressCardStates.map((_, i) => {
-              return <ProgressCard currentState={progress} index={i}
+              return <ProgressCard currentState={progress} index={i} key={i}
                                    creating={creating} progressComplete={progressComplete}/>;
             })}
           </div>

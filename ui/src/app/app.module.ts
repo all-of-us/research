@@ -28,7 +28,7 @@ import {RoutingSpinnerComponent} from './components/routing-spinner/component';
 import {AdminReviewWorkspaceComponent} from './pages/admin/admin-review-workspace';
 import {AdminUserComponent} from './pages/admin/admin-user';
 import {NotebookListComponent} from './pages/analysis/notebook-list';
-import {NotebookRedirectComponent} from './pages/analysis/notebook-redirect/notebook-redirect';
+import {NotebookRedirectComponent} from './pages/analysis/notebook-redirect';
 import {AppComponent, overriddenUrlKey} from './pages/app/component';
 import {CohortActionsComponent} from './pages/data/cohort/cohort-actions';
 import {CohortListComponent} from './pages/data/cohort/cohort-list';

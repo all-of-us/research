@@ -353,3 +353,12 @@ export const toggleIncludes = fp.curry((value, arr) => {
 export function sliceByHalfLength(obj) {
   return Math.ceil(obj.length / 2);
 }
+
+export function timeout(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// This is to allow the timeout function to be mocked in jest tests
+export const exportFunctions = {
+  timeout
+};
