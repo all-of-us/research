@@ -88,16 +88,18 @@ describe('NotebookRedirect', () => {
   it('redirect state should be "Initializing" until cluster is running', async() => {
     const wrapper = component();
     await waitOneTickAndUpdate(wrapper);
-    console.log(getCardSpinnerTestId(progressCardIds.initializing));
-    console.log(wrapper.find(getCardSpinnerTestId(progressCardIds.initializing)).debug());
     expect(wrapper
       .exists(getCardSpinnerTestId(progressCardIds.initializing)))
       .toBeTruthy();
     clusterStub.cluster.status = ClusterStatus.Running;
-
-    //await new Promise(resolve => setTimeout(resolve, 10000));
+    // TODO: not sure how to get repoll to actually happen, or if repoll is
+    // happening and we are just never changing the cluster status to running
+    // so it goes into an infinite loop waiting for the cluster.
     await waitOneTickAndUpdate(wrapper);
-    // jest.runAllTimers();
+    jest.runAllTimers();
+    await Promise.resolve();
+    await waitOneTickAndUpdate(wrapper);
+
     expect(wrapper
       .exists(getCardSpinnerTestId(progressCardIds.initializing)))
       .toBeFalsy();

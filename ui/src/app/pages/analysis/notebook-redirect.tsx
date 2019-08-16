@@ -17,7 +17,7 @@ import colors, {colorWithWhiteness} from 'app/styles/colors';
 import {
   reactStyles,
   ReactWrapperBase,
-  timeout,
+  exportFunctions,
   withCurrentWorkspace,
   withQueryParams,
   withUserProfile
@@ -236,7 +236,12 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
           this.pollCluster(this.state.freeTierBillingProjectName);
         }
       });
+    }
 
+    componentWillUnmount() {
+      if (this.pollClusterTimer) {
+        clearTimeout(this.pollClusterTimer);
+      }
     }
 
     isClusterInProgress(cluster: Cluster): boolean {
@@ -295,7 +300,8 @@ export const NotebookRedirect = fp.flow(withUserProfile(), withCurrentWorkspace(
           if (cluster.status === ClusterStatus.Stopped) {
             await notebooksClusterApi().startCluster(cluster.clusterNamespace, cluster.clusterName);
           }
-          await timeout(10000);
+          // TODO: I don't think we need to put a timeout here, since there is a timeout already on repoll
+          await exportFunctions.timeout(10000);
           repoll();
         }
       } catch (e) {
