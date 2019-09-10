@@ -1892,6 +1892,12 @@ def load_es_index(cmd_name, *args)
     "should eventually match elasticIndexBaseName in the cdr_versions_*.json " +
     "configurations. Defaults to 'cdr' for local runs")
 
+  op.add_option(
+    "--cdr-big-query-dataset [DATASET]",
+    ->(opts, v) { opts.query_dataset = v},
+    "CDR BigQuery dataset ID (including the project), e.g. 'all-of-us-ehr-dev.synthetic_cdr20180606' " +
+    "Defaults to 'all-of-us-ehr-dev.synthetic_cdr20180606' for local runs")
+
   # TODO(RW-2213): Generalize this subsampling approach for all local development work.
   op.add_option(
       "--participant-inclusion-inverse-prob [DENOMINATOR]",
@@ -1908,6 +1914,10 @@ def load_es_index(cmd_name, *args)
   if op.opts.cdr_version.nil?
     raise ArgumentError unless op.opts.env == "local"
     op.opts.cdr_version = 'cdr'
+  end
+  if op.opts.query_dataset.nil?
+    raise ArgumentError unless op.opts.env == "local"
+    op.opts.query_dataset = 'all-of-us-ehr-dev.synthetic_cdr20180606'
   end
 
   unless Workbench.in_docker?
@@ -1926,7 +1936,7 @@ def load_es_index(cmd_name, *args)
     ['--es-base-url', base_url],
     # Matches cdr_versions_local.json
     ['--cdr-version', op.opts.cdr_version],
-    ['--cdr-big-query-dataset', 'all-of-us-ehr-dev.synthetic_cdr20180606'],
+    ['--cdr-big-query-dataset', op.opts.query_dataset],
     ['--scratch-big-query-dataset', 'all-of-us-ehr-dev.workbench_elastic'],
     ['--scratch-gcs-bucket', 'all-of-us-workbench-test-elastic-exports'],
     ['--participant-inclusion-inverse-prob', op.opts.inverse_prob]
