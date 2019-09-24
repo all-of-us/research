@@ -418,8 +418,16 @@ https://docs.google.com/document/d/1N_TDTOi-moTH6wrXn1Ix4dwUlw4j8GT9OsL9yXYXYmY/
 
 ### Indexing
 
+Create person index locally
+
 ```
 ./project.rb load-es-index
+```
+
+Create person index for test
+
+```
+./project.rb load-es-index --query-project-id=all-of-us-workbench-test --cdr-version=synth_r_2019q1_1 --cdr-big-query-dataset=all-of-us-ehr-dev.synthetic_cdr20180606
 ```
 
 ### Development

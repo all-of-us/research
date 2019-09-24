@@ -1877,13 +1877,15 @@ Common.register_command({
 def load_es_index(cmd_name, *args)
   op = WbOptionsParser.new(cmd_name, args)
 
-  op.opts.env = "local"
   op.add_option(
-    "--environment [ENV]",
-    ->(opts, v) { opts.env = v},
-    "Environment to load into; 'local' or a GCP project name, e.g. " +
-    "'all-of-us-workbench-test'")
-  op.add_validator ->(opts) { raise ArgumentError unless ENVIRONMENTS.has_key? opts.env }
+    "--query-project-id [PROJECTID]",
+    ->(opts, v) { opts.query_project_id = v},
+    "Project ID, e.g. 'all-of-us-ehr-dev'. Defaults to 'all-of-us-ehr-dev' for local runs")
+  op.add_validator ->(opts) {
+    if !opts.query_project_id.nil?
+      raise ArgumentError unless ENVIRONMENTS.key? opts.query_project_id
+    end
+  }
 
   op.add_option(
     "--cdr-version [VERSION]",
@@ -1908,6 +1910,12 @@ def load_es_index(cmd_name, *args)
       "1M participant synthetic CDR), defaults to 1 for any other GCP project.")
   op.parse.validate
 
+  if op.opts.query_project_id.nil?
+    op.opts.query_project_id = 'all-of-us-ehr-dev'
+    op.opts.env = 'local'
+  else
+    op.opts.env = ENVIRONMENTS[op.opts.query_project_id]
+  end
   if op.opts.inverse_prob.nil?
     op.opts.inverse_prob = op.opts.env == "local" ? 1000 : 1
   end
@@ -1932,7 +1940,7 @@ def load_es_index(cmd_name, *args)
   # TODO(calbach): Parameterize most of these flags. For now this is hardcoded
   # to work against the synthetic CDR into a local ES (using test Workbench).
   create_flags = (([
-    ['--query-project-id', 'all-of-us-ehr-dev'],
+    ['--query-project-id', op.opts.query_project_id],
     ['--es-base-url', base_url],
     # Matches cdr_versions_local.json
     ['--cdr-version', op.opts.cdr_version],
