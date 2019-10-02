@@ -28,6 +28,14 @@ const styles = {
     fontFamily: 'Montserrat',
     fontSize: '14px',
     fontWeight: 400,
+  },
+  accountPageContainer: {
+    marginTop: '1rem',
+    paddingLeft: '3rem'
+  },
+  profilePageContainer: {
+    marginTop: '1rem',
+    width: '50%'
   }
 };
 
@@ -42,7 +50,7 @@ export const DropDownSection = (props) => {
 export const CheckBoxWithLabel = (props) => {
   return <div style={{display: 'flex', width: '9rem', marginBottom: '0.5rem'}}>
     <CheckBox style={{marginTop: '0.3rem'}}
-              checked={props.checked} onChange={(value) => props.onChange(value)}/>
+              checked={props.checked} onChange={(value) => props.onChange(value)} value={props.value}/>
     <div style={{paddingLeft: '0.5rem', paddingRight: '0.5rem'}}>
       <label style={{...styles.questionLabel, ...props.style}}>{props.label}</label>
     </div>
@@ -81,7 +89,11 @@ export class AccountCreationSurvey extends React.Component<AccountCreationSurvey
   }
 
   componentDidMount() {
-    this.setState({profile: this.profileObj});
+    if (this.isAccountStep) {
+      this.setState({profile: this.profileObj});
+    } else {
+      this.setState({profile: this.props.profile});
+    }
   }
 
   get profileObj() {
@@ -119,15 +131,51 @@ export class AccountCreationSurvey extends React.Component<AccountCreationSurvey
     this.setState(fp.set(['profile', 'demographicSurvey', attribute], value));
   }
 
+  get isAccountStep() {
+    return window.location.pathname === '/login';
+  }
+
+  previous() {
+    if (this.isAccountStep) {
+      this.props.setProfile(this.profileObj, 'accountCreation');
+    } else {
+      this.props.setProfile(null);
+    }
+  }
+
+  submit() {
+    if (this.isAccountStep) {
+      this.createAccount();
+    } else {
+      this.props.setProfile(this.profileObj);
+    }
+  }
+
+  isChecked(attribute, value) {
+    let b = false;
+    const {demographicSurvey} = this.state.profile;
+    demographicSurvey[attribute].forEach(attr => {
+      console.log(attr);
+      console.log(value);
+      if (attr === value) {
+        console.log('save');
+        b = true;
+        return b;
+      }
+    });
+    return b;
+  }
+
   render() {
     const {profile: {demographicSurvey}} = this.state;
-    return <div style={{marginTop: '1rem', paddingLeft: '3rem'}}>
-      <label style={{color: colors.primary, fontSize: 16}}>
+    return <div style={this.isAccountStep ? styles.accountPageContainer : styles.profilePageContainer}>
+      {this.isAccountStep ? <label style={{color: colors.primary, fontSize: 16}}>
         Please complete Step 2 of 2
-      </label>
+      </label> : ''}
       <ListPageHeader>
-        Demographics Survey <label style={{fontSize: '12px', fontWeight: 400}}>
-        (All Survey Fields are optional)</label>
+        Demographics Survey
+        {this.isAccountStep ? <label style={{fontSize: '12px', fontWeight: 400}}>
+        (All Survey Fields are optional)</label> : ''}
       </ListPageHeader>
 
       {/*Race section*/}
@@ -137,6 +185,7 @@ export class AccountCreationSurvey extends React.Component<AccountCreationSurvey
             return <CheckBoxWithLabel attribute='race' label={race.label}
                                       onChange={(value) => this.updateList('race', race.value)}
                                       value={race.value}/>; })
+
           }
         </div>
       </Section>
@@ -190,11 +239,11 @@ export class AccountCreationSurvey extends React.Component<AccountCreationSurvey
 
       <div style={{display: 'flex', paddingTop: '2rem'}}>
         <Button type='secondary' style={{marginRight: '1rem'}} disabled={this.state.creatingAccount}
-                onClick={() => this.props.setProfile(this.profileObj, 'accountCreation')}>
+                onClick={() => this.previous()}>
           Previous
         </Button>
         <Button type='primary' disabled={this.state.creatingAccount || this.state.creatingAccount}
-                onClick={() => this.createAccount()}>
+                onClick={() => this.submit()}>
           Submit
         </Button>
       </div>

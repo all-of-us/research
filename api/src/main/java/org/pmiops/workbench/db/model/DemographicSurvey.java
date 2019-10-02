@@ -2,6 +2,7 @@ package org.pmiops.workbench.db.model;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -12,13 +13,18 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.pmiops.workbench.model.Disability;
 import org.pmiops.workbench.model.Education;
 import org.pmiops.workbench.model.Ethnicity;
 import org.pmiops.workbench.model.Gender;
 import org.pmiops.workbench.model.Race;
+import org.pmiops.workbench.db.model.DemographicSurveyEnum;
 
 @Entity
 @Table(name = "demographic_survey")
@@ -35,10 +41,8 @@ public class DemographicSurvey {
   public DemographicSurvey() {}
 
   public DemographicSurvey(org.pmiops.workbench.model.DemographicSurvey demographicSurvey) {
-    this.race =
-        demographicSurvey.getRace().stream()
-            .map((race) -> DemographicSurveyEnum.raceToStorage(race))
-            .collect(Collectors.toList());
+    this.race = demographicSurvey.getRace().stream().map
+        ((race) -> DemographicSurveyEnum.raceToStorage(race)).collect(Collectors.toList());
     this.ethnicity = DemographicSurveyEnum.ethnicityToStorage(demographicSurvey.getEthnicity());
     this.gender =
         demographicSurvey.getGender().stream()
@@ -60,7 +64,8 @@ public class DemographicSurvey {
     this.id = demographic_survey_id;
   }
 
-  @ElementCollection(fetch = FetchType.LAZY)
+  @ElementCollection
+  @LazyCollection(LazyCollectionOption.FALSE)
   @CollectionTable(
       name = "demographic_survey_race",
       joinColumns = @JoinColumn(name = "demographic_survey_id"))
@@ -94,6 +99,7 @@ public class DemographicSurvey {
             .collect(Collectors.toList());
   }
 
+
   @Column(name = "ethnicity")
   public Short getEthnicity() {
     return ethnicity;
@@ -113,7 +119,8 @@ public class DemographicSurvey {
     this.ethnicity = DemographicSurveyEnum.ethnicityToStorage(ethnicity);
   }
 
-  @ElementCollection(fetch = FetchType.LAZY)
+  @ElementCollection
+  @LazyCollection(LazyCollectionOption.FALSE)
   @CollectionTable(
       name = "demographic_survey_gender",
       joinColumns = @JoinColumn(name = "demographic_survey_id"))
@@ -146,6 +153,8 @@ public class DemographicSurvey {
                 })
             .collect(Collectors.toList());
   }
+
+
 
   @Column(name = "year_of_birth")
   public int getYear_of_birth() {

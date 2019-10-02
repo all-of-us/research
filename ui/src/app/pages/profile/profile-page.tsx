@@ -10,14 +10,18 @@ import {TextArea, TextInput, ValidationError} from 'app/components/inputs';
 import {TooltipTrigger} from 'app/components/popups';
 import {SpinnerOverlay} from 'app/components/spinners';
 import { getRegistrationTasksMap } from 'app/pages/homepage/registration-dashboard';
-import { ProfileRegistrationStepStatus } from 'app/pages/profile/profile-registration-step-status';
 import {profileApi} from 'app/services/swagger-fetch-clients';
 import colors, {colorWithWhiteness} from 'app/styles/colors';
 import {reactStyles, ReactWrapperBase, withUserProfile} from 'app/utils';
 import {serverConfigStore} from 'app/utils/navigation';
 import {environment} from 'environments/environment';
 import {Profile} from 'generated/fetch';
-
+import {Gender, Race} from 'generated/fetch';
+import {
+  InstitutionAffiliation
+} from '../../utils/institutionAffiliation';
+import {AccountCreationSurvey} from '../login/account-creation/account-creation-survey';
+import {ProfileRegistrationStepStatus} from './profile-registration-step-status';
 
 
 const styles = reactStyles({
@@ -63,17 +67,34 @@ const validators = {
   areaOfResearch: required,
 };
 
-export const ProfilePage = withUserProfile()(class extends React.Component<
-  { profileState: { profile: Profile, reload: Function } },
-  { profileEdits: Profile, updating: boolean }
-> {
+export interface ProfileProp {
+  profileState: { profile: Profile, reload: Function };
+}
+
+export interface ProfileState {
+  profileEdits: Profile;
+  showSurvey: boolean;
+  updating: boolean;
+}
+
+export const ProfilePage = withUserProfile()(class extends React.Component<ProfileProp, ProfileState> {
   static displayName = 'ProfilePage';
 
   constructor(props) {
     super(props);
 
     this.state = {
-      profileEdits: props.profileState.profile || {},
+      profileEdits: props.profileState.profile || {
+        demographicSurvey: {
+          race: [] as Race[],
+          ethnicity: undefined,
+          gender: [] as Gender[],
+          yearOfBirth: 0,
+          education: undefined,
+          disability: false
+        }
+      },
+      showSurvey: false,
       updating: false
     };
   }
@@ -91,6 +112,20 @@ export const ProfilePage = withUserProfile()(class extends React.Component<
     }
   }
 
+  setSurvey(profile) {
+    if (profile) {
+      const demographicSurvey = profile.demographicSurvey;
+      const profileEdits = {
+        ...this.state.profileEdits,
+        demographicSurvey
+      };
+      this.setState({profileEdits: profileEdits, showSurvey: false}, () => this.saveProfile());
+    } else {
+      this.setState({showSurvey: false});
+    }
+  }
+
+
   async saveProfile() {
     const {profileState: {reload}} = this.props;
 
@@ -104,6 +139,20 @@ export const ProfilePage = withUserProfile()(class extends React.Component<
     } finally {
       this.setState({updating: false});
     }
+  }
+
+  updateAffiliations(affiliations) {
+    this.setState(fp.set(['profileEdits', 'institutionalAffiliations'], affiliations));
+    this.saveProfile();
+  }
+
+
+  get surveyComplete() {
+    const demographicSurvey = this.props.profileState.profile.demographicSurvey;
+    return demographicSurvey && demographicSurvey.gender !== null && demographicSurvey.gender.length > 0
+         && demographicSurvey.yearOfBirth !== null &&
+        demographicSurvey.race !== null && demographicSurvey.race.length > 0 &&
+        demographicSurvey.ethnicity !== null && demographicSurvey.education !== null;
   }
 
   render() {
@@ -148,28 +197,35 @@ export const ProfilePage = withUserProfile()(class extends React.Component<
       </div>;
     };
 
+    const Section = (props) => {
+      return <div style={{marginBottom: '1.2rem'}}>
+        <div style={{...styles.h1, marginBottom: '0.5rem'}}>{props.header}</div>
+        <label style={{color: colors.primary}}>{props.children}</label>
+      </div>;
+    };
+
     return <div style={{margin: '35px 35px 100px 45px'}}>
       {(!profile || updating) && <SpinnerOverlay/>}
       <div style={{...styles.h1, marginBottom: 30}}>Profile</div>
-      <div style={{display: 'flex'}}>
+      {!this.state.showSurvey && <div style={{display: 'flex'}}>
 
-        <div style={{flex: '1 0 520px', paddingRight: 26}}>
-          <div style={{display: 'flex'}}>
-            {makeProfileInput({
-              title: 'First Name',
-              valueKey: 'givenName'
-            })}
-            {makeProfileInput({
-              title: 'Last Name',
-              valueKey: 'familyName'
-            })}
-          </div>
+      {!environment.enableAccountPages && <div style={{flex: '1 0 520px', paddingRight: 26}}>
+        <div style={{display: 'flex'}}>
           {makeProfileInput({
-            title: 'Contact Email',
-            valueKey: 'contactEmail',
-            disabled: true
+            title: 'First Name',
+            valueKey: 'givenName'
           })}
-          <div style={styles.inputLabel}>Username</div>
+          {makeProfileInput({
+            title: 'Last Name',
+            valueKey: 'familyName'
+          })}
+        </div>
+        {makeProfileInput({
+          title: 'Contact Email',
+          valueKey: 'contactEmail',
+          disabled: true
+        })}
+        <div style={styles.inputLabel}>Username</div>
           <div style={{
             paddingLeft: '0.5rem', marginBottom: 20,
             height: '1.5rem',
@@ -275,7 +331,30 @@ export const ProfilePage = withUserProfile()(class extends React.Component<
               </Button>
             </TooltipTrigger>
           </div>
-        </div>
+        </div>}
+      {environment.enableAccountPages && <div style={{flex: '1 0 520px', paddingRight: 26}}>
+          <Section header='Name'>
+            {profile.givenName} {profile.familyName}
+          </Section>
+          <Section header='Email'>
+            {profile.contactEmail}
+          </Section>
+          <Section header='Address'>
+            {profile && profile.address && profile.address.streetAddress1}
+            {profile && profile.address && profile.address.streetAddress2}
+            {profile && profile.address && profile.address.city}
+            {profile && profile.address && profile.address.state}
+            {profile && profile.address && profile.address.zipCode}
+            {profile && profile.address && profile.address.country}
+          </Section>
+          <Section header='User name'>
+            {profile && profile.username}
+          </Section>
+          <Section header='Institution Affiliation'>
+            <InstitutionAffiliation affiliations={profile.institutionalAffiliations}
+            updateProfile={(affiliations) => this.updateAffiliations(affiliations)}></InstitutionAffiliation>
+          </Section>
+        </div>}
 
         <div>
           <ProfileRegistrationStepStatus
@@ -342,9 +421,16 @@ export const ProfilePage = withUserProfile()(class extends React.Component<
               View current agreement
             </a>
           </ProfileRegistrationStepStatus>}
+          {/*TO DO CHANGE THE DATE TIME*/}
+          {environment.enableAccountPages && <ProfileRegistrationStepStatus
+              completeStep={() => this.setState({showSurvey: true})}
+              title='Demographic Survey' incompleteButtonText='Complete Survey'
+              wasBypassed={false} isComplete={this.surveyComplete} completedButtonText='Completed'
+              completionTimestamp={''}/>}
         </div>
-
-      </div>
+      </div>}
+      {this.state.showSurvey && <AccountCreationSurvey invitationKey='' profile={profileEdits}
+                                                       setProfile={(obj) => this.setSurvey(obj)}/>}
     </div>;
   }
 });

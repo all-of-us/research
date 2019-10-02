@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.pmiops.workbench.db.dao.UserDao;
+import org.pmiops.workbench.db.model.DemographicSurveyEnum;
 import org.pmiops.workbench.db.model.User;
 import org.pmiops.workbench.model.Address;
 import org.pmiops.workbench.model.DemographicSurvey;
@@ -26,9 +27,12 @@ public class ProfileService {
             public InstitutionalAffiliation apply(
                 org.pmiops.workbench.db.model.InstitutionalAffiliation institutionalAffiliation) {
               InstitutionalAffiliation result = new InstitutionalAffiliation();
-              result.setRole(institutionalAffiliation.getRole());
-              result.setInstitution(institutionalAffiliation.getInstitution());
-
+              if (institutionalAffiliation != null) {
+                result.setRole(institutionalAffiliation.getRole());
+                result.setInstitution(institutionalAffiliation.getInstitution());
+                result.setNonAcademicAffiliation(institutionalAffiliation.getNonAcademicAffiliationEnum());
+                result.setOther(institutionalAffiliation.getOther());
+              }
               return result;
             }
           };
@@ -56,8 +60,10 @@ public class ProfileService {
                 result.setDisability(demographicSurvey.getDisabilityEnum().equals(Disability.TRUE));
               result.setEducation(demographicSurvey.getEducationEnum());
               result.setEthnicity(demographicSurvey.getEthnicityEnum());
-              result.setGender(demographicSurvey.getGenderEnum());
-              result.setRace(demographicSurvey.getRaceEnum());
+              result.setGender(demographicSurvey.getGender().stream().map
+                  ((gender) -> DemographicSurveyEnum.genderFromStorage(gender)).collect(Collectors.toList()));
+              result.setRace(demographicSurvey.getRace().stream()
+                  .map((race) -> DemographicSurveyEnum.raceFromStorage(race)).collect(Collectors.toList()));
               result.setYearOfBirth(BigDecimal.valueOf(demographicSurvey.getYear_of_birth()));
 
               return result;
@@ -186,6 +192,8 @@ public class ProfileService {
     }
     if (user.getDemographicSurvey() != null) {
       profile.setDemographicSurvey(TO_CLIENT_DEMOGRAPHIC_SURVEY.apply(user.getDemographicSurvey()));
+    } else {
+      profile.setDemographicSurvey(new DemographicSurvey());
     }
     if (user.getAddress() != null) {
       profile.setAddress(TO_CLIENT_ADDRESS_SURVEY.apply(user.getAddress()));
