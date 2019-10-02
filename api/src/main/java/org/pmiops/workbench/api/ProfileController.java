@@ -267,10 +267,12 @@ public class ProfileController implements ProfileApiDelegate {
       validateStringLength(profile.getOrganization(), "Organization", 255, 1);
       validateStringLength(profile.getAreaOfResearch(), "Current Research", 3000, 1);
     } else {
-      validateStringLength(profile.getAddress().getStreetAddress1(), "Street Address 1", 255, 5);
-      validateStringLength(profile.getAddress().getCity(), "City", 3000, 1);
-      validateStringLength(profile.getAddress().getState(), "State", 3000, 1);
-      validateStringLength(profile.getAddress().getCountry(), "Country", 3000, 2);
+      if(profile.getAddress() != null) {
+        validateStringLength(profile.getAddress().getStreetAddress1(), "Street Address 1", 255, 5);
+        validateStringLength(profile.getAddress().getCity(), "City", 3000, 1);
+        validateStringLength(profile.getAddress().getState(), "State", 3000, 1);
+        validateStringLength(profile.getAddress().getCountry(), "Country", 3000, 2);
+      }
     }
   }
 
