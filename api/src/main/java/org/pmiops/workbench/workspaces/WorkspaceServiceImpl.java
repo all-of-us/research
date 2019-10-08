@@ -1,6 +1,5 @@
 package org.pmiops.workbench.workspaces;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -14,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -40,7 +40,6 @@ import org.pmiops.workbench.firecloud.model.WorkspaceACL;
 import org.pmiops.workbench.firecloud.model.WorkspaceACLUpdate;
 import org.pmiops.workbench.firecloud.model.WorkspaceACLUpdateResponseList;
 import org.pmiops.workbench.firecloud.model.WorkspaceAccessEntry;
-import org.pmiops.workbench.model.RecentWorkspace;
 import org.pmiops.workbench.model.UserRole;
 import org.pmiops.workbench.model.WorkspaceAccessLevel;
 import org.pmiops.workbench.model.WorkspaceActiveStatus;
@@ -509,45 +508,48 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     long userId = userProvider.get().getUserId();
     List<UserRecentWorkspace> userRecentWorkspaces =
         userRecentWorkspaceDao.findByUserIdOrderByLastAccessDateDesc(userId);
-    enforceFirecloudAclsInRecentWorkspaces(userRecentWorkspaces);
-    return userRecentWorkspaceDao.findByUserIdOrderByLastAccessDateDesc(userId);
+    return pruneInaccessibleRecentWorkspaces(userRecentWorkspaces);
   }
 
-  private List<UserRecentWorkspace> enforceFirecloudAclsInRecentWorkspaces(List<UserRecentWorkspace> recentWorkspaces) {
+  private List<UserRecentWorkspace> pruneInaccessibleRecentWorkspaces(
+      List<UserRecentWorkspace> recentWorkspaces) {
     List<Workspace> dbWorkspaces =
         workspaceDao.findAllByWorkspaceIdIn(
             recentWorkspaces.stream()
                 .map(UserRecentWorkspace::getWorkspaceId)
                 .collect(Collectors.toList()));
 
-    final String email = userProvider.get().getEmail();
-    ImmutableList<Long> idsToDelete =
+    Set<Long> idsToDelete =
         dbWorkspaces.stream()
-            .filter(workspace -> {
-              try {
-                enforceWorkspaceAccessLevel(workspace.getWorkspaceNamespace(), workspace.getName(), WorkspaceAccessLevel.READER);
-              } catch (ForbiddenException | NotFoundException e) {
-                return true;
-              }
-              return false;
-            })
+            .filter(
+                workspace -> {
+                  try {
+                    enforceWorkspaceAccessLevel(
+                        workspace.getWorkspaceNamespace(),
+                        workspace.getName(),
+                        WorkspaceAccessLevel.READER);
+                  } catch (ForbiddenException | NotFoundException e) {
+                    return true;
+                  }
+                  return false;
+                })
             .map(Workspace::getWorkspaceId)
-            .collect(ImmutableList.toImmutableList());
+            .collect(Collectors.toSet());
 
     if (!idsToDelete.isEmpty()) {
       userRecentWorkspaceDao.deleteByWorkspaceIdIn(idsToDelete);
     }
 
     return recentWorkspaces.stream()
-            .filter(recentWorkspace -> !idsToDelete.contains(recentWorkspace.getWorkspaceId()))
-            .collect(Collectors.toList());
+        .filter(recentWorkspace -> !idsToDelete.contains(recentWorkspace.getWorkspaceId()))
+        .collect(Collectors.toList());
   }
 
   @Override
   public UserRecentWorkspace updateRecentWorkspaces(
-      long workspaceId, long userId, Timestamp lastAccessDate) {
+      Workspace workspace, long userId, Timestamp lastAccessDate) {
     Optional<UserRecentWorkspace> maybeRecentWorkspace =
-        userRecentWorkspaceDao.findFirstByWorkspaceIdAndUserId(workspaceId, userId);
+        userRecentWorkspaceDao.findFirstByWorkspaceIdAndUserId(workspace.getWorkspaceId(), userId);
     final UserRecentWorkspace matchingRecentWorkspace =
         maybeRecentWorkspace
             .map(
@@ -555,17 +557,17 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                   recentWorkspace.setLastAccessDate(lastAccessDate);
                   return recentWorkspace;
                 })
-            .orElseGet(() -> new UserRecentWorkspace(workspaceId, userId, lastAccessDate));
+            .orElseGet(
+                () -> new UserRecentWorkspace(workspace.getWorkspaceId(), userId, lastAccessDate));
     userRecentWorkspaceDao.save(matchingRecentWorkspace);
     handleWorkspaceLimit(userId);
     return matchingRecentWorkspace;
   }
 
   @Override
-  public UserRecentWorkspace updateRecentWorkspaces(long workspaceId) {
-    long userId = userProvider.get().getUserId();
-    Timestamp now = new Timestamp(clock.instant().toEpochMilli());
-    return updateRecentWorkspaces(workspaceId, userId, now);
+  public UserRecentWorkspace updateRecentWorkspaces(Workspace workspace) {
+    return updateRecentWorkspaces(
+        workspace, userProvider.get().getUserId(), new Timestamp(clock.instant().toEpochMilli()));
   }
 
   private void handleWorkspaceLimit(long userId) {
@@ -592,32 +594,5 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     } else {
       return false;
     }
-  }
-
-  @Override
-  public List<RecentWorkspace> buildRecentWorkspaceList(
-      List<UserRecentWorkspace> userRecentWorkspaces) {
-    return userRecentWorkspaces.stream()
-        .map(
-            userRecentWorkspace -> {
-              org.pmiops.workbench.db.model.Workspace dbWorkspace =
-                  this.findByWorkspaceId(userRecentWorkspace.getWorkspaceId());
-              WorkspaceAccessLevel accessLevel =
-                  this.getWorkspaceAccessLevel(
-                      dbWorkspace.getWorkspaceNamespace(), dbWorkspace.getFirecloudName());
-              return buildRecentWorkspace(dbWorkspace, userRecentWorkspace, accessLevel);
-            })
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public RecentWorkspace buildRecentWorkspace(
-      org.pmiops.workbench.db.model.Workspace dbWorkspace,
-      UserRecentWorkspace userRecentWorkspace,
-      WorkspaceAccessLevel accessLevel) {
-    return new RecentWorkspace()
-            .workspace(workspaceMapper.toApiWorkspace(dbWorkspace))
-            .accessedTime(userRecentWorkspace.getLastAccessDate().toString())
-            .accessLevel(accessLevel);
   }
 }
