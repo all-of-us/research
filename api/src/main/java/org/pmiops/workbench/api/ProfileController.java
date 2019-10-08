@@ -24,7 +24,6 @@ import org.pmiops.workbench.config.WorkbenchConfig;
 import org.pmiops.workbench.config.WorkbenchEnvironment;
 import org.pmiops.workbench.db.dao.UserDao;
 import org.pmiops.workbench.db.dao.UserService;
-import org.pmiops.workbench.db.model.DemographicSurveyEnum;
 import org.pmiops.workbench.db.model.User;
 import org.pmiops.workbench.exceptions.BadRequestException;
 import org.pmiops.workbench.exceptions.ConflictException;
@@ -147,13 +146,12 @@ public class ProfileController implements ProfileApiDelegate {
           new Function<DemographicSurvey, org.pmiops.workbench.db.model.DemographicSurvey>() {
             @Override
             public org.pmiops.workbench.db.model.DemographicSurvey apply(
-                DemographicSurvey demographicSurvey) {
+                DemographicSurvey demographicSurvey
+            ) {
               org.pmiops.workbench.db.model.DemographicSurvey result =
                   new org.pmiops.workbench.db.model.DemographicSurvey();
               if (demographicSurvey.getRace() != null) {
-                result.setRace(demographicSurvey.getRace().stream().map(
-                    (race) -> DemographicSurveyEnum.raceToStorage(race))
-                    .collect(Collectors.toList()));
+                result.setRaceEnum(demographicSurvey.getRace());
               }
               if (demographicSurvey.getEthnicity() != null)
                 result.setEthnicityEnum(demographicSurvey.getEthnicity());
@@ -163,9 +161,7 @@ public class ProfileController implements ProfileApiDelegate {
               if (demographicSurvey.getEducation() != null)
                 result.setEducationEnum(demographicSurvey.getEducation());
               if (demographicSurvey.getGender() != null) {
-                result.setGender(demographicSurvey.getGender().stream()
-                    .map((gender) -> DemographicSurveyEnum.genderToStorage(gender))
-                    .collect(Collectors.toList()));
+                result.setGenderEnum(demographicSurvey.getGender());
               }
               if (demographicSurvey.getDisability() != null)
                 result.setDisabilityEnum(
@@ -649,7 +645,6 @@ public class ProfileController implements ProfileApiDelegate {
       user.getDemographicSurvey().setUser(user);
     }
 
-
     if (updatedProfile.getContactEmail() != null
         && !updatedProfile.getContactEmail().equals(user.getContactEmail())) {
       // See RW-1488.
@@ -670,11 +665,20 @@ public class ProfileController implements ProfileApiDelegate {
       affiliation.setOrderIndex(i);
       affiliation.setUser(user);
       if (oldAffilations.hasNext()) {
-        org.pmiops.workbench.db.model.InstitutionalAffiliation oldAffilation =
+        org.pmiops.workbench.db.model.InstitutionalAffiliation oldAffiliation =
             oldAffilations.next();
-        if (!oldAffilation.getRole().equals(affiliation.getRole())
-      || (oldAffilation.getNonAcademicAffiliation() !=null && !oldAffilation.getNonAcademicAffiliation().equals(affiliation.getNonAcademicAffiliation()))
-            || (oldAffilation.getInstitution() !=null && !oldAffilation.getInstitution().equals(affiliation.getInstitution()))) {
+        if (
+            !oldAffiliation.getRole().equals(affiliation.getRole())
+                || (
+                oldAffiliation.getNonAcademicAffiliation() != null
+                    && !oldAffiliation.getNonAcademicAffiliation()
+                    .equals(affiliation.getNonAcademicAffiliation())
+            )
+                || (
+                oldAffiliation.getInstitution() != null
+                    && !oldAffiliation.getInstitution().equals(affiliation.getInstitution())
+            )
+        ) {
           shouldAdd = true;
         }
       } else {

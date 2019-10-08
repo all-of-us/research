@@ -46,11 +46,14 @@ import org.pmiops.workbench.model.AccessBypassRequest;
 import org.pmiops.workbench.model.AccessModule;
 import org.pmiops.workbench.model.CreateAccountRequest;
 import org.pmiops.workbench.model.DataAccessLevel;
+import org.pmiops.workbench.model.DemographicSurvey;
 import org.pmiops.workbench.model.EmailVerificationStatus;
+import org.pmiops.workbench.model.Gender;
 import org.pmiops.workbench.model.InstitutionalAffiliation;
 import org.pmiops.workbench.model.InvitationVerificationRequest;
 import org.pmiops.workbench.model.NihToken;
 import org.pmiops.workbench.model.Profile;
+import org.pmiops.workbench.model.Race;
 import org.pmiops.workbench.model.ResendWelcomeEmailRequest;
 import org.pmiops.workbench.model.UpdateContactEmailRequest;
 import org.pmiops.workbench.notebooks.LeonardoNotebooksClient;
@@ -129,6 +132,18 @@ public class ProfileControllerTest {
     profile.setCurrentPosition(CURRENT_POSITION);
     profile.setOrganization(ORGANIZATION);
     profile.setAreaOfResearch(RESEARCH_PURPOSE);
+
+    DemographicSurvey demographicSurvey = new DemographicSurvey();
+    ArrayList<Gender> genders = new ArrayList<>();
+    genders.add(Gender.TRANSGENDER);
+    genders.add(Gender.NON_BINARY);
+    demographicSurvey.setGender(genders);
+    ArrayList<Race> races = new ArrayList<>();
+    races.add(Race.WHITE);
+    races.add(Race.AA);
+    demographicSurvey.setRace(races);
+    profile.setDemographicSurvey(demographicSurvey);
+
     createAccountRequest.setProfile(profile);
     createAccountRequest.setInvitationKey(INVITATION_KEY);
     invitationVerificationRequest.setInvitationKey(INVITATION_KEY);

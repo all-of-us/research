@@ -2,21 +2,17 @@ package org.pmiops.workbench.db.model;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.pmiops.workbench.model.Disability;
@@ -24,7 +20,6 @@ import org.pmiops.workbench.model.Education;
 import org.pmiops.workbench.model.Ethnicity;
 import org.pmiops.workbench.model.Gender;
 import org.pmiops.workbench.model.Race;
-import org.pmiops.workbench.db.model.DemographicSurveyEnum;
 
 @Entity
 @Table(name = "demographic_survey")
@@ -82,20 +77,14 @@ public class DemographicSurvey {
   public List<Race> getRaceEnum() {
     if (race == null) return null;
     return this.race.stream()
-        .map(
-            (raceObject) -> {
-              return DemographicSurveyEnum.raceFromStorage(raceObject);
-            })
+        .map(DemographicSurveyEnum::raceFromStorage)
         .collect(Collectors.toList());
   }
 
   public void setRaceEnum(List<Race> raceList) {
     this.race =
         raceList.stream()
-            .map(
-                (race) -> {
-                  return DemographicSurveyEnum.raceToStorage(race);
-                })
+            .map(DemographicSurveyEnum::raceToStorage)
             .collect(Collectors.toList());
   }
 
@@ -137,24 +126,16 @@ public class DemographicSurvey {
   public List<Gender> getGenderEnum() {
     if (gender == null) return null;
     return this.gender.stream()
-        .map(
-            (gender) -> {
-              return DemographicSurveyEnum.genderFromStorage(gender);
-            })
+        .map(DemographicSurveyEnum::genderFromStorage)
         .collect(Collectors.toList());
   }
 
   public void setGenderEnum(List<Gender> genderList) {
     this.gender =
         genderList.stream()
-            .map(
-                (gender) -> {
-                  return DemographicSurveyEnum.genderToStorage(gender);
-                })
+            .map(DemographicSurveyEnum::genderToStorage)
             .collect(Collectors.toList());
   }
-
-
 
   @Column(name = "year_of_birth")
   public int getYear_of_birth() {

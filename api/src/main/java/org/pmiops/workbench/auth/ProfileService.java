@@ -51,43 +51,36 @@ public class ProfileService {
 
   private static final Function<org.pmiops.workbench.db.model.DemographicSurvey, DemographicSurvey>
       TO_CLIENT_DEMOGRAPHIC_SURVEY =
-          new Function<org.pmiops.workbench.db.model.DemographicSurvey, DemographicSurvey>() {
-            @Override
-            public DemographicSurvey apply(
-                org.pmiops.workbench.db.model.DemographicSurvey demographicSurvey) {
-              DemographicSurvey result = new DemographicSurvey();
-              if (result.getDisability() != null)
-                result.setDisability(demographicSurvey.getDisabilityEnum().equals(Disability.TRUE));
-              result.setEducation(demographicSurvey.getEducationEnum());
-              result.setEthnicity(demographicSurvey.getEthnicityEnum());
-              result.setGender(demographicSurvey.getGender().stream().map
-                  ((gender) -> DemographicSurveyEnum.genderFromStorage(gender)).collect(Collectors.toList()));
-              result.setRace(demographicSurvey.getRace().stream()
-                  .map((race) -> DemographicSurveyEnum.raceFromStorage(race)).collect(Collectors.toList()));
-              result.setYearOfBirth(BigDecimal.valueOf(demographicSurvey.getYear_of_birth()));
+      demographicSurvey -> {
+        DemographicSurvey result = new DemographicSurvey();
+        if (result.getDisability() != null)
+          result.setDisability(demographicSurvey.getDisabilityEnum().equals(Disability.TRUE));
+        result.setEducation(demographicSurvey.getEducationEnum());
+        result.setEthnicity(demographicSurvey.getEthnicityEnum());
+        result.setGender(demographicSurvey.getGender().stream()
+            .map(DemographicSurveyEnum::genderFromStorage).collect(Collectors.toList()));
+        result.setRace(demographicSurvey.getRace().stream()
+            .map(DemographicSurveyEnum::raceFromStorage).collect(Collectors.toList()));
+        result.setYearOfBirth(BigDecimal.valueOf(demographicSurvey.getYear_of_birth()));
 
-              return result;
-            }
-          };
+        return result;
+      };
 
   private static final Function<org.pmiops.workbench.db.model.Address, Address>
       TO_CLIENT_ADDRESS_SURVEY =
-          new Function<org.pmiops.workbench.db.model.Address, Address>() {
-            @Override
-            public Address apply(org.pmiops.workbench.db.model.Address address) {
-              Address result = new Address();
-              if (address != null) {
-                result.setStreetAddress1(address.getStreetAddress1());
-                result.setStreetAddress2(address.getStreetAddress2());
-                result.setCity(address.getCity());
-                result.setState(address.getState());
-                result.setCountry(address.getCountry());
-                result.setZipCode(address.getZipCode());
-                return result;
-              }
-              return result;
-            }
-          };
+      address -> {
+        Address result = new Address();
+        if (address != null) {
+          result.setStreetAddress1(address.getStreetAddress1());
+          result.setStreetAddress2(address.getStreetAddress2());
+          result.setCity(address.getCity());
+          result.setState(address.getState());
+          result.setCountry(address.getCountry());
+          result.setZipCode(address.getZipCode());
+          return result;
+        }
+        return result;
+      };
 
   private final UserDao userDao;
 

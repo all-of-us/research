@@ -8,6 +8,10 @@
     <dropNotNullConstraint columnDataType="varchar(255)"
             columnName="institution"
             tableName="institutional_affiliation"/>
-  <modifyDataType tableName="institutional_affiliation" columnName="non_academic_affiliation" newDataType="varchar(255)"/>
-</changeSet>
+    <modifyDataType
+      tableName="institutional_affiliation"
+      columnName="non_academic_affiliation"
+      newDataType="varchar(255)"
+    />
+  </changeSet>
 </databaseChangeLog>
