@@ -18,16 +18,26 @@ public class BigQueryTestService extends BigQueryService {
     return bigquery;
   }
 
-  /** Execute the provided query using bigquery. */
-  public TableResult executeQuery(QueryJobConfiguration query) {
+  /**
+   * BQ can be flaky sometimes throwing 'Read timed out' exceptions. This method overrides
+   * executeQuery so on 'Read timed out' we can try again without failing the test case.
+   */
+  public TableResult executeQuery(QueryJobConfiguration query, long waitTime) {
     int count = 0;
     int maxTries = 3;
     while (true) {
       try {
-        return executeQuery(query, 1000L);
+        return super.executeQuery(query, 1000L);
       } catch (BigQueryException e) {
-        // handle exception
-        if (++count == maxTries) throw e;
+        if (e.getMessage().equals("Read timed out")) {
+          // if 'Read timed out' throw exception after 3 tries.
+          if (++count == maxTries) {
+            throw e;
+          }
+        } else {
+          // not a read timed out exception so throw
+          throw e;
+        }
       }
     }
   }
