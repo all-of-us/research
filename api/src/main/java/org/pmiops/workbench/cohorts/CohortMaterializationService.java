@@ -90,7 +90,7 @@ public class CohortMaterializationService {
                 valueMap.put("value", arrayValue.getValue());
                 values.add(valueMap.build());
               }
-              parameterValueMap.put("arrayValues", values.build().<Map<String, Object>>toArray());
+              parameterValueMap.put("arrayValues", values.build().toArray());
             }
             builder.put("parameterType", parameterTypeMap.build());
             builder.put("parameterValue", parameterValueMap.build());
@@ -314,7 +314,7 @@ public class CohortMaterializationService {
         "queryParameters",
         jobConfiguration.getNamedParameters().entrySet().stream()
             .map(TO_QUERY_PARAMETER_MAP)
-            .<Map<String, Object>>toArray());
+            .toArray());
     configurationMap.put("query", queryConfigurationMap.build());
     cdrQuery.setConfiguration(configurationMap.build());
     return cdrQuery;

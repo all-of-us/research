@@ -29,12 +29,12 @@ public class MoodleApiClientTracer extends ApiClient {
 
   private <T> T handleResponseWithTracing(Response response, Type returnType) throws ApiException {
     String targetUrl = response.request().httpUrl().encodedPath();
-    Scope urlSpan =
+    try (Scope urlSpan =
         tracer
             .spanBuilderWithExplicitParent(
                 "Response Received: ".concat(targetUrl), tracer.getCurrentSpan())
-            .startScopedSpan();
-    urlSpan.close();
-    return super.handleResponse(response, returnType);
+            .startScopedSpan()) {
+      return super.handleResponse(response, returnType);
+    }
   }
 }
