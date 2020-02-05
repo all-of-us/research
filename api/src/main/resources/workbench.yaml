@@ -1073,6 +1073,26 @@ paths:
           schema:
             $ref: "#/definitions/EmptyResponse"
 
+  /v1/admin/workspaces/{workspaceNamespace}:
+    parameters:
+      - $ref: '#/parameters/workspaceNamespace'
+    get:
+      tags:
+        - workspaceAdmin
+      description: >
+        Given a workspace namespace (Google Cloud Platform  Project ID), returns workspace details.
+        Only accessible to privileged admin users.
+      operationId: getFederatedWorkspaceDetails
+      responses:
+        200:
+          description: Federated details about the workspace.
+          schema:
+            $ref: "#/definitions/AdminFederatedWorkspaceDetailsResponse"
+        404:
+          description: Workspace not found for namespace
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
   /v1/admin/clusters/updateConfig:
     post:
       summary: Sets default cluster creation request parameters for a user.
@@ -2467,7 +2487,7 @@ definitions:
       FEATURED_WORKSPACE_ADMIN,
       COMMUNICATIONS_ADMIN,
       SECURITY_ADMIN,
-      CLUSTER_ADMIN
+      WORKSPACES_VIEW
     ]
 
   PageVisit:
@@ -4173,3 +4193,19 @@ definitions:
       items:
         type: integer
         format: int64
+
+  AdminFederatedWorkspaceDetailsResponse:
+    description: Admin-visible metadata about a workspace.
+    type: object
+    properties:
+      workspace:
+        $ref: "#/definitions/Workspace"
+#      collaborators:
+#        type: array
+#        items:
+#          $ref: "#/definitions/UserRole"
+#      resources:
+#        $ref: "#/definitions/WorkspaceResources"
+#      activityLogs:
+#        description: Logs for all action audit events collected for the given workspace.
+#        $ref: "#/definitions/ActionAuditEvents"
