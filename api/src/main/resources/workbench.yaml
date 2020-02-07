@@ -4244,3 +4244,4 @@ definitions:
         type: integer
       storageBytesUsed:
         type: integer
+        format: int64
