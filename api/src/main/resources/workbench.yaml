@@ -2545,6 +2545,8 @@ definitions:
         type: string
       billingAccountName:
         type: string
+      billingAccountType:
+        $ref: "#/definitions/BillingAccountType"
       googleBucketName:
         type: string
       dataAccessLevel:
