@@ -87,6 +87,8 @@ public class WorkspaceAdminController implements WorkspaceAdminApiDelegate {
               .cloudStorage(adminWorkspaceCloudStorageCounts)
               .clusters(clusters);
 
+      workspaceAdminService.getWorkspaceAuditEvents(dbWorkspace.getWorkspaceId());
+
       FirecloudWorkspace fcWorkspace =
           fireCloudService.getWorkspace(workspaceNamespace, workspaceFirecloudName).getWorkspace();
       AdminFederatedWorkspaceDetailsResponse response =

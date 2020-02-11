@@ -4208,9 +4208,9 @@ definitions:
           $ref: "#/definitions/UserRole"
       resources:
         $ref: "#/definitions/AdminWorkspaceResources"
-#      activityLogs:
-#        description: Logs for all action audit events collected for the given workspace.
-#        $ref: "#/definitions/ActionAuditEvents"
+      activityLogs:
+        description: Logs for all action audit events collected for the given workspace.
+        $ref: "#/definitions/ActionAuditEvent"
 
   AdminWorkspaceResources:
     description: >
@@ -4247,3 +4247,28 @@ definitions:
       storageBytesUsed:
         type: integer
         format: int64
+
+  ActionAuditEvent:
+    description: A single row from the activity log system.
+    type: object
+    properties:
+      actionType:
+        type: string
+      actionId:
+        type: integer
+      actionTimestamp:
+        type: integer
+      agentType:
+        type: string
+      agentId:
+        type: integer
+      agentEmail:
+        type: string
+      targetProperty:
+        type: string
+      targetId:
+        type: integer
+      targetType:
+        type: string
+      newValue:
+        type: string

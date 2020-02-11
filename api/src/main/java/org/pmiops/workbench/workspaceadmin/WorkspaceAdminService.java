@@ -12,4 +12,6 @@ public interface WorkspaceAdminService {
 
   AdminWorkspaceCloudStorageCounts getAdminWorkspaceCloudStorageCounts(
       String workspaceNamespace, String workspaceName);
+
+  void getWorkspaceAuditEvents(long workspaceId);
 }
