@@ -1,5 +1,9 @@
 package org.pmiops.workbench.tools;
 
+import com.google.appengine.api.modules.ModulesService;
+import com.google.appengine.api.modules.ModulesServiceFactory;
+import com.google.cloud.logging.Logging;
+import com.google.cloud.logging.LoggingOptions;
 import com.google.common.collect.Streams;
 import com.opencsv.bean.BeanField;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
@@ -39,6 +43,7 @@ import org.pmiops.workbench.firecloud.FireCloudConfig;
 import org.pmiops.workbench.firecloud.FirecloudTransforms;
 import org.pmiops.workbench.firecloud.api.WorkspacesApi;
 import org.pmiops.workbench.model.FileDetail;
+import org.pmiops.workbench.monitoring.LogsBasedMetricServiceImpl;
 import org.pmiops.workbench.monitoring.MonitoringServiceImpl;
 import org.pmiops.workbench.monitoring.MonitoringSpringConfiguration;
 import org.pmiops.workbench.monitoring.StackdriverStatsExporterService;
@@ -61,7 +66,8 @@ import org.springframework.context.annotation.Primary;
   MonitoringSpringConfiguration.class,
   NotebooksServiceImpl.class,
   StackdriverStatsExporterService.class,
-  UserRecentResourceServiceImpl.class
+  UserRecentResourceServiceImpl.class,
+  LogsBasedMetricServiceImpl.class
 })
 @ComponentScan("org.pmiops.workbench.firecloud")
 public class ExportWorkspaceData {
@@ -86,6 +92,16 @@ public class ExportWorkspaceData {
   public WorkspaceService workspaceService() {
     return new WorkspaceServiceImpl(
         null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+  }
+
+  @Bean
+  ModulesService getModulesService() {
+    return ModulesServiceFactory.getModulesService();
+  }
+
+  @Bean
+  Logging logging() {
+    return LoggingOptions.getDefaultInstance().getService();
   }
 
   @Bean
