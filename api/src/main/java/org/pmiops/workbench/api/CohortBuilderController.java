@@ -41,6 +41,7 @@ import org.pmiops.workbench.elasticsearch.ElasticSearchService;
 import org.pmiops.workbench.exceptions.BadRequestException;
 import org.pmiops.workbench.model.AgeTypeCountListResponse;
 import org.pmiops.workbench.model.ConceptIdName;
+import org.pmiops.workbench.model.Criteria;
 import org.pmiops.workbench.model.CriteriaAttribute;
 import org.pmiops.workbench.model.CriteriaAttributeListResponse;
 import org.pmiops.workbench.model.CriteriaListResponse;
@@ -71,6 +72,11 @@ public class CohortBuilderController implements CohortBuilderApiDelegate {
   private static final Integer DEFAULT_CRITERIA_SEARCH_LIMIT = 250;
   private static final String BAD_REQUEST_MESSAGE =
       "Bad Request: Please provide a valid %s. %s is not valid.";
+  private static final List<String> DRUG_TYPES =
+      Arrays.asList(
+          CriteriaType.ATC.toString(),
+          CriteriaType.BRAND.toString(),
+          CriteriaType.RXNORM.toString());
 
   private BigQueryService bigQueryService;
   private CohortQueryBuilder cohortQueryBuilder;
@@ -142,10 +148,22 @@ public class CohortBuilderController implements CohortBuilderApiDelegate {
   @Override
   public ResponseEntity<CriteriaListResponse> getCriteriaAutoComplete(
       Long cdrVersionId, String domain, String term, String type, Boolean standard, Integer limit) {
-    cdrVersionService.setCdrVersion(cdrVersionId);
-    PageRequest pageRequest =
-        new PageRequest(0, Optional.ofNullable(limit).orElse(DEFAULT_TREE_SEARCH_LIMIT));
+    DbCdrVersion cdrVersion = cdrVersionService.findAndSetCdrVersion(cdrVersionId);
+    int resultLimit = Optional.ofNullable(limit).orElse(DEFAULT_TREE_SEARCH_LIMIT);
+
     validateDomainAndType(domain, type);
+    if (configProvider.get().elasticsearch.enableCriteriaIndexSearch
+        && !Strings.isNullOrEmpty(cdrVersion.getElasticIndexBaseName())) {
+      try {
+        List<Criteria> criteriaList =
+            elasticSearchService.criteriaWhereSynonymsMatchPhrasePrefix(
+                domain, Arrays.asList(type), standard, term, resultLimit);
+        return ResponseEntity.ok(new CriteriaListResponse().items(criteriaList));
+      } catch (IOException e) {
+        log.log(Level.SEVERE, "Elastic request failed, falling back to BigQuery", e);
+      }
+    }
+    PageRequest pageRequest = new PageRequest(0, resultLimit);
     List<DbCriteria> criteriaList =
         cbCriteriaDao.findCriteriaByDomainAndTypeAndStandardAndSynonyms(
             domain, type, standard, modifyTermMatch(term), pageRequest);
@@ -166,10 +184,22 @@ public class CohortBuilderController implements CohortBuilderApiDelegate {
   @Override
   public ResponseEntity<CriteriaListResponse> getDrugBrandOrIngredientByValue(
       Long cdrVersionId, String value, Integer limit) {
-    cdrVersionService.setCdrVersion(cdrVersionId);
+    DbCdrVersion cdrVersion = cdrVersionService.findAndSetCdrVersion(cdrVersionId);
+    Integer resultLimit = Optional.ofNullable(limit).orElse(DEFAULT_TREE_SEARCH_LIMIT);
+
+    if (configProvider.get().elasticsearch.enableCriteriaIndexSearch
+        && !Strings.isNullOrEmpty(cdrVersion.getElasticIndexBaseName())) {
+      try {
+        List<Criteria> criteriaList =
+            elasticSearchService.criteriaWhereSynonymsMatchPhrasePrefix(
+                DomainType.DRUG.toString(), DRUG_TYPES, true, value, resultLimit);
+        return ResponseEntity.ok(new CriteriaListResponse().items(criteriaList));
+      } catch (IOException e) {
+        log.log(Level.SEVERE, "Elastic request failed, falling back to BigQuery", e);
+      }
+    }
     List<DbCriteria> criteriaList =
-        cbCriteriaDao.findDrugBrandOrIngredientByValue(
-            value, Optional.ofNullable(limit).orElse(DEFAULT_TREE_SEARCH_LIMIT));
+        cbCriteriaDao.findDrugBrandOrIngredientByValue(value, resultLimit);
     return ResponseEntity.ok(
         new CriteriaListResponse()
             .items(
@@ -205,7 +235,7 @@ public class CohortBuilderController implements CohortBuilderApiDelegate {
   @Override
   public ResponseEntity<Long> countParticipants(Long cdrVersionId, SearchRequest request) {
     DbCdrVersion cdrVersion = cdrVersionService.findAndSetCdrVersion(cdrVersionId);
-    if (configProvider.get().elasticsearch.enableElasticsearchBackend
+    if (configProvider.get().elasticsearch.enablePersonIndexSearch
         && !Strings.isNullOrEmpty(cdrVersion.getElasticIndexBaseName())
         && !isApproximate(request)) {
       try {
@@ -227,7 +257,41 @@ public class CohortBuilderController implements CohortBuilderApiDelegate {
   @Override
   public ResponseEntity<CriteriaListResponse> findCriteriaByDomainAndSearchTerm(
       Long cdrVersionId, String domain, String term, Integer limit) {
-    cdrVersionService.setCdrVersion(cdrVersionId);
+    DbCdrVersion cdrVersion = cdrVersionService.findAndSetCdrVersion(cdrVersionId);
+    int resultLimit = Optional.ofNullable(limit).orElse(DEFAULT_CRITERIA_SEARCH_LIMIT);
+
+    if (configProvider.get().elasticsearch.enableCriteriaIndexSearch
+        && !Strings.isNullOrEmpty(cdrVersion.getElasticIndexBaseName())) {
+      List<Criteria> criteriaList = new ArrayList<>();
+      try {
+        Criteria exactMatchByCode = elasticSearchService.criteriaWhereCodeEqual(domain, term);
+
+        if (exactMatchByCode == null) {
+          // do standard search on synonyms
+          criteriaList =
+              elasticSearchService.criteriaWhereSynonymsMatch(domain, true, term, resultLimit);
+          if (criteriaList.isEmpty()) {
+            // do source search on synonyms
+            criteriaList =
+                elasticSearchService.criteriaWhereSynonymsMatch(domain, false, term, resultLimit);
+          }
+        } else {
+          // do search on code
+          criteriaList =
+              elasticSearchService.criteriaWhereCodePrefix(
+                  domain, exactMatchByCode.getIsStandard(), term, resultLimit);
+
+          Map<Boolean, List<Criteria>> groups =
+              criteriaList.stream()
+                  .collect(Collectors.partitioningBy(c -> c.getCode().equals(term)));
+          criteriaList = groups.get(true);
+          criteriaList.addAll(groups.get(false));
+        }
+        return ResponseEntity.ok(new CriteriaListResponse().items(criteriaList));
+      } catch (IOException e) {
+        log.log(Level.SEVERE, "Elastic request failed, falling back to BigQuery", e);
+      }
+    }
     List<DbCriteria> criteriaList;
     PageRequest pageRequest =
         new PageRequest(0, Optional.ofNullable(limit).orElse(DEFAULT_CRITERIA_SEARCH_LIMIT));
@@ -339,7 +403,7 @@ public class CohortBuilderController implements CohortBuilderApiDelegate {
       return ResponseEntity.ok(response);
     }
     DbCdrVersion cdrVersion = cdrVersionService.findAndSetCdrVersion(cdrVersionId);
-    if (configProvider.get().elasticsearch.enableElasticsearchBackend
+    if (configProvider.get().elasticsearch.enablePersonIndexSearch
         && !Strings.isNullOrEmpty(cdrVersion.getElasticIndexBaseName())
         && !isApproximate(request)) {
       try {

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -46,19 +47,20 @@ public final class ElasticUtils {
   // https://www.elastic.co/guide/en/elasticsearch/reference/current/removal-of-types.html
   public static final String INDEX_TYPE = "_doc";
   public static final RequestOptions REQ_OPTS = RequestOptions.DEFAULT;
+  private static final String PERSON_SUFFIX = "_person";
 
   private ElasticUtils() {}
 
   /** Returns the canonical person index name for the given CDR version. */
   public static String personIndexName(String cdrVersion) {
-    return cdrVersion + "_person";
+    return cdrVersion + PERSON_SUFFIX;
   }
 
   /**
-   * Creates a new person index and optionally deletes any existing index of the same name. Applies
-   * the expected field mapping for the index type.
+   * Creates a new index and optionally deletes any existing index of the same name. Applies the
+   * expected field mapping for the index type.
    */
-  public static void createPersonIndex(
+  public static void createIndex(
       RestHighLevelClient client, String indexName, boolean deleteExisting) throws IOException {
     if (deleteExisting
         && client.indices().exists(new GetIndexRequest().indices(indexName), REQ_OPTS)) {
@@ -74,9 +76,24 @@ public final class ElasticUtils {
                     ImmutableMap.of(
                         // Do not allow new fields to appear in the mapping, this would indicate a
                         // programming error.
-                        "dynamic", "strict", "properties", ElasticDocument.PERSON_SCHEMA)),
+                        "dynamic", "strict", "properties", getSchema(indexName))),
             REQ_OPTS);
-    log.info("created person index: " + indexName);
+    log.info("created index: " + indexName);
+  }
+
+  /** Returns the canonical criteria index name for the given CDR version. */
+  public static String criteriaIndexName(String cdrVersion) {
+    return cdrVersion + "_criteria";
+  }
+
+  public static Map<String, Object> getSchema(String indexName) {
+    return indexName.endsWith(PERSON_SUFFIX)
+        ? ElasticDocument.PERSON_SCHEMA
+        : ElasticDocument.CRITERIA_SCHEMA;
+  }
+
+  public static boolean isPersonIndex(String indexName) {
+    return indexName.endsWith(PERSON_SUFFIX);
   }
 
   /**

@@ -166,7 +166,8 @@ public class WorkbenchConfig {
   public static class ElasticsearchConfig {
     public String baseUrl;
     public boolean enableBasicAuth;
-    public boolean enableElasticsearchBackend;
+    public boolean enablePersonIndexSearch;
+    public boolean enableCriteriaIndexSearch;
   }
 
   public static class MoodleConfig {

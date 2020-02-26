@@ -263,7 +263,7 @@ public class ElasticFiltersTest {
   @Test
   public void testLeafQuery() {
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -278,7 +278,7 @@ public class ElasticFiltersTest {
   @Test
   public void testParentConceptQuery() {
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -303,7 +303,7 @@ public class ElasticFiltersTest {
   @Test
   public void testICD9Query() {
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -329,7 +329,7 @@ public class ElasticFiltersTest {
   @Test
   public void testICD9AndSnomedQuery() {
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -382,7 +382,7 @@ public class ElasticFiltersTest {
   @Test
   public void testPPISurveyQuery() {
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -408,7 +408,7 @@ public class ElasticFiltersTest {
   @Test
   public void testPPIQuestionQuery() {
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -436,7 +436,7 @@ public class ElasticFiltersTest {
     Attribute attr =
         new Attribute().name(AttrName.NUM).operator(Operator.EQUAL).addOperandsItem("1");
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -464,7 +464,7 @@ public class ElasticFiltersTest {
   public void testPPIAnswerQueryCat() {
     Attribute attr = new Attribute().name(AttrName.CAT).operator(Operator.IN).addOperandsItem("1");
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -492,7 +492,7 @@ public class ElasticFiltersTest {
   @Test
   public void testAgeAtEventModifierQuery() {
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -515,7 +515,7 @@ public class ElasticFiltersTest {
   @Test
   public void testDateModifierQuery() {
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -539,7 +539,7 @@ public class ElasticFiltersTest {
   @Test
   public void testVisitsModifierQuery() {
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -562,7 +562,7 @@ public class ElasticFiltersTest {
   @Test
   public void testNumOfOccurrencesModifierQuery() {
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -593,7 +593,7 @@ public class ElasticFiltersTest {
             .ancestorData(false)
             .group(false);
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -623,7 +623,7 @@ public class ElasticFiltersTest {
             .standard(false)
             .addAttributesItem(attr);
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -656,7 +656,7 @@ public class ElasticFiltersTest {
             .group(false)
             .addAttributesItem(attr);
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -681,7 +681,7 @@ public class ElasticFiltersTest {
             .ancestorData(false)
             .group(false);
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -705,7 +705,7 @@ public class ElasticFiltersTest {
             .ancestorData(false)
             .standard(true);
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addExcludesItem(
@@ -729,7 +729,7 @@ public class ElasticFiltersTest {
             .ancestorData(false)
             .standard(true);
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -756,7 +756,7 @@ public class ElasticFiltersTest {
             .ancestorData(false)
             .standard(true);
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -780,7 +780,7 @@ public class ElasticFiltersTest {
             .ancestorData(false)
             .standard(true);
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -802,7 +802,7 @@ public class ElasticFiltersTest {
             .ancestorData(false)
             .group(false);
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -831,7 +831,7 @@ public class ElasticFiltersTest {
             .standard(false)
             .attributes(ImmutableList.of(attr));
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -864,7 +864,7 @@ public class ElasticFiltersTest {
             .standard(true)
             .attributes(ImmutableList.of(attr));
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -890,7 +890,7 @@ public class ElasticFiltersTest {
             .standard(true)
             .group(false);
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -920,7 +920,7 @@ public class ElasticFiltersTest {
                     .operator(Operator.BETWEEN)
                     .operands(ImmutableList.of("20", "34")));
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(
@@ -965,7 +965,7 @@ public class ElasticFiltersTest {
             .standard(true)
             .conceptId(Long.parseLong(conceptId));
     QueryBuilder resp =
-        ElasticFilters.fromCohortSearch(
+        ElasticPersonFilters.fromCohortSearch(
             cbCriteriaDao,
             new SearchRequest()
                 .addIncludesItem(

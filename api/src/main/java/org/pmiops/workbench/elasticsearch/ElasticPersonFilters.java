@@ -34,13 +34,13 @@ import org.pmiops.workbench.model.SearchRequest;
  * Utility for conversion of Cohort Builder request into Elasticsearch filters. Instances of this
  * class are used internally to track metadata during request processing.
  */
-public final class ElasticFilters {
+public final class ElasticPersonFilters {
 
-  private static final Logger log = Logger.getLogger(ElasticFilters.class.getName());
+  private static final Logger log = Logger.getLogger(ElasticPersonFilters.class.getName());
 
   /** Translates a Cohort Builder search request into an Elasticsearch filter. */
   public static QueryBuilder fromCohortSearch(CBCriteriaDao cbCriteriaDao, SearchRequest req) {
-    ElasticFilters f = new ElasticFilters(cbCriteriaDao);
+    ElasticPersonFilters f = new ElasticPersonFilters(cbCriteriaDao);
     return f.process(req);
   }
 
@@ -55,7 +55,7 @@ public final class ElasticFilters {
   private boolean processed = false;
   private Map<SearchParameter, Set<Long>> childrenByCriteriaGroup;
 
-  private ElasticFilters(CBCriteriaDao cbCriteriaDao) {
+  private ElasticPersonFilters(CBCriteriaDao cbCriteriaDao) {
     this.criteriaLookupUtil = new CriteriaLookupUtil(cbCriteriaDao);
   }
 

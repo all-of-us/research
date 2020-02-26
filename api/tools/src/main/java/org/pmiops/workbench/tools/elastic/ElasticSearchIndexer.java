@@ -166,10 +166,16 @@ public final class ElasticSearchIndexer {
       inverseProb = Integer.parseInt(opts.getOptionValue(inverseProbOpt.getLongOpt()));
     }
 
-    String personIndex = ElasticUtils.personIndexName(opts.getOptionValue("cdr-version"));
+    createIndex(
+        opts, inverseProb, ElasticUtils.personIndexName(opts.getOptionValue("cdr-version")));
+    createIndex(
+        opts, inverseProb, ElasticUtils.criteriaIndexName(opts.getOptionValue("cdr-version")));
+  }
+
+  private void createIndex(CommandLine opts, int inverseProb, String indexName)
+      throws IOException, InterruptedException {
     try {
-      ElasticUtils.createPersonIndex(
-          client, personIndex, opts.hasOption(deleteIndicesOpt.getLongOpt()));
+      ElasticUtils.createIndex(client, indexName, opts.hasOption(deleteIndicesOpt.getLongOpt()));
     } catch (ElasticsearchStatusException e) {
       if (e.status().getStatus() != 400) {
         throw e;
@@ -183,13 +189,13 @@ public final class ElasticSearchIndexer {
     Settings originalSettings =
         client
             .indices()
-            .getSettings(new GetSettingsRequest().indices(personIndex), ElasticUtils.REQ_OPTS)
+            .getSettings(new GetSettingsRequest().indices(indexName), ElasticUtils.REQ_OPTS)
             .getIndexToSettings()
-            .get(personIndex);
+            .get(indexName);
     client
         .indices()
         .putSettings(
-            new UpdateSettingsRequest(personIndex)
+            new UpdateSettingsRequest(indexName)
                 .settings(
                     Settings.builder()
                         .put("index.refresh_interval", -1)
@@ -204,7 +210,11 @@ public final class ElasticSearchIndexer {
             .build()
             .getService();
     String cdrDataset = opts.getOptionValue(cdrBigQueryDatasetOpt.getLongOpt());
-    String personSQL = getPersonBigQuerySQL(cdrDataset, inverseProb);
+
+    String bigQuerySQL =
+        ElasticUtils.isPersonIndex(indexName)
+            ? getPersonBigQuerySQL(cdrDataset, inverseProb)
+            : getCriteriaBigQuerySQL(cdrDataset);
 
     int totalSampleSize;
     Iterator<ElasticDocument> docs;
@@ -214,7 +224,7 @@ public final class ElasticSearchIndexer {
       String[] parts = opts.getOptionValue(scratchBigQueryDatasetOpt.getLongOpt()).split("\\.");
       String scratchProject = parts[0];
       String scratchDataset = parts[1];
-      String scratchTable = String.format("%s_%d", personIndex, Instant.now().toEpochMilli());
+      String scratchTable = String.format("%s_%d", indexName, Instant.now().toEpochMilli());
       TableId scratchTableId = TableId.of(scratchProject, scratchDataset, scratchTable);
 
       log.info(
@@ -223,7 +233,7 @@ public final class ElasticSearchIndexer {
       Job job =
           bq.create(
                   Job.of(
-                      QueryJobConfiguration.newBuilder(personSQL)
+                      QueryJobConfiguration.newBuilder(bigQuerySQL)
                           .setDestinationTable(scratchTableId)
                           .build()))
               .waitFor(RetryOption.totalTimeout(Duration.ofHours(1)));
@@ -238,7 +248,8 @@ public final class ElasticSearchIndexer {
 
       // * is substituted with a numeric shard value; this only matters if the results are large
       // enough to be sharded by BigQuery on export.
-      String gcsExportPath = String.format("gs://%s/%s/person-*.json", bucket, gcsDir);
+      String filePrefix = ElasticUtils.isPersonIndex(indexName) ? "person" : "criteria";
+      String gcsExportPath = String.format("gs://%s/%s/" + filePrefix + "-*.json", bucket, gcsDir);
       log.info(
           String.format(
               "Exporting from intermediate table '%s' -> intermediate GCS file(s) '%s'",
@@ -275,11 +286,11 @@ public final class ElasticSearchIndexer {
     } else {
       log.info(
           String.format("SELECTing from CDR '%s' -> Elasticsearch JSON documents", cdrDataset));
-      TableResult res = bq.query(QueryJobConfiguration.newBuilder(personSQL).build());
+      TableResult res = bq.query(QueryJobConfiguration.newBuilder(bigQuerySQL).build());
       totalSampleSize = (int) res.getTotalRows();
       docs =
           StreamSupport.stream(res.iterateAll().spliterator(), false)
-              .map(ElasticDocument::fromBigQueryResults)
+              .map(fvl -> ElasticDocument.fromBigQueryResults(fvl, ElasticDocument.PERSON_SCHEMA))
               .iterator();
     }
 
@@ -287,13 +298,13 @@ public final class ElasticSearchIndexer {
         String.format(
             "Starting bulk ingest of Elasticsearch documents to '%s'",
             opts.getOptionValue(esBaseUrlOpt.getLongOpt())));
-    ElasticUtils.ingestDocuments(client, personIndex, docs, totalSampleSize);
+    ElasticUtils.ingestDocuments(client, indexName, docs, totalSampleSize);
 
     // Restore the original index settings.
     client
         .indices()
         .putSettings(
-            new UpdateSettingsRequest(personIndex)
+            new UpdateSettingsRequest(indexName)
                 .settings(
                     Settings.builder()
                         .put(
@@ -312,6 +323,13 @@ public final class ElasticSearchIndexer {
     return esPersonBQTemplate
         .replaceAll("\\{BQ_DATASET\\}", bqDataset)
         .replaceAll("\\{PERSON_ID_MOD\\}", Integer.toString(inverseProb));
+  }
+
+  private String getCriteriaBigQuerySQL(String bqDataset) throws IOException {
+    String esCriteriaBQTemplate =
+        Resources.toString(
+            Resources.getResource("bigquery/es_criteria.sql"), Charset.defaultCharset());
+    return esCriteriaBQTemplate.replaceAll("\\{BQ_DATASET\\}", bqDataset);
   }
 
   private static RestHighLevelClient newClient(String esBaseUrl, @Nullable String esAuthProject)

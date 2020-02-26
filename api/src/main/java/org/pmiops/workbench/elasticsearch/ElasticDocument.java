@@ -91,6 +91,27 @@ public class ElasticDocument {
           .put("events", NESTED_FOREIGN_SCHEMA)
           .build();
 
+  public static final Map<String, Object> CRITERIA_SCHEMA =
+      ImmutableMap.<String, Object>builder()
+          .put("parent_id", esType(ElasticType.KEYWORD))
+          .put("domain_id", esType(ElasticType.KEYWORD))
+          .put("is_standard", esType(ElasticType.KEYWORD))
+          .put("type", esType(ElasticType.KEYWORD))
+          .put("subtype", esType(ElasticType.KEYWORD))
+          .put("concept_id", esType(ElasticType.KEYWORD))
+          .put("code", esType(ElasticType.KEYWORD))
+          .put("name", esType(ElasticType.KEYWORD))
+          .put("value", esType(ElasticType.KEYWORD))
+          .put("est_count", esType(ElasticType.INTEGER))
+          .put("is_group", esType(ElasticType.KEYWORD))
+          .put("is_selectable", esType(ElasticType.KEYWORD))
+          .put("has_attribute", esType(ElasticType.KEYWORD))
+          .put("has_hierarchy", esType(ElasticType.KEYWORD))
+          .put("has_ancestor_data", esType(ElasticType.KEYWORD))
+          .put("synonyms", esType(ElasticType.TEXT))
+          .put("path", esType(ElasticType.KEYWORD))
+          .build();
+
   private static Map<String, Object> esType(ElasticType t) {
     return ImmutableMap.of("type", t.lower());
   }
@@ -130,11 +151,12 @@ public class ElasticDocument {
   }
 
   /** Converts a row of BigQuery results to an Elasticsearch document suitable for indexing. */
-  public static ElasticDocument fromBigQueryResults(FieldValueList fvl) {
+  public static ElasticDocument fromBigQueryResults(
+      FieldValueList fvl, Map<String, Object> schema) {
     // The id must be ingested separately from the source document, so we first remove it from the
     // BigQuery JSON results.
     String id = fvl.get("_id").getStringValue();
-    Map<String, Object> source = bqToElasticSchema(fvl, PERSON_SCHEMA);
+    Map<String, Object> source = bqToElasticSchema(fvl, schema);
     try {
       XContentBuilder builder = XContentFactory.contentBuilder(XContentType.JSON);
       builder.map(source);
