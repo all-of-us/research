@@ -56,6 +56,7 @@ import org.pmiops.workbench.cohortreview.CohortReviewService;
 import org.pmiops.workbench.cohortreview.ReviewQueryBuilder;
 import org.pmiops.workbench.cohortreview.util.PageRequest;
 import org.pmiops.workbench.cohortreview.util.ParticipantCohortStatusDbInfo;
+import org.pmiops.workbench.cohorts.CohortFactory;
 import org.pmiops.workbench.db.dao.UserRecentResourceService;
 import org.pmiops.workbench.db.model.DbCohort;
 import org.pmiops.workbench.db.model.DbCohortReview;
@@ -74,6 +75,7 @@ import org.pmiops.workbench.model.CohortStatus;
 import org.pmiops.workbench.model.ConceptIdName;
 import org.pmiops.workbench.model.CreateReviewRequest;
 import org.pmiops.workbench.model.DomainType;
+import org.pmiops.workbench.model.DuplicateCohortReviewRequest;
 import org.pmiops.workbench.model.EmptyResponse;
 import org.pmiops.workbench.model.FilterColumns;
 import org.pmiops.workbench.model.ModifyCohortStatusRequest;
@@ -120,6 +122,7 @@ public class CohortReviewController implements CohortReviewApiDelegate {
   private ReviewQueryBuilder reviewQueryBuilder;
   private UserRecentResourceService userRecentResourceService;
   private Provider<DbUser> userProvider;
+  private final CohortFactory cohortFactory;
   private final Clock clock;
   private static final Logger log = Logger.getLogger(CohortReviewController.class.getName());
 
@@ -236,7 +239,8 @@ public class CohortReviewController implements CohortReviewApiDelegate {
       ReviewQueryBuilder reviewQueryBuilder,
       UserRecentResourceService userRecentResourceService,
       Provider<DbUser> userProvider,
-      Clock clock) {
+      Clock clock,
+      CohortFactory cohortFactory) {
     this.cbCriteriaDao = cbCriteriaDao;
     this.cohortReviewService = cohortReviewService;
     this.bigQueryService = bigQueryService;
@@ -245,6 +249,7 @@ public class CohortReviewController implements CohortReviewApiDelegate {
     this.userRecentResourceService = userRecentResourceService;
     this.userProvider = userProvider;
     this.clock = clock;
+    this.cohortFactory = cohortFactory;
   }
 
   /**
@@ -383,6 +388,26 @@ public class CohortReviewController implements CohortReviewApiDelegate {
         annotationId, cohortReviewId, participantId);
 
     return ResponseEntity.ok(new EmptyResponse());
+  }
+
+  @Override
+  public ResponseEntity<org.pmiops.workbench.model.CohortReview> duplicateCohortReview(
+      String workspaceNamespace,
+      String workspaceId,
+      DuplicateCohortReviewRequest duplicateCohortReviewRequest) {
+    cohortReviewService.enforceWorkspaceAccessLevel(
+        workspaceNamespace, workspaceId, WorkspaceAccessLevel.WRITER);
+    cohortReviewService.checkForDuplicateCohortReviewNameException(
+        workspaceNamespace, workspaceId, duplicateCohortReviewRequest.getNewName());
+    DbCohortReview originalCohortReview =
+        cohortReviewService.findCohortReview(
+            workspaceNamespace,
+            workspaceId,
+            duplicateCohortReviewRequest.getOriginalCohortReviewId());
+    DbCohortReview toReview =
+        cohortFactory.duplicateCohortReview(originalCohortReview, userProvider.get());
+    cohortReviewService.saveCohortReview(toReview);
+    return ResponseEntity.ok(TO_CLIENT_COHORTREVIEW.apply(toReview));
   }
 
   @Override

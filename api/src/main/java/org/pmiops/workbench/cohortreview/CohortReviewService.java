@@ -82,6 +82,16 @@ public interface CohortReviewService {
   List<DbCohortReview> getRequiredWithCohortReviews(String ns, String firecloudName);
 
   /**
+   * Check for specified ns, firecloudName and review name.
+   *
+   * @param ns
+   * @param firecloudName
+   * @param newReviewName
+   */
+  void checkForDuplicateCohortReviewNameException(
+      String ns, String firecloudName, String newReviewName);
+
+  /**
    * Save the specified {@link DbCohortReview}.
    *
    * @param cohortReview

@@ -43,4 +43,18 @@ public interface CohortReviewDao extends JpaRepository<DbCohortReview, Long> {
       @Param("ns") String workspaceNamespace,
       @Param("fcName") String fcName,
       @Param("cohortReviewId") long cohortReviewId);
+
+  @Query(
+      value =
+          "select * from cohort_review cr "
+              + "join cohort c on (cr.cohort_id = c.cohort_id) "
+              + "join workspace ws on (c.workspace_id = ws.workspace_id) "
+              + "where ws.workspace_namespace = :ns "
+              + "and ws.firecloud_name = :fcName "
+              + "and cr.cohort_name = :newReviewName",
+      nativeQuery = true)
+  DbCohortReview findByNamespaceAndFirecloudNameAndNewReviewName(
+      @Param("ns") String workspaceNamespace,
+      @Param("fcName") String fcName,
+      @Param("newReviewName") String newReviewName);
 }

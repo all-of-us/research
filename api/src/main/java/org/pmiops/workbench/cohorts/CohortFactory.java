@@ -14,4 +14,6 @@ public interface CohortFactory {
       String newName, DbUser creator, DbWorkspace targetWorkspace, DbCohort original);
 
   DbCohortReview duplicateCohortReview(DbCohortReview original, DbCohort targetCohort);
+
+  DbCohortReview duplicateCohortReview(DbCohortReview original, DbUser creator);
 }

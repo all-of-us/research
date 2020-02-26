@@ -13,6 +13,7 @@ import org.pmiops.workbench.db.model.DbCohort;
 import org.pmiops.workbench.db.model.DbCohortReview;
 import org.pmiops.workbench.db.model.DbUser;
 import org.pmiops.workbench.db.model.DbWorkspace;
+import org.pmiops.workbench.model.EmailVerificationStatus;
 import org.pmiops.workbench.model.ReviewStatus;
 
 public class CohortFactoryTest {
@@ -98,5 +99,34 @@ public class CohortFactoryTest {
     assertThat(newReview.getReviewedCount()).isEqualTo(originalCohortReview.getReviewedCount());
     assertThat(newReview.getReviewStatusEnum())
         .isEqualTo(originalCohortReview.getReviewStatusEnum());
+  }
+
+  @Test
+  public void duplicateCohortReviewWithCreator() {
+    DbUser creator = new DbUser();
+    creator.setContactEmail("bob@gmail.com");
+    creator.setUserId(123L);
+    creator.setDisabled(false);
+    creator.setEmailVerificationStatusEnum(EmailVerificationStatus.SUBSCRIBED);
+
+    DbCohortReview originalCohortReview = new DbCohortReview();
+    originalCohortReview.setCohortId(1l);
+    originalCohortReview.setCdrVersionId(2l);
+    originalCohortReview.setMatchedParticipantCount(3l);
+    originalCohortReview.setReviewSize(4l);
+    originalCohortReview.setReviewedCount(5l);
+    originalCohortReview.setReviewStatusEnum(ReviewStatus.CREATED);
+
+    DbCohortReview newReview = cohortFactory.duplicateCohortReview(originalCohortReview, creator);
+
+    assertThat(newReview.getCohortId()).isEqualTo(originalCohortReview.getCohortId());
+    assertThat(newReview.getCdrVersionId()).isEqualTo(originalCohortReview.getCdrVersionId());
+    assertThat(newReview.getMatchedParticipantCount())
+        .isEqualTo(originalCohortReview.getMatchedParticipantCount());
+    assertThat(newReview.getReviewSize()).isEqualTo(originalCohortReview.getReviewSize());
+    assertThat(newReview.getReviewedCount()).isEqualTo(originalCohortReview.getReviewedCount());
+    assertThat(newReview.getReviewStatusEnum())
+        .isEqualTo(originalCohortReview.getReviewStatusEnum());
+    assertThat(newReview.getCreator()).isEqualTo(creator);
   }
 }

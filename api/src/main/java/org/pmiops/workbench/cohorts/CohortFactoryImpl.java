@@ -45,22 +45,37 @@ public class CohortFactoryImpl implements CohortFactory {
 
   @Override
   public DbCohortReview duplicateCohortReview(DbCohortReview original, DbCohort targetCohort) {
-    DbCohortReview newCohortReview = new DbCohortReview();
+    return new DbCohortReview()
+        .cohortId(targetCohort.getCohortId())
+        .creationTime(targetCohort.getCreationTime())
+        .lastModifiedTime(targetCohort.getLastModifiedTime())
+        .cdrVersionId(original.getCdrVersionId())
+        .matchedParticipantCount(original.getMatchedParticipantCount())
+        .reviewSize(original.getReviewSize())
+        .reviewedCount(original.getReviewedCount())
+        .reviewStatusEnum(original.getReviewStatusEnum())
+        .cohortName(original.getCohortName())
+        .cohortDefinition(original.getCohortDefinition())
+        .description(original.getDescription())
+        .creator(original.getCreator());
+  }
 
-    newCohortReview.setCohortId(targetCohort.getCohortId());
-    newCohortReview.creationTime(targetCohort.getCreationTime());
-    newCohortReview.setLastModifiedTime(targetCohort.getLastModifiedTime());
-    newCohortReview.setCdrVersionId(original.getCdrVersionId());
-    newCohortReview.setMatchedParticipantCount(original.getMatchedParticipantCount());
-    newCohortReview.setReviewSize(original.getReviewSize());
-    newCohortReview.setReviewedCount(original.getReviewedCount());
-    newCohortReview.setReviewStatusEnum(original.getReviewStatusEnum());
-    newCohortReview.setCohortName(original.getCohortName());
-    newCohortReview.setCohortDefinition(original.getCohortDefinition());
-    newCohortReview.setDescription(original.getDescription());
-    newCohortReview.setCreator(original.getCreator());
-
-    return newCohortReview;
+  @Override
+  public DbCohortReview duplicateCohortReview(DbCohortReview original, DbUser creator) {
+    Timestamp now = new Timestamp(clock.instant().toEpochMilli());
+    return new DbCohortReview()
+        .cohortId(original.getCohortId())
+        .creationTime(now)
+        .lastModifiedTime(now)
+        .cdrVersionId(original.getCdrVersionId())
+        .matchedParticipantCount(original.getMatchedParticipantCount())
+        .reviewSize(original.getReviewSize())
+        .reviewedCount(original.getReviewedCount())
+        .reviewStatusEnum(original.getReviewStatusEnum())
+        .cohortName(original.getCohortName())
+        .cohortDefinition(original.getCohortDefinition())
+        .description(original.getDescription())
+        .creator(creator);
   }
 
   private DbCohort createCohort(

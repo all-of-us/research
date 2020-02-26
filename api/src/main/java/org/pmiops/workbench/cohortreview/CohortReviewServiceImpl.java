@@ -154,6 +154,17 @@ public class CohortReviewServiceImpl implements CohortReviewService, GaugeDataCo
   }
 
   @Override
+  public void checkForDuplicateCohortReviewNameException(
+      String ns, String firecloudName, String newCohortName) {
+    if (cohortReviewDao.findByNamespaceAndFirecloudNameAndNewReviewName(
+            ns, firecloudName, newCohortName)
+        != null) {
+      throw new BadRequestException(
+          String.format("Cohort Review \"%s\" already exists.", newCohortName));
+    }
+  }
+
+  @Override
   public DbCohortReview saveCohortReview(DbCohortReview cohortReview) {
     return cohortReviewDao.save(cohortReview);
   }

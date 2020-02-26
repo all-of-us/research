@@ -74,6 +74,30 @@ public class CohortReviewDaoTest {
             .get(0));
   }
 
+  @Test
+  public void findByNamespaceAndFirecloudNameAndCohortReviewId() throws Exception {
+    DbCohortReview cohortReview = createCohortReview();
+
+    cohortReviewDao.save(cohortReview);
+
+    assertEquals(
+        cohortReview,
+        cohortReviewDao.findByNamespaceAndFirecloudNameAndCohortReviewId(
+            "namespace", "firecloudName", cohortReview.getCohortReviewId()));
+  }
+
+  @Test
+  public void findByNamespaceAndFirecloudNameAndNewReviewName() throws Exception {
+    DbCohortReview cohortReview = createCohortReview();
+
+    cohortReviewDao.save(cohortReview);
+
+    assertEquals(
+        cohortReview,
+        cohortReviewDao.findByNamespaceAndFirecloudNameAndNewReviewName(
+            "namespace", "firecloudName", cohortReview.getCohortName()));
+  }
+
   private DbCohortReview createCohortReview() {
     return new DbCohortReview()
         .cohortId(cohortId)

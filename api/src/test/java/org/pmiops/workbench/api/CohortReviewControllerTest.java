@@ -36,6 +36,7 @@ import org.pmiops.workbench.cdr.model.DbCriteria;
 import org.pmiops.workbench.cohortbuilder.CohortQueryBuilder;
 import org.pmiops.workbench.cohortreview.CohortReviewServiceImpl;
 import org.pmiops.workbench.cohortreview.ReviewQueryBuilder;
+import org.pmiops.workbench.cohorts.CohortFactoryImpl;
 import org.pmiops.workbench.db.dao.CdrVersionDao;
 import org.pmiops.workbench.db.dao.CohortAnnotationDefinitionDao;
 import org.pmiops.workbench.db.dao.CohortDao;
@@ -66,6 +67,7 @@ import org.pmiops.workbench.model.CreateReviewRequest;
 import org.pmiops.workbench.model.CriteriaType;
 import org.pmiops.workbench.model.DataAccessLevel;
 import org.pmiops.workbench.model.DomainType;
+import org.pmiops.workbench.model.DuplicateCohortReviewRequest;
 import org.pmiops.workbench.model.EmailVerificationStatus;
 import org.pmiops.workbench.model.EmptyResponse;
 import org.pmiops.workbench.model.FilterColumns;
@@ -188,7 +190,8 @@ public class CohortReviewControllerTest {
     CohortReviewController.class,
     CohortReviewServiceImpl.class,
     CohortQueryBuilder.class,
-    ReviewQueryBuilder.class
+    ReviewQueryBuilder.class,
+    CohortFactoryImpl.class
   })
   @MockBean({
     BigQueryService.class,
@@ -583,7 +586,34 @@ public class CohortReviewControllerTest {
   }
 
   @Test
-  public void createParticipantCohortAnnotationNoAnnotationDefinitionFound() {
+  public void duplicateCohortReview() {
+    when(workspaceService.enforceWorkspaceAccessLevel(
+            WORKSPACE_NAMESPACE, WORKSPACE_NAME, WorkspaceAccessLevel.WRITER))
+        .thenReturn(WorkspaceAccessLevel.WRITER);
+    DuplicateCohortReviewRequest duplicateRequest =
+        new DuplicateCohortReviewRequest()
+            .originalCohortReviewId(cohortReview.getCohortReviewId())
+            .newName("newName");
+    CohortReview cohortReviewResponse =
+        cohortReviewController
+            .duplicateCohortReview(WORKSPACE_NAMESPACE, WORKSPACE_NAME, duplicateRequest)
+            .getBody();
+    CohortReview expectedCohortReview =
+        new CohortReview()
+            .cohortReviewId(cohortReviewResponse.getCohortReviewId())
+            .cohortId(cohortReview.getCohortId())
+            .cdrVersionId(cohortReview.getCdrVersionId())
+            .etag(Etags.fromVersion(cohortReview.getVersion()))
+            .creationTime(cohortReviewResponse.getCreationTime())
+            .lastModifiedTime(cohortReviewResponse.getLastModifiedTime())
+            .matchedParticipantCount(cohortReview.getMatchedParticipantCount())
+            .reviewSize(cohortReview.getReviewSize())
+            .reviewedCount(cohortReview.getReviewedCount());
+    assertThat(cohortReviewResponse).isEqualTo(expectedCohortReview);
+  }
+
+  @Test
+  public void createParticipantCohortAnnotationNoAnnotationDefinitionFound() throws Exception {
     Long participantId = participantCohortStatus1.getParticipantKey().getParticipantId();
 
     when(workspaceService.getWorkspaceEnforceAccessLevelAndSetCdrVersion(
