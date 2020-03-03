@@ -5,7 +5,7 @@ import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {RouteReuseStrategy} from '@angular/router';
 import {ClarityModule} from '@clr/angular';
-import {WorkspaceWrapperComponent} from 'app/pages/workspace/workspace-wrapper/component';
+import {WorkspaceWrapperComponent} from 'app/pages/workspace/workspace-wrapper';
 import {environment} from 'environments/environment';
 import * as StackTrace from 'stacktrace-js';
 
@@ -50,7 +50,6 @@ import {WorkspaceAboutComponent} from './pages/workspace/workspace-about';
 import {WorkspaceEditComponent} from './pages/workspace/workspace-edit';
 import {WorkspaceLibraryComponent} from './pages/workspace/workspace-library';
 import {WorkspaceListComponent} from './pages/workspace/workspace-list';
-import {WorkspaceNavBarComponent} from './pages/workspace/workspace-nav-bar';
 import {WorkspaceShareComponent} from './pages/workspace/workspace-share';
 
 /* Our Modules */
@@ -165,7 +164,6 @@ export function getLeoConfiguration(signInService: SignInService): LeoConfigurat
     WorkspaceEditComponent,
     WorkspaceLibraryComponent,
     WorkspaceListComponent,
-    WorkspaceNavBarComponent,
     WorkspaceShareComponent,
     WorkspaceWrapperComponent,
     HomepageComponent,

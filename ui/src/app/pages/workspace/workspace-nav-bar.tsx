@@ -33,7 +33,7 @@ const styles = reactStyles({
   }
 });
 
-const tabs = [
+export const tabs = [
   {name: 'Data', link: 'data'},
   {name: 'Analysis', link: 'notebooks'},
   {name: 'About', link: 'about'},
@@ -41,11 +41,11 @@ const tabs = [
 
 const navSeparator = <div style={styles.separator}/>;
 
-export const WorkspaceNavBarReact = fp.flow(
+export const WorkspaceNavBar = fp.flow(
   withCurrentWorkspace(),
   withUrlParams(),
 )(props => {
-  const {tabPath, urlParams: {ns: namespace, wsid: id}} = props;
+  const {tabPath, setTabPath, urlParams: {ns: namespace, wsid: id}} = props;
   const activeTabIndex = fp.findIndex(['link', tabPath], tabs);
 
 
@@ -60,7 +60,10 @@ export const WorkspaceNavBarReact = fp.flow(
         aria-selected={selected}
         style={{...styles.tab, ...(selected ? styles.active : {})}}
         hover={{color: styles.active.color}}
-        onClick={() => NavStore.navigate(fp.compact(['/workspaces', namespace, id, link]))}
+        onClick={() => {
+          NavStore.navigate(fp.compact(['/workspaces', namespace, id, link]));
+          setTabPath(link);
+        }}
       >
         {name}
       </Clickable>
@@ -74,15 +77,3 @@ export const WorkspaceNavBarReact = fp.flow(
     <div style={{flexGrow: 1}}/>
   </div>;
 });
-
-@Component({
-  selector: 'app-workspace-nav-bar',
-  template: '<div #root></div>',
-})
-export class WorkspaceNavBarComponent extends ReactWrapperBase {
-  @Input() tabPath;
-
-  constructor() {
-    super(WorkspaceNavBarReact, ['tabPath']);
-  }
-}

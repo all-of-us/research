@@ -32,7 +32,7 @@ import {WorkspaceAboutComponent} from './pages/workspace/workspace-about';
 import {WorkspaceEditComponent, WorkspaceEditMode} from './pages/workspace/workspace-edit';
 import {WorkspaceLibraryComponent} from './pages/workspace/workspace-library';
 import {WorkspaceListComponent} from './pages/workspace/workspace-list';
-import {WorkspaceWrapperComponent} from './pages/workspace/workspace-wrapper/component';
+import {WorkspaceWrapperComponent} from './pages/workspace/workspace-wrapper';
 
 import {environment} from 'environments/environment';
 import {InteractiveNotebookComponent} from './pages/analysis/interactive-notebook';
@@ -106,7 +106,8 @@ const routes: Routes = [
                   breadcrumb: BreadcrumbType.Workspace,
                   helpContent: 'about'
                 }
-              }, {
+              },
+              {
                 path: 'edit',
                 component: WorkspaceEditComponent,
                 data: {
@@ -115,7 +116,8 @@ const routes: Routes = [
                   breadcrumb: BreadcrumbType.WorkspaceEdit,
                   helpContent: 'edit'
                 }
-              }, {
+              },
+              {
                 path: 'duplicate',
                 component: WorkspaceEditComponent,
                 data: {
@@ -187,7 +189,8 @@ const routes: Routes = [
                       breadcrumb: BreadcrumbType.Dataset,
                       helpContent: 'datasetBuilder'
                     }
-                  }, {
+                  },
+                  {
                     path: 'cohorts',
                     children: [
                       {
@@ -214,7 +217,8 @@ const routes: Routes = [
                               breadcrumb: BreadcrumbType.Cohort,
                               helpContent: 'reviewParticipants'
                             }
-                          }, {
+                          },
+                          {
                             path: 'participants',
                             component: TablePage,
                             data: {
@@ -222,7 +226,8 @@ const routes: Routes = [
                               breadcrumb: BreadcrumbType.Cohort,
                               helpContent: 'reviewParticipants'
                             }
-                          }, {
+                          },
+                          {
                             path: 'cohort-description',
                             component: QueryReportComponent,
                             data: {
@@ -230,7 +235,8 @@ const routes: Routes = [
                               breadcrumb: BreadcrumbType.Cohort,
                               helpContent: 'cohortDescription'
                             }
-                          }, {
+                          },
+                          {
                             path: 'participants/:pid',
                             component: DetailPageComponent,
                             data: {
@@ -255,23 +261,26 @@ const routes: Routes = [
                   },
                   {
                     path: 'concepts/sets',
-                    children: [{
-                      path: ':csid',
-                      component: ConceptSetDetailsComponent,
-                      data: {
-                        title: 'Concept Set',
-                        breadcrumb: BreadcrumbType.ConceptSet,
-                        helpContent: 'conceptSets'
+                    children: [
+                      {
+                        path: ':csid',
+                        component: ConceptSetDetailsComponent,
+                        data: {
+                          title: 'Concept Set',
+                          breadcrumb: BreadcrumbType.ConceptSet,
+                          helpContent: 'conceptSets'
+                        },
                       },
-                    }, {
-                      path: ':csid/actions',
-                      component: ConceptSetActionsComponent,
-                      data: {
-                        title: 'Concept Set Actions',
-                        breadcrumb: BreadcrumbType.ConceptSet,
-                        helpContent: 'conceptSets'
+                      {
+                        path: ':csid/actions',
+                        component: ConceptSetActionsComponent,
+                        data: {
+                          title: 'Concept Set Actions',
+                          breadcrumb: BreadcrumbType.ConceptSet,
+                          helpContent: 'conceptSets'
+                        },
                       },
-                    }, ]
+                    ]
                   }
                 ]
               }]
