@@ -62,9 +62,11 @@ function redirectToGoogleSecurity(): void {
 }
 
 function redirectToNiH(): void {
-  const url = environment.shibbolethUrl + '/link-nih-account?redirect-url=' +
+  let url = environment.shibbolethUrl + '/link-nih-account?redirect-url=' +
           encodeURIComponent(
             window.location.origin.toString() + '/nih-callback?token={token}');
+  url = 'https://broad-shibboleth-prod.appspot.com/dev/login?return-url=' + encodeURIComponent(
+    window.location.origin.toString() + '/nih-callback?token={token}');
   window.location.assign(url);
 }
 
