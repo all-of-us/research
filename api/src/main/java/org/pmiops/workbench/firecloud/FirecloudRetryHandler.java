@@ -8,9 +8,11 @@ import org.pmiops.workbench.exceptions.WorkbenchException;
 import org.pmiops.workbench.utils.ResponseCodeRetryPolicy;
 import org.pmiops.workbench.utils.RetryHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.retry.backoff.BackOffPolicy;
 import org.springframework.stereotype.Service;
 
+@Primary
 @Service
 public class FirecloudRetryHandler extends RetryHandler<ApiException> {
 
