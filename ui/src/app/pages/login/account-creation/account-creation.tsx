@@ -39,6 +39,7 @@ import {
 } from 'app/pages/login/account-creation/common';
 import {isBlank, reactStyles} from 'app/utils';
 import {serverConfigStore} from 'app/utils/navigation';
+import {TextAreaWithCharLimit} from "app/components/TextAreaWithCharLimit";
 
 const styles = reactStyles({
   ...commonStyles,
@@ -567,6 +568,17 @@ export class AccountCreation extends React.Component<AccountCreationProps, Accou
               border: `1px solid ${colorWithWhiteness(colors.dark, 0.5)}`}}>
               {2000 - areaOfResearch.length} characters remaining
             </FlexRow>
+
+            <div style={{height: '15rem', width: '26rem'}}>
+              <TextAreaWithCharLimit
+                value={areaOfResearch}
+                placeholder={'Describe Your Current Research'}
+                onChange={v => this.updateProfileObject('areaOfResearch', v)}
+                minCharCount={50}
+                maxCharCount={2000}
+              />
+            </div>
+
           </Section>
           {/* TODO(RW-4361): remove after we switch to verified institutional affiliation */}
           {!requireInstitutionalVerification && <React.Fragment>
