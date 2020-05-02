@@ -497,7 +497,7 @@ paths:
       - application/json
       responses:
         204:
-          description: Successfully Updated User In Group
+          description: Successfully Updated Users In Group
         403:
           description: You must be an admin of this group in order to enable/disable
             members
@@ -514,13 +514,13 @@ paths:
       parameters:
       - in: body
         name: request
-        description: Request containing user email to update and a disabled status
-          to update the user to.
+        description: Request containing a list of pairs of user emails and a disabled status to
+          update the users to
         schema:
-          "$ref": "#/definitions/UpdateUserDisabledRequest"
-      summary: enable/disable a user to an auth domain if you have ID verification
+          "$ref": "#definitions/UpdateDisabledStatusForUsersRequest"
+      summary: enable/disable a list of users to an auth domain if you have ID verification
         authority
-      operationId: updateUserDisabledStatus
+      operationId: updateDisabledStatusForUsers
   "/v1/user/{term}":
     get:
       tags:
@@ -5205,13 +5205,15 @@ definitions:
         type: array
         items:
           "$ref": "#/definitions/Profile"
-  UpdateUserDisabledRequest:
+  UpdateDisabledStatusForUsersRequest:
     type: object
     required:
-    - email
+    - emailList
     properties:
-      email:
-        type: string
+      usernameList:
+        type: array
+        items:
+          type: string
       disabled:
         description: Set to true to disable user in auth domain, false otherwise
         type: boolean

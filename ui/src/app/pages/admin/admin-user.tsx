@@ -75,10 +75,10 @@ export const AdminUser = withUserProfile()(class extends React.Component<
     });
   }
 
-  async updateUserDisabledStatus(disable: boolean, profile: Profile) {
+  async updateDisabledStatusForUsers(profile: Profile, disable: boolean) {
     this.setState({reloadingProfile: profile});
-    authDomainApi().updateUserDisabledStatus(
-      {email: profile.username, disabled: disable}).then(_ => {
+    authDomainApi().updateDisabledStatusForUsers(
+      {usernameList: [profile.username], disabled: disable}).then(_ => {
         this.reloadProfile(profile);
       });
   }
@@ -138,7 +138,7 @@ export const AdminUser = withUserProfile()(class extends React.Component<
       bypass: <AdminUserBypass profile={p}/>, disabled: p.disabled.toString(),
       userLockout: <LockoutButton disabled={this.state.reloadingProfile === p}
         profileDisabled={p.disabled}
-        onClick={() => this.updateUserDisabledStatus(!p.disabled, p)}/>}));
+        onClick={() => this.updateDisabledStatusForUsers(p, !p.disabled)}/>}));
   }
 
   render() {

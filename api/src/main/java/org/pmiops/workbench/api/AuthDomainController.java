@@ -1,5 +1,8 @@
 package org.pmiops.workbench.api;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.pmiops.workbench.actionaudit.auditors.AuthDomainAuditor;
 import org.pmiops.workbench.annotations.AuthorityRequired;
 import org.pmiops.workbench.db.dao.UserDao;
@@ -8,7 +11,7 @@ import org.pmiops.workbench.db.model.DbUser;
 import org.pmiops.workbench.firecloud.FireCloudService;
 import org.pmiops.workbench.model.Authority;
 import org.pmiops.workbench.model.EmptyResponse;
-import org.pmiops.workbench.model.UpdateUserDisabledRequest;
+import org.pmiops.workbench.model.UpdateDisabledStatusForUsersRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,23 +46,33 @@ public class AuthDomainController implements AuthDomainApiDelegate {
 
   @Override
   @AuthorityRequired({Authority.ACCESS_CONTROL_ADMIN})
-  public ResponseEntity<Void> updateUserDisabledStatus(UpdateUserDisabledRequest request) {
-    final DbUser targetDbUser = userDao.findUserByUsername(request.getEmail());
-    final Boolean previousDisabled = targetDbUser.getDisabled();
-    final DbUser updatedTargetUser =
-        userService.setDisabledStatus(targetDbUser.getUserId(), request.getDisabled());
-    auditAdminActions(request, previousDisabled, updatedTargetUser);
+  public ResponseEntity<Void> updateDisabledStatusForUsers(
+      UpdateDisabledStatusForUsersRequest request) {
+    final List<DbUser> dbUsers = userDao.findUsersByUsernameIn(request.getUsernameList());
+    final Map<Long, Boolean> oldDisabledStatusByUserId =
+        dbUsers.stream().collect(Collectors.toMap(DbUser::getUserId, DbUser::getDisabled));
+    final List<DbUser> updatedDbUsers =
+        userService.setDisabledStatusForUsers(dbUsers, request.getDisabled());
+    final Map<Long, Boolean> newDisabledStatusByUserId =
+        updatedDbUsers.stream().collect(Collectors.toMap(DbUser::getUserId, DbUser::getDisabled));
+    dbUsers.forEach(
+        user -> {
+          auditAdminActions(
+              newDisabledStatusByUserId.get(user.getUserId()),
+              oldDisabledStatusByUserId.get(user.getUserId()),
+              user);
+        });
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 
   private void auditAdminActions(
-      UpdateUserDisabledRequest request, Boolean previousDisabled, DbUser updatedTargetUser) {
+      Boolean newDisabled, Boolean previousDisabled, DbUser updatedTargetUser) {
     authDomainAuditAdapter.fireSetAccountDisabledStatus(
-        updatedTargetUser.getUserId(), request.getDisabled(), previousDisabled);
+        updatedTargetUser.getUserId(), newDisabled, previousDisabled);
     userService.logAdminUserAction(
         updatedTargetUser.getUserId(),
         "updated user disabled state",
         previousDisabled,
-        request.getDisabled());
+        newDisabled);
   }
 }
