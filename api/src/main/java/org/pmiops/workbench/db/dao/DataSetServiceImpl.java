@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.transaction.Transactional;
@@ -687,42 +688,24 @@ public class DataSetServiceImpl implements DataSetService, GaugeDataCollector {
   //    SELECT * FROM cdr.dataset.person WHERE criteria IN (1, 2, 3)
   private static String fillInQueryParams(
       String query, Map<String, QueryParameterValue> queryParameterValueMap) {
-    StringBuilder stringBuilder = new StringBuilder(query);
-    queryParameterValueMap.forEach(
-        (key, value) -> {
-          if (StandardSQLTypeName.ARRAY.equals(value.getType())) {
-            // This handles the replacement of array parameters.
-            // It finds the parameter (specified by `unnest(NAME)`)
-            String stringToReplace = "unnest(@".concat(key.concat(")"));
-            int startingIndex = stringBuilder.indexOf(stringToReplace);
-            stringBuilder.replace(
-                startingIndex,
-                startingIndex + stringToReplace.length(),
-                arraySqlFromQueryParameter(value));
-          } else {
-            // This handles the replacement of non-array parameters.
-            // getValue should always work, because it handles all value types except arrays and
-            // structs.
-            // We do not use structs.
-            String stringToReplace = "@".concat(key);
-            int startingIndex = stringBuilder.indexOf(stringToReplace);
-            Optional.ofNullable(value.getValue())
-                .ifPresent(
-                    v ->
-                        stringBuilder.replace(
-                            startingIndex, startingIndex + stringToReplace.length(), v));
-          }
-        });
-    return stringBuilder.toString();
+    return queryParameterValueMap.entrySet().stream()
+        .map(param -> (Function<String, String>) s -> replaceParameter(s, param))
+        .reduce(Function.identity(), Function::andThen)
+        .apply(query)
+        .replaceAll("unnest", "");
   }
 
   @NotNull
-  private static String arraySqlFromQueryParameter(QueryParameterValue value) {
-    return String.format(
-        "(%s)",
-        nullableListToEmpty(value.getArrayValues()).stream()
-            .map(QueryParameterValue::getValue)
-            .collect(Collectors.joining(", ")));
+  private static String replaceParameter(
+      String s, Map.Entry<String, QueryParameterValue> parameter) {
+    String value =
+        StandardSQLTypeName.ARRAY.equals(parameter.getValue().getType())
+            ? nullableListToEmpty(parameter.getValue().getArrayValues()).stream()
+                .map(QueryParameterValue::getValue)
+                .collect(Collectors.joining(", "))
+            : parameter.getValue().getValue();
+    String key = "@" + parameter.getKey();
+    return s.replaceAll(key, value);
   }
 
   private static String generateNotebookUserCode(
