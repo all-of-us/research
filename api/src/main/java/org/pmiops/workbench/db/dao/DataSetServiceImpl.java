@@ -703,7 +703,7 @@ public class DataSetServiceImpl implements DataSetService, GaugeDataCollector {
                 .map(DataSetServiceImpl::convertSqlTypeToString)
                 .collect(Collectors.joining(", "))
             : convertSqlTypeToString(parameter.getValue());
-    String key = "@" + parameter.getKey();
+    String key = String.format("@%s", parameter.getKey());
     return s.replaceAll(key, value);
   }
 
@@ -718,7 +718,7 @@ public class DataSetServiceImpl implements DataSetService, GaugeDataCollector {
       case STRING:
       case TIMESTAMP:
       case DATE:
-        return "'" + parameter.getValue() + "'";
+        return String.format("'%s'", parameter.getValue());
       default:
         throw new RuntimeException();
     }
