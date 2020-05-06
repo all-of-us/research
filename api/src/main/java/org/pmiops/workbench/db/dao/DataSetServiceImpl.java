@@ -1,8 +1,9 @@
 package org.pmiops.workbench.db.dao;
 
+import static com.google.cloud.bigquery.StandardSQLTypeName.ARRAY;
+
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.QueryParameterValue;
-import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.TableResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -25,7 +26,6 @@ import java.util.stream.StreamSupport;
 import javax.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.engine.jdbc.internal.BasicFormatterImpl;
-import org.jetbrains.annotations.NotNull;
 import org.pmiops.workbench.api.BigQueryService;
 import org.pmiops.workbench.cdr.ConceptBigQueryService;
 import org.pmiops.workbench.cohortbuilder.CohortQueryBuilder;
@@ -695,17 +695,33 @@ public class DataSetServiceImpl implements DataSetService, GaugeDataCollector {
         .replaceAll("unnest", "");
   }
 
-  @NotNull
   private static String replaceParameter(
       String s, Map.Entry<String, QueryParameterValue> parameter) {
     String value =
-        StandardSQLTypeName.ARRAY.equals(parameter.getValue().getType())
+        ARRAY.equals(parameter.getValue().getType())
             ? nullableListToEmpty(parameter.getValue().getArrayValues()).stream()
-                .map(QueryParameterValue::getValue)
+                .map(DataSetServiceImpl::convertSqlTypeToString)
                 .collect(Collectors.joining(", "))
-            : parameter.getValue().getValue();
+            : convertSqlTypeToString(parameter.getValue());
     String key = "@" + parameter.getKey();
     return s.replaceAll(key, value);
+  }
+
+  private static String convertSqlTypeToString(QueryParameterValue parameter) {
+    switch (parameter.getType()) {
+      case BOOL:
+        return Boolean.valueOf(parameter.getValue()) ? "1" : "0";
+      case INT64:
+      case FLOAT64:
+      case NUMERIC:
+        return parameter.getValue();
+      case STRING:
+      case TIMESTAMP:
+      case DATE:
+        return "'" + parameter.getValue() + "'";
+      default:
+        throw new RuntimeException();
+    }
   }
 
   private static String generateNotebookUserCode(
