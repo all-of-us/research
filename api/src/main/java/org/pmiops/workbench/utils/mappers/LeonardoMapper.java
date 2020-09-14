@@ -103,7 +103,7 @@ public interface LeonardoMapper {
 
   default String getJupyterImage(List<LeonardoRuntimeImage> images) {
     return images.stream()
-        .filter(image -> "Jupyter".equals(image.getImageType()))
+        .filter(image -> image.getImageType().equals("Jupyter"))
         .findFirst()
         .get()
         .getImageUrl();
