@@ -363,7 +363,7 @@ public class RuntimeControllerTest {
   }
 
   @Test
-  public void testGetRuntime_gceConfig() throws ApiException {
+  public void testGetRuntime_gceConfig() {
     GceConfig gceConfig =
         new GceConfig().bootDiskSize(10).diskSize(100).machineType("n1-standard-2");
 
@@ -373,7 +373,7 @@ public class RuntimeControllerTest {
     gceConfigObj.put("machineType", "n1-standard-2");
     gceConfigObj.put("cloudService", "GCE");
 
-    when(userRuntimesApi.getRuntime(BILLING_PROJECT_ID, getRuntimeName()))
+    when(mockLeoNotebooksClient.getRuntime(BILLING_PROJECT_ID, getRuntimeName()))
         .thenReturn(testLeoRuntime.runtimeConfig(gceConfigObj));
 
     assertThat(runtimeController.getRuntime(BILLING_PROJECT_ID).getBody())
@@ -381,8 +381,8 @@ public class RuntimeControllerTest {
   }
 
   @Test
-  public void testGetRuntime_UnknownStatus() throws ApiException {
-    when(userRuntimesApi.getRuntime(BILLING_PROJECT_ID, getRuntimeName()))
+  public void testGetRuntime_UnknownStatus() {
+    when(mockLeoNotebooksClient.getRuntime(BILLING_PROJECT_ID, getRuntimeName()))
         .thenReturn(testLeoRuntime.status(null));
 
     assertThat(runtimeController.getRuntime(BILLING_PROJECT_ID).getBody().getStatus())
