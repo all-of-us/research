@@ -5499,12 +5499,6 @@ definitions:
           Optional, the number of preemptible workers. If unspecified, the
           default number is 0. Ignored if numberOfWorkers is 0.
           For more information, see https://cloud.google.com/compute/docs/instances/preemptible
-  FileDetail:
-    type: object
-    required:
-    - name
-    - path
-    - lastModifiedTime
   ListRuntimeResponse:
     description: This is a subset of options in a full runtimes response, copied from leonardo.yaml.
     required:

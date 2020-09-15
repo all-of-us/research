@@ -51,7 +51,6 @@ public interface LeonardoMapper {
 
   @Mapping(target = "createdDate", source = "auditInfo.createdDate")
   @Mapping(target = "toolDockerImage", source = "runtimeImages")
-  @Mapping(target = "configurationType", ignore = true)
   @Mapping(target = "gceConfig", ignore = true)
   @Mapping(target = "dataprocConfig", ignore = true)
   Runtime toApiRuntime(LeonardoGetRuntimeResponse runtime);
