@@ -56,7 +56,7 @@ const styles = reactStyles({
     top: '60px',
     right: 0,
     height: 'calc(100% - 60px)',
-    transition: 'width 0.5s ease-out',
+    width: 'calc(30rem + 45px)',
     overflow: 'hidden',
     color: colors.primary,
     zIndex: -1,
