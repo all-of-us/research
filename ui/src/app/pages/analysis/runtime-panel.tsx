@@ -109,7 +109,11 @@ export const RuntimePanel = withCurrentWorkspace()(
         masterMachineName = runtime.gceConfig.machineType;
         masterDiskSize = runtime.gceConfig.bootDiskSize;
       }
+<<<<<<< HEAD
       const machineType = allMachineTypes.find(({name}) => name === masterMachineName) || defaultMachineType;
+=======
+      const machineType = machineTypes.find(({name}) => name === masterMachineName) || defaultMachineType;
+>>>>>>> defaults
 
       return <div data-test-id='runtime-panel'>
         <h3 style={styles.sectionHeader}>Cloud analysis environment</h3>
