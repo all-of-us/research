@@ -166,7 +166,9 @@ export class LeoRuntimeInitializer {
   }
 
   private async getRuntime(): Promise<Runtime> {
-    return await runtimeApi().getRuntime(this.workspaceNamespace, {signal: this.abortSignal});
+    const runtime = await runtimeApi().getRuntime(this.workspaceNamespace, {signal: this.abortSignal});
+    updateRuntimeStoreForWorkspaceNamespace(this.workspaceNamespace, runtime);
+    return runtime;
   }
 
   private async createRuntime(): Promise<void> {
@@ -178,6 +180,7 @@ export class LeoRuntimeInitializer {
       {configurationType: RuntimeConfigurationType.DefaultDataproc},
       {signal: this.abortSignal});
     this.createCount++;
+    await this.getRuntime(); // to update the runtimesStore
   }
 
   private async resumeRuntime(): Promise<void> {
@@ -188,6 +191,7 @@ export class LeoRuntimeInitializer {
     await leoRuntimesApi().startRuntime(
       this.currentRuntime.googleProject, this.currentRuntime.runtimeName, {signal: this.abortSignal});
     this.resumeCount++;
+    await this.getRuntime(); // TODO aschwart: there is a better way to do this
   }
 
   private async deleteRuntime(): Promise<void> {
@@ -197,6 +201,7 @@ export class LeoRuntimeInitializer {
     }
     await runtimeApi().deleteRuntime(this.workspaceNamespace, {signal: this.abortSignal});
     this.deleteCount++;
+    await this.getRuntime(); // TODO aschwart: there is a better way to do this
   }
 
   private isRuntimeRunning(): boolean {
@@ -228,7 +233,7 @@ export class LeoRuntimeInitializer {
   }
 
   /**
-   * Runs the runtime intiailizer flow.
+   * Runs the runtime initializer flow.
    *
    * The strategy here is to poll the getRuntime endpoint for runtime status, waiting for the
    * runtime to reach the ready state (RuntimeStatus.Running) or an error state which can be

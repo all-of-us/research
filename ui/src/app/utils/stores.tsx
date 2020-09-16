@@ -1,7 +1,8 @@
 import {Profile} from 'generated';
 import * as React from 'react';
-import { BreadcrumbType } from './navigation';
+import {BreadcrumbType} from './navigation';
 import {atom, Atom} from './subscribable';
+import {Runtime} from "generated/fetch";
 
 const {useEffect, useState} = React;
 
@@ -29,6 +30,22 @@ interface ProfileStore {
 }
 
 export const profileStore = atom<ProfileStore>({});
+
+interface WorkspaceRuntime {
+  [workspaceNamespace: string]: Runtime
+}
+
+interface RuntimesStore {
+  runtimesByWorkspaceNamespace: WorkspaceRuntime;
+}
+
+export const runtimesStore = atom<RuntimesStore>({runtimesByWorkspaceNamespace: {}});
+
+export const updateRuntimeStoreForWorkspaceNamespace = (workspaceNamespace: string, runtime: Runtime) => {
+  const runtimesByWorkspaceNamespace = runtimesStore.get().runtimesByWorkspaceNamespace;
+  runtimesByWorkspaceNamespace[workspaceNamespace] = runtime;
+  runtimesStore.set({runtimesByWorkspaceNamespace: runtimesByWorkspaceNamespace});
+}
 
 /**
  * @name useStore
