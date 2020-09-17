@@ -16,15 +16,6 @@ import {Runtime} from 'generated/fetch';
 import * as fp from 'lodash/fp';
 import * as React from 'react';
 
-<<<<<<< HEAD
-=======
-import {Button} from 'app/components/buttons';
-import {FlexColumn, FlexRow} from 'app/components/flex';
-import colors, {addOpacity, colorWithWhiteness} from 'app/styles/colors';
-import {reactStyles, withCurrentWorkspace, withUserProfile} from 'app/utils';
-import {WorkspaceData} from 'app/utils/workspace-data';
-import {runtimeOpsStore, useStore} from "../../utils/stores";
->>>>>>> shelving??
 
 const styles = reactStyles({
   sectionHeader: {
@@ -81,7 +72,13 @@ export const RuntimePanel = withCurrentWorkspace()(
       let runtime = null;
       let error = false;
       try {
-        runtime = await runtimeApi().getRuntime(this.props.workspace.namespace, {signal: this.aborter.signal});
+        const promise = runtimeApi().getRuntime(this.props.workspace.namespace, {signal: this.aborter.signal});
+        updateRuntimeOpsStoreForWorkspaceNamespace(this.props.workspace.namespace, {
+          promise: promise,
+          operation: 'get',
+          aborter: this.aborter
+        });
+        await promise
       } catch (e) {
         // 404 is expected if the runtime doesn't exist, represent this as a null
         // runtime rather than an error mode.
@@ -89,6 +86,7 @@ export const RuntimePanel = withCurrentWorkspace()(
           error = true;
         }
       }
+      markRuntimeOperationCompleteForWorkspace(this.props.workspace.namespace);
       this.setState({
         runtime,
         error,
@@ -205,16 +203,9 @@ export const RuntimePanel = withCurrentWorkspace()(
                       value={isDataproc ? 'Dataproc cluster' : 'Standard VM'}/>
           </FlexColumn>
         </div>
-<<<<<<< HEAD
         <FlexRow style={{justifyContent: 'flex-end', marginTop: '.75rem'}}>
           <Button disabled={true}>Create</Button>
         </FlexRow>
-=======
-        {runtime && <div style={styles.runtimeSection}>
-          <h3 style={styles.sectionHeader}>Runtime status</h3>
-          <div>{runtime.status}</div>
-        </div>}
->>>>>>> shelving??
       </div>;
     }
 
