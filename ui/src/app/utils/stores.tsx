@@ -31,20 +31,42 @@ interface ProfileStore {
 
 export const profileStore = atom<ProfileStore>({});
 
-interface WorkspaceRuntime {
-  [workspaceNamespace: string]: Runtime
+export interface RuntimeOperation {
+  promise: Promise<any>,
+  operation: string,
+  aborter: AbortController
 }
 
-interface RuntimesStore {
-  runtimesByWorkspaceNamespace: WorkspaceRuntime;
+interface WorkspaceRuntimeOperation {
+  [workspaceNamespace: string]: RuntimeOperation
 }
 
-export const runtimesStore = atom<RuntimesStore>({runtimesByWorkspaceNamespace: {}});
+interface RuntimeOpsStore {
+  opsByWorkspaceNamespace: WorkspaceRuntimeOperation;
+}
 
-export const updateRuntimeStoreForWorkspaceNamespace = (workspaceNamespace: string, runtime: Runtime) => {
-  const runtimesByWorkspaceNamespace = runtimesStore.get().runtimesByWorkspaceNamespace;
-  runtimesByWorkspaceNamespace[workspaceNamespace] = runtime;
-  runtimesStore.set({runtimesByWorkspaceNamespace: runtimesByWorkspaceNamespace});
+export const runtimeOpsStore = atom<RuntimeOpsStore>({opsByWorkspaceNamespace: {}});
+
+export const updateRuntimeOpsStoreForWorkspaceNamespace = (workspaceNamespace: string, runtimeOperation: RuntimeOperation) => {
+  const opsByWorkspaceNamespace = runtimeOpsStore.get().opsByWorkspaceNamespace;
+  opsByWorkspaceNamespace[workspaceNamespace] = runtimeOperation;
+  runtimeOpsStore.set({...runtimeOpsStore.get(), opsByWorkspaceNamespace: opsByWorkspaceNamespace});
+}
+
+export const markRuntimeOperationCompleteForWorkspace = (workspaceNamespace: string) => {
+  const opsByWorkspaceNamespace = runtimeOpsStore.get().opsByWorkspaceNamespace;
+  if (!!opsByWorkspaceNamespace[workspaceNamespace]) {
+    delete opsByWorkspaceNamespace[workspaceNamespace];
+  }
+}
+
+export const abortRuntimeOperationForWorkspace = (workspaceNamespace: string) => {
+  const opsByWorkspaceNamespace = runtimeOpsStore.get().opsByWorkspaceNamespace;
+  if (!!opsByWorkspaceNamespace[workspaceNamespace]) {
+    const runtimeOperation = opsByWorkspaceNamespace[workspaceNamespace];
+    runtimeOperation.aborter.abort();
+    delete opsByWorkspaceNamespace[workspaceNamespace];
+  }
 }
 
 /**
