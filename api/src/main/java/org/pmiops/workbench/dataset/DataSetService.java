@@ -32,7 +32,7 @@ public interface DataSetService {
   List<String> generateCodeCells(
       KernelTypeEnum kernelTypeEnum,
       String dataSetName,
-      String cdrVersionName,
+      DbCdrVersion cdrVersion,
       String qualifier,
       Map<String, QueryJobConfiguration> queryJobConfigurationMap);
 
