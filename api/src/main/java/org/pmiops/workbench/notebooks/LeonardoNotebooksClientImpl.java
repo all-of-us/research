@@ -42,7 +42,6 @@ import org.springframework.stereotype.Service;
 public class LeonardoNotebooksClientImpl implements LeonardoNotebooksClient {
 
   private static final String WORKSPACE_CDR = "WORKSPACE_CDR";
-  private static final String WORKSPACE_CDR_VERSION_ID = "WORKSPACE_CDR_VERSION_ID";
 
   private static final Logger log = Logger.getLogger(LeonardoNotebooksClientImpl.class.getName());
 
