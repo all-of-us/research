@@ -82,7 +82,7 @@ public enum BigQueryDataSetTableInfo {
   MEASUREMENT(
       Domain.MEASUREMENT,
       "ds_measurement",
-      " measurement_concept_id in (select concept_id\n"
+      " select concept_id\n"
           + "from `${projectId}.${dataSetId}.cb_criteria` c\n"
           + "join (select cast(id as string)  as id\n"
           + "from `${projectId}.${dataSetId}.cb_criteria`\n"
@@ -91,8 +91,8 @@ public enum BigQueryDataSetTableInfo {
           + "and is_standard = 1) a\n"
           + "on (c.path like concat('%.', a.id, '.%') or c.path like concat('%.', a.id))\n"
           + "and domain_id = 'MEASUREMENT'\n"
-          + "and is_standard = 1)",
-      " measurement_source_concept_id in (select concept_id\n"
+          + "and is_standard = 1",
+      " select concept_id\n"
           + "from `${projectId}.${dataSetId}.cb_criteria` c\n"
           + "join (select cast(id as string)  as id\n"
           + "from `${projectId}.${dataSetId}.cb_criteria`\n"
@@ -101,7 +101,13 @@ public enum BigQueryDataSetTableInfo {
           + "and is_standard = 0) a\n"
           + "on (c.path like concat('%.', a.id, '.%') or c.path like concat('%.', a.id))\n"
           + "and domain_id = 'MEASUREMENT'\n"
-          + "and is_standard = 0)",
+          + "and is_standard = 0",
+      " (measurement_concept_id in unnest(@conceptIds) or measurement_source_concept_id in unnest(@conceptIds))"),
+  PHYSICAL_MEASUREMENT(
+      Domain.PHYSICAL_MEASUREMENT,
+      "ds_measurement",
+      " select concept_id\n from `${projectId}.${dataSetId}.concept`\n where concept_id in unnest(@pmStandardConceptIds)",
+      " select concept_id\n from `${projectId}.${dataSetId}.concept`\n where concept_id in unnest(@pmSourceConceptIds)",
       " (measurement_concept_id in unnest(@conceptIds) or measurement_source_concept_id in unnest(@conceptIds))"),
   SURVEY(
       Domain.SURVEY,
