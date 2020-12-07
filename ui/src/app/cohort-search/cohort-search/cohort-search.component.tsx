@@ -8,6 +8,7 @@ import {generateId, typeToTitle} from 'app/cohort-search/utils';
 import {Button, Clickable} from 'app/components/buttons';
 import {FlexRowWrap} from 'app/components/flex';
 import {CriteriaSearch} from 'app/pages/data/criteria-search';
+import {cohortBuilderApi} from 'app/services/swagger-fetch-clients';
 import colors, {addOpacity} from 'app/styles/colors';
 import {reactStyles, withCurrentCohortSearchContext} from 'app/utils';
 import {triggerEvent} from 'app/utils/analytics';
@@ -15,6 +16,7 @@ import {
   attributesSelectionStore,
   currentCohortCriteriaStore,
   currentCohortSearchContextStore,
+  currentWorkspaceStore,
   serverConfigStore,
   setSidebarActiveIconStore,
 } from 'app/utils/navigation';
@@ -179,6 +181,12 @@ export const CohortSearch = withCurrentCohortSearchContext()(class extends React
     const {cohortContext: {domain, item, standard, type}} = this.props;
     // JSON stringify and parse prevents changes to selections from being passed to the cohortContext
     const selections = JSON.parse(JSON.stringify(item.searchParameters));
+    const criteriaRequest = {
+      sourceConceptIds: selections.filter(s => !s.isStandard).map(s => s.conceptId),
+      standardConceptIds: selections.filter(s => s.isStandard).map(s => s.conceptId),
+    };
+    const {cdrVersionId} = currentWorkspaceStore.getValue();
+    cohortBuilderApi().findCriteriaForCohortEdit(+cdrVersionId, domain, criteriaRequest).then(res => console.log(res));
     const selectedIds = selections.map(s => s.parameterId);
     if (type === CriteriaType.DECEASED) {
       this.selectDeceased();
