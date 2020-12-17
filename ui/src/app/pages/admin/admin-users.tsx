@@ -56,9 +56,17 @@ export const AdminUsers = withUserProfile()(class extends React.Component<
     this.loadProfiles();
   }
 
+  debugPrintProfiles(prefix: string, profiles: Profile[]) {
+    profiles.forEach(p => {
+      console.log(`${prefix}: ${p.username}`);
+    });
+  }
+
   async loadProfiles() {
     this.setState({contentLoaded: false});
     profileApi().getAllUsers().then(profilesResp => {
+      this.debugPrintProfiles('loadProfiles presort', profilesResp.profileList);
+      this.debugPrintProfiles('loadProfiles postsort', this.sortProfileList(profilesResp.profileList));
       this.setState({profiles: this.sortProfileList(profilesResp.profileList),
         contentLoaded: true});
     });
@@ -72,6 +80,7 @@ export const AdminUsers = withUserProfile()(class extends React.Component<
     const index = profiles.findIndex(x => x.username === profile.username);
     profileApi().getUser(profile.userId).then(updatedProfile => {
       profiles[index] = updatedProfile;
+      this.debugPrintProfiles('reloadProfile', profiles);
       this.setState({profiles: profiles, reloadingProfile: null});
     });
   }
@@ -134,13 +143,15 @@ export const AdminUsers = withUserProfile()(class extends React.Component<
   }
 
   convertProfilesToFields(profiles: Profile[]) {
+    this.debugPrintProfiles('convertProfilesToFields', profiles);
     return profiles.map(p => ({
       ...p,
       name: <a onClick={() => navigate(['admin', 'users', usernameWithoutDomain(p.username)])}>
         {p.familyName + ', ' + p.givenName}
       </a>,
       betaAccessRequestTime: this.convertDate(p.betaAccessRequestTime),
-      bypass: <AdminUserBypass profile={p}/>, disabled: p.disabled.toString(),
+      bypass: <AdminUserBypass profile={p} onUpdate={() => this.reloadProfile(p)}/>,
+      disabled: p.disabled.toString(),
       userLockout: <LockoutButton disabled={this.state.reloadingProfile === p}
         profileDisabled={p.disabled}
         onClick={() => this.updateUserDisabledStatus(!p.disabled, p)}/>,

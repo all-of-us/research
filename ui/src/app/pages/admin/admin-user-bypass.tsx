@@ -22,11 +22,18 @@ const styles = reactStyles({
   }
 });
 
-export class AdminUserBypass extends React.Component<
-    { profile: Profile},
-    { initialModules: AccessModule[], selectedModules: AccessModule[],
-      open: boolean} > {
+interface Props {
+  profile: Profile;
+  onUpdate: () => Promise<void>;
+}
 
+interface State {
+  initialModules: AccessModule[];
+  selectedModules: AccessModule[];
+  open: boolean;
+}
+
+export class AdminUserBypass extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     const {profile} = props;
@@ -49,9 +56,9 @@ export class AdminUserBypass extends React.Component<
     this.setState({selectedModules: initialModules});
   }
 
-  save() {
+  async save() {
     const {initialModules, selectedModules} = this.state;
-    const {profile} = this.props;
+    const {profile, onUpdate} = this.props;
     const changedModules = fp.xor(initialModules, selectedModules);
     changedModules.forEach(async module => {
       await profileApi()
@@ -60,6 +67,7 @@ export class AdminUserBypass extends React.Component<
     });
 
     this.setState({initialModules: selectedModules});
+    await onUpdate();
   }
 
   hasEdited(): boolean {
