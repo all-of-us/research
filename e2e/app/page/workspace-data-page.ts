@@ -1,14 +1,15 @@
-import ConceptDomainCard, {Domain} from 'app/component/concept-domain-card';
+import ConceptDomainCard, { Domain } from 'app/component/concept-domain-card';
 
 import DataResourceCard from 'app/component/data-resource-card';
 import ClrIconLink from 'app/element/clr-icon-link';
-import {Option, Language, ResourceCard} from 'app/text-labels';
-import {ElementHandle, Page} from 'puppeteer';
-import {makeRandomName} from 'utils/str-utils';
-import {waitForDocumentTitle, waitWhileLoading} from 'utils/waits-utils';
+import { Option, Language, ResourceCard } from 'app/text-labels';
+import { ElementHandle, Page } from 'puppeteer';
+import { makeRandomName } from 'utils/str-utils';
+import { waitForDocumentTitle, waitWhileLoading } from 'utils/waits-utils';
 import CohortActionsPage from './cohort-actions-page';
 import CohortBuildPage from './cohort-build-page';
-import {Visits} from './criteria-search-page';
+import ConceptSetSearchPage from './conceptset-search-page';
+import CriteriaSearchPage, { Visits } from './criteria-search-page';
 import DatasetBuildPage from './dataset-build-page';
 import NotebookPage from './notebook-page';
 import WorkspaceAnalysisPage from './workspace-analysis-page';
@@ -17,7 +18,6 @@ import WorkspaceBase from './workspace-base';
 const PageTitle = 'Data Page';
 
 export default class WorkspaceDataPage extends WorkspaceBase {
-
   constructor(page: Page) {
     super(page);
   }
@@ -25,7 +25,7 @@ export default class WorkspaceDataPage extends WorkspaceBase {
   async isLoaded(): Promise<boolean> {
     await Promise.all([
       waitForDocumentTitle(this.page, PageTitle),
-      waitWhileLoading(this.page)
+      waitWhileLoading(this.page),
     ]);
     await this.imgDiagramLoaded();
     return true;
@@ -33,17 +33,29 @@ export default class WorkspaceDataPage extends WorkspaceBase {
 
   async imgDiagramLoaded(): Promise<ElementHandle[]> {
     return Promise.all<ElementHandle, ElementHandle>([
-      this.page.waitForXPath('//img[@src="/assets/images/dataset-diagram.svg"]', {visible: true}),
-      this.page.waitForXPath('//img[@src="/assets/images/cohort-diagram.svg"]', {visible: true}),
+      this.page.waitForXPath(
+        '//img[@src="/assets/images/dataset-diagram.svg"]',
+        { visible: true }
+      ),
+      this.page.waitForXPath(
+        '//img[@src="/assets/images/cohort-diagram.svg"]',
+        { visible: true }
+      ),
     ]);
   }
 
   async getAddDatasetButton(): Promise<ClrIconLink> {
-    return ClrIconLink.findByName(this.page, {name: 'Datasets', iconShape: 'plus-circle'});
+    return ClrIconLink.findByName(this.page, {
+      name: 'Datasets',
+      iconShape: 'plus-circle',
+    });
   }
 
   async getAddCohortsButton(): Promise<ClrIconLink> {
-    return ClrIconLink.findByName(this.page, {name: 'Cohorts', iconShape: 'plus-circle'});
+    return ClrIconLink.findByName(this.page, {
+      name: 'Cohorts',
+      iconShape: 'plus-circle',
+    });
   }
 
   // Click Add Datasets button.
@@ -63,11 +75,21 @@ export default class WorkspaceDataPage extends WorkspaceBase {
    * @param {string} datasetName Dataset name.
    * @param {string} notebookName Notebook name.
    */
-  async exportToNotebook(datasetName: string, notebookName: string): Promise<void> {
+  async exportToNotebook(
+    datasetName: string,
+    notebookName: string
+  ): Promise<void> {
     const resourceCard = new DataResourceCard(this.page);
-    const datasetCard = await resourceCard.findCard(datasetName, ResourceCard.Dataset);
-    await datasetCard.selectSnowmanMenu(Option.exportToNotebook, {waitForNav: false});
-    console.log(`Exported Dataset "${datasetName}" to notebook "${notebookName}"`);
+    const datasetCard = await resourceCard.findCard(
+      datasetName,
+      ResourceCard.Dataset
+    );
+    await datasetCard.selectSnowmanMenu(Option.exportToNotebook, {
+      waitForNav: false,
+    });
+    console.log(
+      `Exported Dataset "${datasetName}" to notebook "${notebookName}"`
+    );
   }
 
   async findCohortCard(cohortName?: string): Promise<DataResourceCard> {
@@ -97,9 +119,9 @@ export default class WorkspaceDataPage extends WorkspaceBase {
     await group1.viewAndSaveCriteria();
     await waitWhileLoading(this.page);
     await cohortBuildPage.getTotalCount();
-    const name = (cohortName === undefined) ? makeRandomName() : cohortName;
+    const name = cohortName === undefined ? makeRandomName() : cohortName;
     await cohortBuildPage.saveCohortAs(name);
-    await (new CohortActionsPage(this.page)).waitForLoad();
+    await new CohortActionsPage(this.page).waitForLoad();
     return this.findCohortCard(name);
   }
 
@@ -109,7 +131,12 @@ export default class WorkspaceDataPage extends WorkspaceBase {
    * Click Domain card.
    * @param {Domain} domain
    */
-  async openConceptSetSearch(domain: Domain): Promise<any> {
+  async openConceptSetSearch(
+    domain: Domain
+  ): Promise<{
+    conceptSearchPage: ConceptSetSearchPage;
+    criteriaSearch: CriteriaSearchPage;
+  }> {
     // Click Add Datasets button.
     const datasetBuildPage = await this.clickAddDatasetButton();
 
@@ -117,10 +144,13 @@ export default class WorkspaceDataPage extends WorkspaceBase {
     const conceptSearchPage = await datasetBuildPage.clickAddConceptSetsButton();
 
     // Add Concept Set in domain.
-    const procedures = await ConceptDomainCard.findDomainCard(this.page, domain);
+    const procedures = await ConceptDomainCard.findDomainCard(
+      this.page,
+      domain
+    );
     const criteriaSearch = await procedures.clickSelectConceptButton();
 
-    return {conceptSearchPage, criteriaSearch};
+    return { conceptSearchPage, criteriaSearch };
   }
 
   /**
@@ -131,11 +161,13 @@ export default class WorkspaceDataPage extends WorkspaceBase {
    * @param notebookName The notebook name.
    * @param {Language} lang The notebook language.
    */
-  async createNotebook(notebookName: string, lang: Language = Language.Python): Promise<NotebookPage> {
+  async createNotebook(
+    notebookName: string,
+    lang: Language = Language.Python
+  ): Promise<NotebookPage> {
     await this.openAnalysisPage();
     const analysisPage = new WorkspaceAnalysisPage(this.page);
     await analysisPage.waitForLoad();
     return analysisPage.createNotebook(notebookName, lang);
   }
-
 }

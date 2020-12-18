@@ -1,13 +1,13 @@
 import Link from 'app/element/link';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
-import WorkspacesPage, {FieldSelector} from 'app/page/workspaces-page';
-import {signIn, performActions} from 'utils/test-utils';
+import WorkspacesPage, { FieldSelector } from 'app/page/workspaces-page';
+import { signIn, performActions } from 'utils/test-utils';
 import Button from 'app/element/button';
 import * as testData from 'resources/data/workspace-data';
-import {makeWorkspaceName} from 'utils/str-utils';
-import {UseFreeCredits} from 'app/page/workspace-base';
+import { makeWorkspaceName } from 'utils/str-utils';
+import { UseFreeCredits } from 'app/page/workspace-base';
 import WorkspaceEditPage from 'app/page/workspace-edit-page';
-import {config} from 'resources/workbench-config';
+import { config } from 'resources/workbench-config';
 
 describe('Creating new workspaces', () => {
   beforeEach(async () => {
@@ -20,12 +20,19 @@ describe('Creating new workspaces', () => {
     await workspacesPage.load();
 
     // create workspace with "No Review Requested" radiobutton selected
-    const modalTextContent = await workspacesPage.createWorkspace(newWorkspaceName);
+    const modalTextContent = await workspacesPage.createWorkspace(
+      newWorkspaceName
+    );
 
     // Pick out few sentenses to verify
     expect(modalTextContent).toContain('Create Workspace');
-    expect(modalTextContent).toContain('Primary purpose of your project (Question 1)Summary of research purpose (Question 2)Population of interest (Question 5)');
-    expect(modalTextContent).toContain('You can also make changes to your answers after you create your workspace.');
+    expect(modalTextContent).toContain(
+      'Primary purpose of your project (Question 1)Summary of research purpose' +
+        '(Question 2)Population of interest (Question 5)'
+    );
+    expect(modalTextContent).toContain(
+      'You can also make changes to your answers after you create your workspace.'
+    );
 
     const dataPage = await verifyWorkspaceLinkOnDataPage(newWorkspaceName);
 
@@ -40,7 +47,10 @@ describe('Creating new workspaces', () => {
     const workspacesPage = new WorkspacesPage(page);
     await workspacesPage.load();
 
-    const createNewWorkspaceButton  = await Button.findByName(page, FieldSelector.CreateNewWorkspaceButton.textOption );
+    const createNewWorkspaceButton = await Button.findByName(
+      page,
+      FieldSelector.CreateNewWorkspaceButton.textOption
+    );
     await createNewWorkspaceButton.clickAndWait();
 
     const workspaceEditPage = new WorkspaceEditPage(page);
@@ -62,10 +72,16 @@ describe('Creating new workspaces', () => {
     await performActions(page, testData.defaultAnswersResearchPurposeSummary);
 
     // fill out question #3 - The All of Us Research Program encourages researchers to disseminate their research findings...
-    await performActions(page, testData.defaultAnswersDisseminateResearchFindings);
+    await performActions(
+      page,
+      testData.defaultAnswersDisseminateResearchFindings
+    );
 
     // fill out question #4 - select all of the statements below that describe the outcomes you anticipate from your research.
-    await performActions(page, testData.defaultAnswersAnticipatedOutcomesFromResearch);
+    await performActions(
+      page,
+      testData.defaultAnswersAnticipatedOutcomesFromResearch
+    );
 
     // fill out question #5 - Population interest
     await performActions(page, testData.defaultAnswersPopulationOfInterest);
@@ -82,12 +98,14 @@ describe('Creating new workspaces', () => {
   });
 
   // helper function to check visible workspace link on Data page
-  async function verifyWorkspaceLinkOnDataPage(workspaceName: string): Promise<WorkspaceDataPage> {
+  async function verifyWorkspaceLinkOnDataPage(
+    workspaceName: string
+  ): Promise<WorkspaceDataPage> {
     const dataPage = new WorkspaceDataPage(page);
     await dataPage.waitForLoad();
 
     const workspaceLink = new Link(page, `//a[text()='${workspaceName}']`);
-    await workspaceLink.waitForXPath({visible: true});
+    await workspaceLink.waitForXPath({ visible: true });
     expect(await workspaceLink.isVisible()).toBe(true);
     return dataPage;
   }

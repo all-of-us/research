@@ -2,11 +2,10 @@ import BaseElement from 'app/element/base-element';
 import HomePage from 'app/page/home-page';
 import WorkspaceCard from 'app/component/workspace-card';
 import WorkspacesPage from 'app/page/workspaces-page';
-import {signIn} from 'utils/test-utils';
-import Navigation, {NavLink} from 'app/component/navigation';
+import { signIn } from 'utils/test-utils';
+import Navigation, { NavLink } from 'app/component/navigation';
 
 describe('Workspace ui tests', () => {
-
   beforeEach(async () => {
     await signIn(page);
   });
@@ -37,7 +36,7 @@ describe('Workspace ui tests', () => {
   test('Check Workspace cards on the Workspaces page', async () => {
     const home = new HomePage(page);
     await home.load();
-    
+
     await Navigation.navMenu(page, NavLink.YOUR_WORKSPACES);
     await new WorkspacesPage(page).waitForLoad();
 
@@ -54,7 +53,9 @@ describe('Workspace ui tests', () => {
 
     const snowmanMenu = await card.getSnowmanMenu();
     const links = await snowmanMenu.getAllOptionTexts();
-    expect(links).toEqual(expect.arrayContaining(['Share', 'Edit', 'Duplicate', 'Delete']));
+    expect(links).toEqual(
+      expect.arrayContaining(['Share', 'Edit', 'Duplicate', 'Delete'])
+    );
   });
 
   test('Click CANCEL button bring user back to the Workspaces page', async () => {
@@ -64,7 +65,9 @@ describe('Workspace ui tests', () => {
     // Click Create New Workspace link on the Workspaces page
     const editPage = await workspaces.clickCreateNewWorkspace();
 
-    await (await editPage.getWorkspaceNameTextbox()).type('I-love-my-new-workspace');
+    await (await editPage.getWorkspaceNameTextbox()).type(
+      'I-love-my-new-workspace'
+    );
     await (await editPage.getWorkspaceNameTextbox()).pressTab();
 
     // No Confirm to Cancel confirmation dialog
@@ -74,5 +77,4 @@ describe('Workspace ui tests', () => {
     await workspaces.waitForLoad();
     expect(await workspaces.isLoaded()).toBe(true);
   });
-
 });

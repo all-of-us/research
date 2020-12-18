@@ -16,26 +16,27 @@ const NEW_CHROME_SWITCHES = [
   '--no-zygote',
   '--no-sandbox', // required for --no-zygote flag
   '--safebrowsing-disable-auto-update',
-  '--window-size=1280,1024'
+  '--window-size=1280,1024',
 ];
 
 // Append to Puppeteer default chrome flags.
 // https://github.com/puppeteer/puppeteer/blob/33f1967072e07824c5bf6a8c1336f844d9efaabf/lib/Launcher.js#L261
 const DEFAULT_SWITCHES = fp.concat(
-  puppeteer.defaultArgs({devtools: false, headless: isHeadless, userDataDir: null}),
+  puppeteer.defaultArgs({
+    devtools: false,
+    headless: isHeadless,
+    userDataDir: null,
+  }),
   NEW_CHROME_SWITCHES
 );
 
 // Need for running Puppeteer headless Chromium in docker container.
-const CI_SWITCHES = fp.concat(
-  DEFAULT_SWITCHES,
-  [
-    '--disable-gpu', // https://bugs.chromium.org/p/chromium/issues/detail?id=737678#c10
-    '--disable-setuid-sandbox',
-  ]
-);
+const CI_SWITCHES = fp.concat(DEFAULT_SWITCHES, [
+  '--disable-gpu', // https://bugs.chromium.org/p/chromium/issues/detail?id=737678#c10
+  '--disable-setuid-sandbox',
+]);
 
-const SWITCHES = (process.env.CI === 'true') ? CI_SWITCHES : DEFAULT_SWITCHES;
+const SWITCHES = process.env.CI === 'true' ? CI_SWITCHES : DEFAULT_SWITCHES;
 const isCognito = process.env.INCOGNITO || true;
 
 module.exports = {

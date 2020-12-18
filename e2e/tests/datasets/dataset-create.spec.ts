@@ -2,13 +2,12 @@ import DataResourceCard from 'app/component/data-resource-card';
 import ClrIconLink from 'app/element/clr-icon-link';
 import CohortBuildPage from 'app/page/cohort-build-page';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
-import {Option, ResourceCard} from 'app/text-labels';
-import {findOrCreateWorkspace, signIn} from 'utils/test-utils';
-import {waitForText, waitWhileLoading} from 'utils/waits-utils';
+import { Option, ResourceCard } from 'app/text-labels';
+import { findOrCreateWorkspace, signIn } from 'utils/test-utils';
+import { waitForText, waitWhileLoading } from 'utils/waits-utils';
 import DatasetEditPage from 'app/page/dataset-edit-page';
 
 describe('Dataset test', () => {
-
   beforeEach(async () => {
     await signIn(page);
   });
@@ -38,10 +37,16 @@ describe('Dataset test', () => {
     const searchPage = await group1.includeDrugs();
 
     // Search for drug hydroxychloroquine
-    const searchResultsTable = await searchPage.searchCriteria('hydroxychloroquine');
+    const searchResultsTable = await searchPage.searchCriteria(
+      'hydroxychloroquine'
+    );
     // Add a drug in Result table first row. Drug name ignored.
     const nameValue = await searchResultsTable.getCellValue(1, 1);
-    const addIcon = await ClrIconLink.findByName(page, {containsText: nameValue, iconShape: 'plus-circle'}, searchResultsTable);
+    const addIcon = await ClrIconLink.findByName(
+      page,
+      { containsText: nameValue, iconShape: 'plus-circle' },
+      searchResultsTable
+    );
     await addIcon.click();
 
     // Open selection list and click Save Criteria button
@@ -61,17 +66,20 @@ describe('Dataset test', () => {
     await datasetPage.selectCohorts([cohortName]);
     await datasetPage.selectConceptSets(['Demographics']);
     const saveModal = await datasetPage.clickSaveAndAnalyzeButton();
-    let datasetName = await saveModal.saveDataset({exportToNotebook: false});
+    let datasetName = await saveModal.saveDataset({ exportToNotebook: false });
 
     // Verify create successful.
     await dataPage.openDatasetsSubtab();
 
     const resourceCard = new DataResourceCard(page);
-    const dataSetExists = await resourceCard.cardExists(datasetName, ResourceCard.Dataset);
+    const dataSetExists = await resourceCard.cardExists(
+      datasetName,
+      ResourceCard.Dataset
+    );
     expect(dataSetExists).toBe(true);
 
     // Edit the dataset to include "All Participants".
-    const datasetCard = await resourceCard.findCard(datasetName)
+    const datasetCard = await resourceCard.findCard(datasetName);
     await datasetCard.selectSnowmanMenu(Option.Edit);
     await waitWhileLoading(page);
 
@@ -79,14 +87,16 @@ describe('Dataset test', () => {
     await datasetEditPage.waitForLoad();
     await datasetEditPage.selectCohorts(['All Participants']);
     await datasetEditPage.clickAnalyzeButton();
-    
+
     // Save Dataset in a new name.
     await saveModal.waitForLoad();
-    datasetName = await saveModal.saveDataset({exportToNotebook: false}, true);
+    datasetName = await saveModal.saveDataset(
+      { exportToNotebook: false },
+      true
+    );
     await dataPage.waitForLoad();
 
     await dataPage.openDatasetsSubtab();
     await dataPage.deleteResource(datasetName, ResourceCard.Dataset);
   });
-
 });

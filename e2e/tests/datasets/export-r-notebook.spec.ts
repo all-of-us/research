@@ -2,15 +2,14 @@ import Link from 'app/element/link';
 import WorkspaceAnalysisPage from 'app/page/workspace-analysis-page';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
 import NotebookPreviewPage from 'app/page/notebook-preview-page';
-import {makeRandomName} from 'utils/str-utils';
-import {findOrCreateWorkspace, signIn} from 'utils/test-utils';
-import {waitForText, waitWhileLoading} from 'utils/waits-utils';
+import { makeRandomName } from 'utils/str-utils';
+import { findOrCreateWorkspace, signIn } from 'utils/test-utils';
+import { waitForText, waitWhileLoading } from 'utils/waits-utils';
 import CohortActionsPage from 'app/page/cohort-actions-page';
-import {Ethnicity} from 'app/page/cohort-search-page';
-import {Language, ResourceCard} from 'app/text-labels';
+import { Ethnicity } from 'app/page/cohort-search-page';
+import { Language, ResourceCard } from 'app/text-labels';
 
 describe('Create Dataset', () => {
-
   beforeEach(async () => {
     await signIn(page);
   });
@@ -33,7 +32,10 @@ describe('Create Dataset', () => {
     // Include Participants Group 1: Add Criteria: Ethnicity
     const group1 = cohortBuildPage.findIncludeParticipantsGroup('Group 1');
     const searchPage = await group1.includeEthnicity();
-    await searchPage.addEthnicity([Ethnicity.HispanicOrLatino, Ethnicity.NotHispanicOrLatino]);
+    await searchPage.addEthnicity([
+      Ethnicity.HispanicOrLatino,
+      Ethnicity.NotHispanicOrLatino,
+    ]);
 
     // Open selection list and click Save Criteria button
     await group1.viewAndSaveCriteria();
@@ -59,7 +61,7 @@ describe('Create Dataset', () => {
     const newDatasetName = await saveModal.saveDataset({
       exportToNotebook: true,
       notebookName: newNotebookName,
-      lang: Language.R
+      lang: Language.R,
     });
     await waitWhileLoading(page);
 
@@ -67,13 +69,15 @@ describe('Create Dataset', () => {
     const notebookPreviewPage = new NotebookPreviewPage(page);
     await notebookPreviewPage.waitForLoad();
     const currentPageUrl = page.url();
-    expect(currentPageUrl).toContain(`notebooks/preview/${newNotebookName}.ipynb`);
+    expect(currentPageUrl).toContain(
+      `notebooks/preview/${newNotebookName}.ipynb`
+    );
 
     const code = await notebookPreviewPage.getFormattedCode();
     expect(code).toContain('library(bigrquery)');
 
     // Navigate to Workpace Data page.
-    const notebooksLink = await Link.findByName(page, {name: workspaceName});
+    const notebooksLink = await Link.findByName(page, { name: workspaceName });
     await notebooksLink.clickAndWait();
     await dataPage.waitForLoad();
 
@@ -88,16 +92,23 @@ describe('Create Dataset', () => {
     // Delete Dataset
     await dataPage.openDatasetsSubtab();
 
-    const datasetDeleteDialogText = await dataPage.deleteResource(newDatasetName, ResourceCard.Dataset);
-    expect(datasetDeleteDialogText).toContain(`Are you sure you want to delete Dataset: ${newDatasetName}?`);
+    const datasetDeleteDialogText = await dataPage.deleteResource(
+      newDatasetName,
+      ResourceCard.Dataset
+    );
+    expect(datasetDeleteDialogText).toContain(
+      `Are you sure you want to delete Dataset: ${newDatasetName}?`
+    );
 
     // Delete Cohort
     await dataPage.openCohortsSubtab();
 
-    const cohortDeleteDialogText = await dataPage.deleteResource(newCohortName, ResourceCard.Cohort);
-    expect(cohortDeleteDialogText).toContain(`Are you sure you want to delete Cohort: ${newCohortName}?`);
-
+    const cohortDeleteDialogText = await dataPage.deleteResource(
+      newCohortName,
+      ResourceCard.Cohort
+    );
+    expect(cohortDeleteDialogText).toContain(
+      `Are you sure you want to delete Cohort: ${newCohortName}?`
+    );
   });
-
-
 });

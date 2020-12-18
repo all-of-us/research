@@ -1,7 +1,7 @@
-import {Page} from 'puppeteer';
-import {waitForDocumentTitle, waitWhileLoading} from 'utils/waits-utils';
+import { Page } from 'puppeteer';
+import { waitForDocumentTitle, waitWhileLoading } from 'utils/waits-utils';
 import Button from 'app/element/button';
-import {LinkText} from 'app/text-labels';
+import { LinkText } from 'app/text-labels';
 import Link from 'app/element/link';
 import AuthenticatedPage from './authenticated-page';
 import ConceptSetPage from './conceptset-page';
@@ -11,7 +11,6 @@ import DatasetBuildPage from './dataset-build-page';
 const PageTitle = 'Concept Set Actions';
 
 export default class ConceptSetActionsPage extends AuthenticatedPage {
-
   constructor(page: Page) {
     super(page);
   }
@@ -19,11 +18,11 @@ export default class ConceptSetActionsPage extends AuthenticatedPage {
   async isLoaded(): Promise<boolean> {
     await Promise.all([
       waitForDocumentTitle(this.page, PageTitle),
-      waitWhileLoading(this.page)
+      waitWhileLoading(this.page),
     ]);
     await Promise.all([
       this.getCreateAnotherConceptSetButton(),
-      this.getCreateDatasetButton()
+      this.getCreateDatasetButton(),
     ]);
     return true;
   }
@@ -41,11 +40,13 @@ export default class ConceptSetActionsPage extends AuthenticatedPage {
   }
 
   async getCreateAnotherConceptSetButton(): Promise<Button> {
-    return Button.findByName(this.page, {name: LinkText.CreateAnotherConceptSet});
+    return Button.findByName(this.page, {
+      name: LinkText.CreateAnotherConceptSet,
+    });
   }
 
   async getCreateDatasetButton(): Promise<Button> {
-    return Button.findByName(this.page, {name: LinkText.CreateDataset});
+    return Button.findByName(this.page, { name: LinkText.CreateDataset });
   }
 
   async openConceptSet(conceptName: string): Promise<ConceptSetPage> {
@@ -68,5 +69,4 @@ export default class ConceptSetActionsPage extends AuthenticatedPage {
     await conceptSearchPage.waitForLoad();
     return conceptSearchPage;
   }
-
 }

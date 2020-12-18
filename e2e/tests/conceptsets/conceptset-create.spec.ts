@@ -1,13 +1,12 @@
-import ConceptDomainCard, {Domain} from 'app/component/concept-domain-card';
+import ConceptDomainCard, { Domain } from 'app/component/concept-domain-card';
 import DataResourceCard from 'app/component/data-resource-card';
 import ConceptSetActionsPage from 'app/page/conceptset-actions-page';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
-import {findOrCreateWorkspace, signIn} from 'utils/test-utils';
-import {waitForText} from 'utils/waits-utils';
-import {ResourceCard} from 'app/text-labels';
+import { findOrCreateWorkspace, signIn } from 'utils/test-utils';
+import { waitForText } from 'utils/waits-utils';
+import { ResourceCard } from 'app/text-labels';
 
 describe('Create Concept Sets from Domains', () => {
-
   beforeEach(async () => {
     await signIn(page);
   });
@@ -30,7 +29,10 @@ describe('Create Concept Sets from Domains', () => {
     const conceptSetPage = await datasetBuildPage.clickAddConceptSetsButton();
 
     // Start: Add a Concept in Conditions domain
-    const conditionDomainCard = await ConceptDomainCard.findDomainCard(page, Domain.Conditions);
+    const conditionDomainCard = await ConceptDomainCard.findDomainCard(
+      page,
+      Domain.Conditions
+    );
 
     // In Conditions domain, both Concepts and Participants counts should be non-zero numberical digits.
     const conceptsCount = await conditionDomainCard.getConceptsCount();
@@ -53,12 +55,12 @@ describe('Create Concept Sets from Domains', () => {
     expect(rowValues.name).toBe(conditionName);
 
     await conceptSetPage.viewAndSaveConceptSet();
-    
+
     // Save
     const conceptSetName = await conceptSetPage.saveConceptSet();
 
     // Verify Concept Set created successfully.
-    const successMessage = `Concept Set Saved Successfully`;
+    const successMessage = 'Concept Set Saved Successfully';
     const isSuccess = await waitForText(page, successMessage);
     expect(isSuccess).toBe(true);
 
@@ -69,8 +71,13 @@ describe('Create Concept Sets from Domains', () => {
     // Delete Concept Set
     await dataPage.openConceptSetsSubtab();
 
-    const modalTextContent = await dataPage.deleteResource(conceptSetName, ResourceCard.ConceptSet);
-    expect(modalTextContent).toContain(`Are you sure you want to delete Concept Set: ${conceptSetName}?`);
+    const modalTextContent = await dataPage.deleteResource(
+      conceptSetName,
+      ResourceCard.ConceptSet
+    );
+    expect(modalTextContent).toContain(
+      `Are you sure you want to delete Concept Set: ${conceptSetName}?`
+    );
   });
 
   /**
@@ -94,7 +101,10 @@ describe('Create Concept Sets from Domains', () => {
     const conceptSearchPage = await datasetBuildPage.clickAddConceptSetsButton();
 
     // Add new Concept in Drug Exposures domain
-    const drugDomainCard = await ConceptDomainCard.findDomainCard(page, Domain.DrugExposures);
+    const drugDomainCard = await ConceptDomainCard.findDomainCard(
+      page,
+      Domain.DrugExposures
+    );
 
     // In Drug Exposures domain, both Concepts and Participants counts should be non-zero numberical digits.
     const conceptsCount = await drugDomainCard.getConceptsCount();
@@ -126,7 +136,10 @@ describe('Create Concept Sets from Domains', () => {
     await conceptActionPage.clickCreateAnotherConceptSetButton();
 
     // Add new Concept in Measurements domain
-    const measurementsDomainCard = await ConceptDomainCard.findDomainCard(page, Domain.Measurements);
+    const measurementsDomainCard = await ConceptDomainCard.findDomainCard(
+      page,
+      Domain.Measurements
+    );
     await measurementsDomainCard.clickSelectConceptButton();
 
     // Hardcode Measurements name for search
@@ -154,12 +167,20 @@ describe('Create Concept Sets from Domains', () => {
     await dataPage.openDatasetsSubtab();
 
     const resourceCard = new DataResourceCard(page);
-    const dataSetExists = await resourceCard.cardExists(datasetName, ResourceCard.Dataset);
+    const dataSetExists = await resourceCard.cardExists(
+      datasetName,
+      ResourceCard.Dataset
+    );
     expect(dataSetExists).toBe(true);
 
     // Delete Dataset.
-    const textContent = await dataPage.deleteResource(datasetName, ResourceCard.Dataset);
-    expect(textContent).toContain(`Are you sure you want to delete Dataset: ${datasetName}?`);
+    const textContent = await dataPage.deleteResource(
+      datasetName,
+      ResourceCard.Dataset
+    );
+    expect(textContent).toContain(
+      `Are you sure you want to delete Dataset: ${datasetName}?`
+    );
 
     // Delete Concept Set.
     await dataPage.openConceptSetsSubtab();
@@ -167,5 +188,4 @@ describe('Create Concept Sets from Domains', () => {
     await dataPage.deleteResource(conceptSet1, ResourceCard.ConceptSet);
     await dataPage.deleteResource(conceptSet2, ResourceCard.ConceptSet);
   });
-
 });

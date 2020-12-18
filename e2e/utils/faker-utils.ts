@@ -1,4 +1,4 @@
-const faker = require('faker/locale/en_US');
+import faker from 'faker/locale/en_US';
 
 /**
  * Get a fake user information.
@@ -13,5 +13,5 @@ export const user = {
   message: faker.random.words(),
   email: faker.internet.email(),
   state: faker.address.stateAbbr(),
-  country: 'U.S.A'
+  country: 'U.S.A',
 };

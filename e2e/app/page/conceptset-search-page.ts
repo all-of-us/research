@@ -1,18 +1,17 @@
-import {Page} from 'puppeteer';
-import {waitForDocumentTitle, waitWhileLoading} from 'utils/waits-utils';
+import { Page } from 'puppeteer';
+import { waitForDocumentTitle, waitWhileLoading } from 'utils/waits-utils';
 import Textbox from 'app/element/textbox';
 import DataTable from 'app/component/data-table';
 import HelpSidebar from 'app/component/help-sidebar';
 import Button from 'app/element/button';
-import {LinkText} from 'app/text-labels';
-import {getPropValue, waitUntilChanged} from 'utils/element-utils';
+import { LinkText } from 'app/text-labels';
+import { getPropValue, waitUntilChanged } from 'utils/element-utils';
 import AuthenticatedPage from './authenticated-page';
-import ConceptSetSaveModal, {SaveOption} from './conceptset-save-modal';
+import ConceptSetSaveModal, { SaveOption } from './conceptset-save-modal';
 
 const PageTitle = 'Search Concepts';
 
-export default class ConceptSetSearchPage extends AuthenticatedPage{
-
+export default class ConceptSetSearchPage extends AuthenticatedPage {
   constructor(page: Page) {
     super(page);
   }
@@ -20,14 +19,17 @@ export default class ConceptSetSearchPage extends AuthenticatedPage{
   async isLoaded(): Promise<boolean> {
     await Promise.all([
       waitForDocumentTitle(this.page, PageTitle),
-      waitWhileLoading(this.page)
+      waitWhileLoading(this.page),
     ]);
     const searchTextbox = this.getSearchTextbox();
     await searchTextbox.waitForXPath();
     return true;
   }
 
-  async saveConceptSet(saveOption?: SaveOption, existingConceptSetName?: string): Promise<string> {
+  async saveConceptSet(
+    saveOption?: SaveOption,
+    existingConceptSetName?: string
+  ): Promise<string> {
     const modal = new ConceptSetSaveModal(this.page);
     return modal.fillOutSaveModal(saveOption, existingConceptSetName);
   }
@@ -45,7 +47,7 @@ export default class ConceptSetSearchPage extends AuthenticatedPage{
   }
 
   async searchConcepts(searchKeywords: string): Promise<void> {
-    const dataTable = await (this.getDataTable()).asElement();
+    const dataTable = await this.getDataTable().asElement();
     const searchInput = this.getSearchTextbox();
     await searchInput.type(searchKeywords);
     await searchInput.pressReturn();
@@ -60,8 +62,15 @@ export default class ConceptSetSearchPage extends AuthenticatedPage{
    * @return {code: string; vocabulary: string; participantCount: string}
    *  The Code, Vocabulary and Participant Count values in same table row.
    */
-  async dataTableSelectRow(rowIndex: number = 1,
-                           selctionColumnIndex = 1): Promise<{name: string, code: string; vocabulary: string; participantCount: string}> {
+  async dataTableSelectRow(
+    rowIndex = 1,
+    selctionColumnIndex = 1
+  ): Promise<{
+    name: string;
+    code: string;
+    vocabulary: string;
+    participantCount: string;
+  }> {
     const dataTable = this.getDataTable();
     const bodyTable = dataTable.getBodyTable();
 
@@ -75,17 +84,31 @@ export default class ConceptSetSearchPage extends AuthenticatedPage{
 
     // Vocabulary column #4
     const vocabularyCell = await bodyTable.getCell(rowIndex, 4);
-    const vocabValue = await getPropValue<string>(vocabularyCell, 'textContent');
+    const vocabValue = await getPropValue<string>(
+      vocabularyCell,
+      'textContent'
+    );
 
     // Participant Count column #5
     const participantCountCell = await bodyTable.getCell(rowIndex, 5);
-    const partiCountValue = await getPropValue<string>(participantCountCell, 'textContent');
+    const partiCountValue = await getPropValue<string>(
+      participantCountCell,
+      'textContent'
+    );
 
-    const selectCheckCell = await bodyTable.getCell(rowIndex, selctionColumnIndex);
+    const selectCheckCell = await bodyTable.getCell(
+      rowIndex,
+      selctionColumnIndex
+    );
     const elemt = (await selectCheckCell.$x('.//*[@role="checkbox"]'))[0];
     await elemt.click();
 
-    return { name: nameValue, code: codeValue, vocabulary: vocabValue, participantCount: partiCountValue };
+    return {
+      name: nameValue,
+      code: codeValue,
+      vocabulary: vocabValue,
+      participantCount: partiCountValue,
+    };
   }
 
   /**
@@ -105,11 +128,16 @@ export default class ConceptSetSearchPage extends AuthenticatedPage{
   }
 
   private getSearchTextbox(): Textbox {
-    return new Textbox(this.page, '//input[@data-test-id="concept-search-input"]');
+    return new Textbox(
+      this.page,
+      '//input[@data-test-id="concept-search-input"]'
+    );
   }
 
   async viewAndSaveConceptSet(): Promise<void> {
-    const finishAndReviewButton = await Button.findByName(this.page, {name: LinkText.FinishAndReview});
+    const finishAndReviewButton = await Button.findByName(this.page, {
+      name: LinkText.FinishAndReview,
+    });
     await finishAndReviewButton.waitUntilEnabled();
     await finishAndReviewButton.click();
 
@@ -117,5 +145,4 @@ export default class ConceptSetSearchPage extends AuthenticatedPage{
     const helpSidebar = new HelpSidebar(this.page);
     await helpSidebar.clickSaveConceptSetButton();
   }
-
 }

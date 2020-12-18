@@ -1,12 +1,10 @@
 import BaseElement from 'app/element/base-element';
 import CreateAccountPage from 'app/page/create-account-page';
 import GoogleLoginPage from 'app/page/google-login';
-import {config} from 'resources/workbench-config';
-import {waitForText} from 'utils/waits-utils';
-
+import { config } from 'resources/workbench-config';
+import { waitForText } from 'utils/waits-utils';
 
 describe('User registration UI tests:', () => {
-
   test('Loading registration workflow', async () => {
     const loginPage = new GoogleLoginPage(page);
     await loginPage.load();
@@ -71,7 +69,9 @@ describe('User registration UI tests:', () => {
     expect(await waitForText(page, 'Create your account')).toBeTruthy();
 
     // verify username domain
-    expect(await createAccountPage.getUsernameDomain()).toBe(config.userEmailDomain);
+    expect(await createAccountPage.getUsernameDomain()).toBe(
+      config.userEmailDomain
+    );
 
     // verify all input fields are visible and editable on this page
     const allInputs = await page.$$('input');
@@ -89,8 +89,5 @@ describe('User registration UI tests:', () => {
     await userInforPageButton.isDisplayed();
     const cursor = await userInforPageButton.isCursorNotAllowed();
     expect(cursor).toEqual(true);
-
   });
-
-
 });

@@ -1,16 +1,14 @@
 import DataResourceCard from 'app/component/data-resource-card';
 import Link from 'app/element/link';
 import CohortActionsPage from 'app/page/cohort-actions-page';
-import CohortBuildPage, {FieldSelector} from 'app/page/cohort-build-page';
+import CohortBuildPage, { FieldSelector } from 'app/page/cohort-build-page';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
-import {ResourceCard} from 'app/text-labels';
-import {makeRandomName} from 'utils/str-utils';
-import {findOrCreateWorkspace, signIn} from 'utils/test-utils';
-import {waitForNumericalString, waitForText} from 'utils/waits-utils';
-
+import { ResourceCard } from 'app/text-labels';
+import { makeRandomName } from 'utils/str-utils';
+import { findOrCreateWorkspace, signIn } from 'utils/test-utils';
+import { waitForNumericalString, waitForText } from 'utils/waits-utils';
 
 describe('User can create, modify, rename and delete Cohort', () => {
-
   beforeEach(async () => {
     await signIn(page);
   });
@@ -28,7 +26,6 @@ describe('User can create, modify, rename and delete Cohort', () => {
    * Delete Cohort.
    */
   test('Add cohort including Demographics Age', async () => {
-
     const workspaceCard = await findOrCreateWorkspace(page);
     await workspaceCard.clickWorkspaceName();
 
@@ -47,10 +44,16 @@ describe('User can create, modify, rename and delete Cohort', () => {
     await group1.includeAge(minAge, maxAge);
 
     // Checking Group 1 count is numerical and greater than 1.
-    const group1Count = await waitForNumericalString(page, group1.getGroupCountXpath(), 60000);
+    const group1Count = await waitForNumericalString(
+      page,
+      group1.getGroupCountXpath(),
+      60000
+    );
     const group1CountInt = Number(group1Count.replace(/,/g, ''));
     expect(group1CountInt).toBeGreaterThan(1);
-    console.log('Include Participants Group 1 Demographics Age Count = ' + group1CountInt);
+    console.log(
+      'Include Participants Group 1 Demographics Age Count = ' + group1CountInt
+    );
 
     let totalCount = await cohortBuildPage.getTotalCount();
     expect(totalCount).toEqual(group1Count);
@@ -61,7 +64,10 @@ describe('User can create, modify, rename and delete Cohort', () => {
 
     const group3CountInt = Number(group3Count.replace(/,/g, ''));
     expect(group3CountInt).toBeGreaterThan(1);
-    console.log('Exclude Participants Group 3 Demographics Deceased Count = ' + group3CountInt);
+    console.log(
+      'Exclude Participants Group 3 Demographics Deceased Count = ' +
+        group3CountInt
+    );
 
     // Log Total Count.
     totalCount = await cohortBuildPage.getTotalCount();
@@ -74,9 +80,14 @@ describe('User can create, modify, rename and delete Cohort', () => {
     console.log(`Created Cohort "${cohortName}"`);
 
     // Click cohort link. Open cohort build page.
-    const cohortLink = await Link.findByName(page, {name: cohortName});
+    const cohortLink = await Link.findByName(page, { name: cohortName });
     await cohortLink.clickAndWait();
-    await waitForText(page, totalCount, {xpath: FieldSelector.TotalCount}, 60000);
+    await waitForText(
+      page,
+      totalCount,
+      { xpath: FieldSelector.TotalCount },
+      60000
+    );
 
     // Remove Exclude Group 3.
     const groupCriteriasList = await group3.deleteGroup();
@@ -93,20 +104,29 @@ describe('User can create, modify, rename and delete Cohort', () => {
 
     // Rename cohort.
     const newCohortName = makeRandomName();
-    await dataPage.renameResource(cohortName, newCohortName, ResourceCard.Cohort);
+    await dataPage.renameResource(
+      cohortName,
+      newCohortName,
+      ResourceCard.Cohort
+    );
 
     // Verify rename successful.
     expect(await DataResourceCard.findCard(page, newCohortName)).toBeTruthy();
 
     // Delete cohort.
-    const modalTextContent = await dataPage.deleteResource(newCohortName, ResourceCard.Cohort);
+    const modalTextContent = await dataPage.deleteResource(
+      newCohortName,
+      ResourceCard.Cohort
+    );
 
     // Verify Delete dialog content text
-    expect(modalTextContent).toContain(`Are you sure you want to delete Cohort: ${newCohortName}?`);
+    expect(modalTextContent).toContain(
+      `Are you sure you want to delete Cohort: ${newCohortName}?`
+    );
 
     // Verify Delete successful.
-    expect(await DataResourceCard.findCard(page, newCohortName, 5000)).toBeFalsy();
+    expect(
+      await DataResourceCard.findCard(page, newCohortName, 5000)
+    ).toBeFalsy();
   });
-
-
 });

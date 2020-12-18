@@ -1,50 +1,46 @@
-const {defaults} = require('jest-config');
-const {TEST_MODE} = process.env;
+import { defaults } from 'jest-config';
 
-module.exports = {
-  'verbose': true,
-  'bail': 1, // Stop running tests after `n` failures
-  'preset': 'jest-puppeteer',
-  'testTimeout': 600000,
-  'testRunner': 'jest-circus/runner',
-  'testEnvironment': '<rootDir>/puppeteer-custom-environment.ts',
-  'setupFilesAfterEnv': [
+const { TEST_MODE } = process.env;
+
+export default {
+  verbose: true,
+  bail: 1, // Stop running tests after `n` failures
+  preset: 'jest-puppeteer',
+  testTimeout: 600000,
+  testRunner: 'jest-circus/runner',
+  testEnvironment: '<rootDir>/puppeteer-custom-environment.ts',
+  setupFilesAfterEnv: [
     '<rootDir>/jest-circus.setup.ts',
-    '<rootDir>/jest.test-setup.ts'
+    '<rootDir>/jest.test-setup.ts',
   ],
-  'setupFiles': [
-    'dotenv/config'
-  ],
-  'reporters': [
+  setupFiles: ['dotenv/config'],
+  reporters: [
     'default',
     'jest-junit',
     [
-      'jest-stare', {
-        'resultDir': 'logs',
-        'resultJson': 'test-results.json',
-        'reportTitle': 'AoU integration tests',
-        'report': false
-      }
-    ]
+      'jest-stare',
+      {
+        resultDir: 'logs',
+        resultJson: 'test-results.json',
+        reportTitle: 'AoU integration tests',
+        report: false,
+      },
+    ],
   ],
-  'transform': {
-    '^.+\\.(ts|tsx)$': 'ts-jest'
+  transform: {
+    '^.+\\.(ts|tsx)$': 'ts-jest',
   },
-  'globals': {
+  globals: {
     'ts-jest': {
-      'tsconfig': 'tsconfig.jest.json'
-    }
+      tsconfig: 'tsconfig.jest.json',
+    },
   },
-  'testPathIgnorePatterns': [
-    '/node_modules/',
-    '/tsc-out/'
-  ],
-  'testMatch': TEST_MODE==='nightly-integration' ? ['<rootDir>/tests/nightly/**/*.spec.ts'] : ['<rootDir>/tests(?!/nightly)/**/*.spec.ts'],
-  'transformIgnorePatterns': [
-    '<rootDir>/node_modules/(?!tests)'
-  ],
-  'moduleFileExtensions': [...defaults.moduleFileExtensions],
-  'modulePaths': [
-    '<rootDir>'
-  ]
+  testPathIgnorePatterns: ['/node_modules/', '/tsc-out/'],
+  testMatch:
+    TEST_MODE === 'nightly-integration'
+      ? ['<rootDir>/tests/nightly/**/*.spec.ts']
+      : ['<rootDir>/tests(?!/nightly)/**/*.spec.ts'],
+  transformIgnorePatterns: ['<rootDir>/node_modules/(?!tests)'],
+  moduleFileExtensions: [...defaults.moduleFileExtensions],
+  modulePaths: ['<rootDir>'],
 };

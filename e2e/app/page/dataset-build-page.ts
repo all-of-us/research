@@ -1,11 +1,11 @@
-import {Page} from 'puppeteer';
+import { Page } from 'puppeteer';
 import Table from 'app/component/table';
 import Button from 'app/element/button';
 import Checkbox from 'app/element/checkbox';
 import ClrIconLink from 'app/element/clr-icon-link';
-import {waitForDocumentTitle, waitWhileLoading} from 'utils/waits-utils';
-import {buildXPath} from 'app/xpath-builders';
-import {ElementType} from 'app/xpath-options';
+import { waitForDocumentTitle, waitWhileLoading } from 'utils/waits-utils';
+import { buildXPath } from 'app/xpath-builders';
+import { ElementType } from 'app/xpath-options';
 import AuthenticatedPage from './authenticated-page';
 import CohortBuildPage from './cohort-build-page';
 import ConceptSetSearchPage from './conceptset-search-page';
@@ -20,7 +20,6 @@ enum LabelAlias {
 }
 
 export default class DatasetBuildPage extends AuthenticatedPage {
-
   constructor(page: Page) {
     super(page);
   }
@@ -34,7 +33,11 @@ export default class DatasetBuildPage extends AuthenticatedPage {
   }
 
   async clickAddCohortsButton(): Promise<CohortBuildPage> {
-    const addCohortButton = await ClrIconLink.findByName(this.page, {name: LabelAlias.SelectCohorts, ancestorLevel: 3, iconShape: 'plus-circle'});
+    const addCohortButton = await ClrIconLink.findByName(this.page, {
+      name: LabelAlias.SelectCohorts,
+      ancestorLevel: 3,
+      iconShape: 'plus-circle',
+    });
     await addCohortButton.clickAndWait();
     const cohortPage = new CohortBuildPage(this.page);
     return cohortPage.waitForLoad();
@@ -50,7 +53,10 @@ export default class DatasetBuildPage extends AuthenticatedPage {
 
   async selectConceptSets(conceptSetNames: string[]): Promise<void> {
     for (const conceptSetName of conceptSetNames) {
-      const xpath = this.getCheckboxXpath(LabelAlias.SelectConceptSets, conceptSetName);
+      const xpath = this.getCheckboxXpath(
+        LabelAlias.SelectConceptSets,
+        conceptSetName
+      );
       const checkbox = new Checkbox(this.page, xpath);
       await checkbox.check();
       await waitWhileLoading(this.page);
@@ -61,7 +67,11 @@ export default class DatasetBuildPage extends AuthenticatedPage {
    * Click Add Concept Sets button, opened the Concept Sets page.
    */
   async clickAddConceptSetsButton(): Promise<ConceptSetSearchPage> {
-    const addConceptSetsButton = await ClrIconLink.findByName(this.page, {name: LabelAlias.SelectConceptSets, ancestorLevel: 3, iconShape: 'plus-circle'});
+    const addConceptSetsButton = await ClrIconLink.findByName(this.page, {
+      name: LabelAlias.SelectConceptSets,
+      ancestorLevel: 3,
+      iconShape: 'plus-circle',
+    });
     await addConceptSetsButton.clickAndWait();
     const conceptSetSearchPage = new ConceptSetSearchPage(this.page);
     await conceptSetSearchPage.waitForLoad();
@@ -72,10 +82,18 @@ export default class DatasetBuildPage extends AuthenticatedPage {
    * Check or uncheck the Select All checkbox.
    * @param {boolean} selectAll
    */
-  async selectAllValues(selectAll: boolean = true): Promise<void> {
-    const xpath = buildXPath({containsText: LabelAlias.SelectValues, ancestorLevel: 3, type: ElementType.Checkbox});
+  async selectAllValues(selectAll = true): Promise<void> {
+    const xpath = buildXPath({
+      containsText: LabelAlias.SelectValues,
+      ancestorLevel: 3,
+      type: ElementType.Checkbox,
+    });
     const selectAllCheckbox = new Checkbox(this.page, xpath);
-    selectAll ? await selectAllCheckbox.check() : await selectAllCheckbox.unCheck();
+    if (selectAll) {
+      await selectAllCheckbox.check();
+    } else {
+      await selectAllCheckbox.unCheck();
+    }
     await waitWhileLoading(this.page);
   }
 
@@ -93,7 +111,9 @@ export default class DatasetBuildPage extends AuthenticatedPage {
    * @returns Instance of DatasetSaveModal.
    */
   async clickSaveAndAnalyzeButton(): Promise<DatasetSaveModal> {
-    const saveButton = await Button.findByName(this.page, {name: 'Save and Analyze'});
+    const saveButton = await Button.findByName(this.page, {
+      name: 'Save and Analyze',
+    });
     await saveButton.waitUntilEnabled();
     await saveButton.click();
     await waitWhileLoading(this.page);
@@ -103,20 +123,26 @@ export default class DatasetBuildPage extends AuthenticatedPage {
   }
 
   async clickAnalyzeButton(): Promise<void> {
-    const saveButton = await Button.findByName(this.page, {containsText: 'Analyze'});
+    const saveButton = await Button.findByName(this.page, {
+      containsText: 'Analyze',
+    });
     await saveButton.waitUntilEnabled();
     await saveButton.click();
   }
 
   async getPreviewTable(): Promise<Table> {
-    const previewButton = await Button.findByName(this.page, {name: 'View Preview Table'});
+    const previewButton = await Button.findByName(this.page, {
+      name: 'View Preview Table',
+    });
     await previewButton.click();
     await waitWhileLoading(this.page);
-    return new Table(this.page, '//table[@class="p-datatable-scrollable-body-table"]');
+    return new Table(
+      this.page,
+      '//table[@class="p-datatable-scrollable-body-table"]'
+    );
   }
 
   private getCheckboxXpath(labelName: string, valueName: string): string {
     return `//label[contains(normalize-space(), "${labelName}")]/ancestor::node()[3]//input[@type="checkbox" and @value="${valueName}"]`;
   }
-
 }

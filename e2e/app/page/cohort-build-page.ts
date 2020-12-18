@@ -1,27 +1,29 @@
-import {Page} from 'puppeteer';
+import { Page } from 'puppeteer';
 import Modal from 'app/component/modal';
 import TieredMenu from 'app/component/tiered-menu';
 import Button from 'app/element/button';
 import ClrIconLink from 'app/element/clr-icon-link';
-import {ElementType} from 'app/xpath-options';
-import {makeRandomName} from 'utils/str-utils';
-import {waitForDocumentTitle, waitForNumericalString, waitWhileLoading} from 'utils/waits-utils';
-import {buildXPath} from 'app/xpath-builders';
-import {LinkText} from 'app/text-labels';
+import { ElementType } from 'app/xpath-options';
+import { makeRandomName } from 'utils/str-utils';
+import {
+  waitForDocumentTitle,
+  waitForNumericalString,
+  waitWhileLoading,
+} from 'utils/waits-utils';
+import { buildXPath } from 'app/xpath-builders';
+import { LinkText } from 'app/text-labels';
 import AuthenticatedPage from './authenticated-page';
 import CohortParticipantsGroup from './cohort-participants-group';
+import faker from 'faker/locale/en_US';
 
-const faker = require('faker/locale/en_US');
 const PageTitle = 'Build Cohort Criteria';
 
-
 export enum FieldSelector {
-   TotalCount = '//*[contains(normalize-space(text()), "Total Count")]/parent::*//span',
-   GroupCount = '//*[contains(normalize-space(text()), "Group Count")]/parent::*//span',
+  TotalCount = '//*[contains(normalize-space(text()), "Total Count")]/parent::*//span',
+  GroupCount = '//*[contains(normalize-space(text()), "Group Count")]/parent::*//span',
 }
 
 export default class CohortBuildPage extends AuthenticatedPage {
-
   constructor(page: Page) {
     super(page);
   }
@@ -38,14 +40,19 @@ export default class CohortBuildPage extends AuthenticatedPage {
    * Save Cohort changes.
    */
   async saveChanges(): Promise<void> {
-    const createCohortButton = await Button.findByName(this.page, {normalizeSpace: LinkText.SaveCohort});
+    const createCohortButton = await Button.findByName(this.page, {
+      normalizeSpace: LinkText.SaveCohort,
+    });
     await createCohortButton.waitUntilEnabled();
     await createCohortButton.click(); // Click dropdown trigger to open menu
-    const menu =  new TieredMenu(this.page);
+    const menu = new TieredMenu(this.page);
     await menu.select(['Save']);
   }
 
-  async saveCohortAs(cohortName?: string, description?: string): Promise<string> {
+  async saveCohortAs(
+    cohortName?: string,
+    description?: string
+  ): Promise<string> {
     const createCohortButton = this.getCreateCohortButton();
     await createCohortButton.waitUntilEnabled();
     await createCohortButton.click();
@@ -64,7 +71,7 @@ export default class CohortBuildPage extends AuthenticatedPage {
     const descriptionTextarea = await modal.waitForTextarea('DESCRIPTION');
     await descriptionTextarea.type(description);
 
-    await modal.clickButton(LinkText.Save, {waitForClose: true});
+    await modal.clickButton(LinkText.Save, { waitForClose: true });
     await waitWhileLoading(this.page);
 
     return cohortName;
@@ -73,7 +80,7 @@ export default class CohortBuildPage extends AuthenticatedPage {
   async deleteCohort(): Promise<string[]> {
     const saveButton = this.getSaveCohortButton();
     await saveButton.waitUntilEnabled();
-    await this.getDeleteButton().then(b => b.click());
+    await this.getDeleteButton().then((b) => b.click());
     return this.deleteConfirmationDialog();
   }
 
@@ -84,7 +91,7 @@ export default class CohortBuildPage extends AuthenticatedPage {
   async deleteConfirmationDialog(): Promise<string[]> {
     const modal = new Modal(this.page);
     const contentText = await modal.getTextContent();
-    await modal.clickButton(LinkText.DeleteCohort, {waitForClose: true});
+    await modal.clickButton(LinkText.DeleteCohort, { waitForClose: true });
     await waitWhileLoading(this.page);
     return contentText;
   }
@@ -96,7 +103,10 @@ export default class CohortBuildPage extends AuthenticatedPage {
   async discardChangesConfirmationDialog(): Promise<string[]> {
     const modal = new Modal(this.page);
     const contentText = await modal.getTextContent();
-    await modal.clickButton(LinkText.DiscardChanges, {waitForNav: true, waitForClose: true});
+    await modal.clickButton(LinkText.DiscardChanges, {
+      waitForNav: true,
+      waitForClose: true,
+    });
     await waitWhileLoading(this.page);
     return contentText;
   }
@@ -111,12 +121,18 @@ export default class CohortBuildPage extends AuthenticatedPage {
   }
 
   getSaveCohortButton(): Button {
-    const xpath = buildXPath({type: ElementType.Button, normalizeSpace: LinkText.SaveCohort});
+    const xpath = buildXPath({
+      type: ElementType.Button,
+      normalizeSpace: LinkText.SaveCohort,
+    });
     return new Button(this.page, xpath);
   }
 
   getCreateCohortButton(): Button {
-    const xpath = buildXPath({type: ElementType.Button, normalizeSpace: LinkText.CreateCohort});
+    const xpath = buildXPath({
+      type: ElementType.Button,
+      normalizeSpace: LinkText.CreateCohort,
+    });
     return new Button(this.page, xpath);
   }
 
@@ -125,21 +141,21 @@ export default class CohortBuildPage extends AuthenticatedPage {
    * @return {ClrIconLink}
    */
   async getDeleteButton(): Promise<ClrIconLink> {
-    return ClrIconLink.findByName(this.page, {iconShape: 'trash'});
+    return ClrIconLink.findByName(this.page, { iconShape: 'trash' });
   }
 
   /**
    * Find EXPORT button in Cohort Build page.
    */
   async getExportButton(): Promise<ClrIconLink> {
-    return ClrIconLink.findByName(this.page, {iconShape: 'export'});
+    return ClrIconLink.findByName(this.page, { iconShape: 'export' });
   }
 
   /**
    * Find COPY button in Cohort Build page.
    */
   async getCopyButton(): Promise<ClrIconLink> {
-    return ClrIconLink.findByName(this.page, {iconShape: 'copy'});
+    return ClrIconLink.findByName(this.page, { iconShape: 'copy' });
   }
 
   /**
@@ -148,14 +164,17 @@ export default class CohortBuildPage extends AuthenticatedPage {
    */
   findIncludeParticipantsGroup(groupName: string): CohortParticipantsGroup {
     const group = new CohortParticipantsGroup(this.page);
-    group.setXpath(`//*[@id="list-include-groups"]//*[normalize-space()="${groupName}"]`);
+    group.setXpath(
+      `//*[@id="list-include-groups"]//*[normalize-space()="${groupName}"]`
+    );
     return group;
   }
 
   findExcludeParticipantsGroup(groupName: string): CohortParticipantsGroup {
     const group = new CohortParticipantsGroup(this.page);
-    group.setXpath(`//*[@id="list-exclude-groups"]//*[normalize-space()="${groupName}"]`);
+    group.setXpath(
+      `//*[@id="list-exclude-groups"]//*[normalize-space()="${groupName}"]`
+    );
     return group;
   }
-
 }

@@ -1,0 +1,92 @@
+{
+  "extends": "google",
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "root": true,
+  "env": {
+    "node": true,
+    "jest": true,
+    "commonjs": true,
+    "es6": true
+  },
+  "globals": {
+    "page": true,
+    "browser": true,
+    "context": true,
+    "jestPuppeteer": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "rules": {
+    // 2 == error, 1 == warning, 0 == off
+    "indent": [
+      2,
+      2,
+      {
+        "SwitchCase": 1,
+        "VariableDeclarator": 2,
+        "MemberExpression": 2,
+        "outerIIFEBody": 0
+      }
+    ],
+    "max-len": [
+      2,
+      140,
+      {
+        "ignoreComments": true,
+        "ignoreUrls": true,
+        "tabWidth": 2
+      }
+    ],
+    "no-implicit-coercion": [
+      2,
+      {
+        "boolean": false,
+        "number": true,
+        "string": true
+      }
+    ],
+    "no-unused-expressions": [
+      2,
+      {
+        "allowShortCircuit": true,
+        "allowTernary": false
+      }
+    ],
+    "no-unused-vars": [
+      2,
+      {
+        "vars": "all",
+        "args": "after-used",
+        "argsIgnorePattern": "(^reject$|^_$)",
+        "varsIgnorePattern": "(^_$)"
+      }
+    ],
+    "quotes": [2, "single"],
+    "require-jsdoc": 0,
+    "valid-jsdoc": 0,
+    "prefer-arrow-callback": 1,
+    "no-var": 2,
+    "no-console": 0,
+    "prefer-const": 2,
+    "comma-dangle": 0,
+    "arrow-parens": 0,
+    "no-trailing-spaces": 2,
+    "eol-last": 2
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts"],
+      "extends": [
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
+      ],
+      "rules": {
+        "@typescript-eslint/no-non-null-assertion": 0
+      }
+    }
+  ],
+  "ignorePatterns": ["tsc-out/**/*"]
+}

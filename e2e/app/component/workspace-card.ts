@@ -1,9 +1,9 @@
-import {ElementHandle, Page} from 'puppeteer';
+import { ElementHandle, Page } from 'puppeteer';
 import * as fp from 'lodash/fp';
 
-import {Option, WorkspaceAccessLevel} from 'app/text-labels';
+import { Option, WorkspaceAccessLevel } from 'app/text-labels';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
-import {getPropValue} from 'utils/element-utils';
+import { getPropValue } from 'utils/element-utils';
 import CardBase from './card-base';
 import WorkspaceEditPage from 'app/page/workspace-edit-page';
 
@@ -11,15 +11,13 @@ const WorkspaceCardSelector = {
   cardRootXpath: '//*[child::*[@data-test-id="workspace-card"]]', // finds 'workspace-card' parent container node
   cardNameXpath: '@data-test-id="workspace-card-name"',
   accessLevelXpath: './/*[@data-test-id="workspace-access-level"]',
-}
-
+};
 
 /**
  * WorkspaceCard represents workspace card user found on Home and All Workspaces pages.
  * A Workspace Card is element that contains a child element with attribute: @data-test-id='workspace-card'
  */
 export default class WorkspaceCard extends CardBase {
-
   // **********************
   // static functions
   // **********************
@@ -27,7 +25,10 @@ export default class WorkspaceCard extends CardBase {
   /**
    * Delete workspace via Workspace card "Delete" dropdown menu option.
    */
-  static async deleteWorkspace(page: Page, workspaceName: string): Promise<string[]> {
+  static async deleteWorkspace(
+    page: Page,
+    workspaceName: string
+  ): Promise<string[]> {
     const card = await WorkspaceCard.findCard(page, workspaceName);
     await card.selectSnowmanMenu(Option.Delete, { waitForNav: false });
     // Handle Delete Confirmation modal
@@ -41,13 +42,18 @@ export default class WorkspaceCard extends CardBase {
    */
   static async findAllCards(page: Page): Promise<WorkspaceCard[]> {
     try {
-      await page.waitForXPath(WorkspaceCardSelector.cardRootXpath, {visible: true, timeout: 1000});
+      await page.waitForXPath(WorkspaceCardSelector.cardRootXpath, {
+        visible: true,
+        timeout: 1000,
+      });
     } catch (e) {
       return [];
     }
     const cards = await page.$x(WorkspaceCardSelector.cardRootXpath);
     // transform to WorkspaceCard object
-    const resourceCards = cards.map(card => new WorkspaceCard(page).asCard(card));
+    const resourceCards = cards.map((card) =>
+      new WorkspaceCard(page).asCard(card)
+    );
     return resourceCards;
   }
 
@@ -60,7 +66,10 @@ export default class WorkspaceCard extends CardBase {
     return anyCard;
   }
 
-  static async findCard(page: Page, workspaceName: string): Promise<WorkspaceCard | null> {
+  static async findCard(
+    page: Page,
+    workspaceName: string
+  ): Promise<WorkspaceCard | null> {
     const selector = `.//*[${WorkspaceCardSelector.cardNameXpath} and normalize-space(text())="${workspaceName}"]`;
     const allCards = await this.findAllCards(page);
     for (const card of allCards) {
@@ -76,7 +85,6 @@ export default class WorkspaceCard extends CardBase {
     return null; // not found
   }
 
-
   constructor(page: Page) {
     super(page);
   }
@@ -84,7 +92,9 @@ export default class WorkspaceCard extends CardBase {
   async findCard(workspaceName: string): Promise<WorkspaceCard | null> {
     const selector = `.//*[${WorkspaceCardSelector.cardNameXpath} and normalize-space(text())="${workspaceName}"]`;
     try {
-      await this.page.waitForXPath(WorkspaceCardSelector.cardRootXpath, {visible: true});
+      await this.page.waitForXPath(WorkspaceCardSelector.cardRootXpath, {
+        visible: true,
+      });
     } catch (err) {
       // no Workspace card.
       return null;
@@ -100,7 +110,9 @@ export default class WorkspaceCard extends CardBase {
   }
 
   async getWorkspaceName(): Promise<string> {
-    const workspaceNameElemt = await this.cardElement.$x(`.//*[${WorkspaceCardSelector.cardNameXpath}]`);
+    const workspaceNameElemt = await this.cardElement.$x(
+      `.//*[${WorkspaceCardSelector.cardNameXpath}]`
+    );
     return getPropValue<string>(workspaceNameElemt[0], 'innerText');
   }
 
@@ -108,8 +120,10 @@ export default class WorkspaceCard extends CardBase {
    * Find workspace access level.
    * @param workspaceName
    */
-  async getWorkspaceAccessLevel() : Promise<string> {
-    const [element] = await this.cardElement.$x(WorkspaceCardSelector.accessLevelXpath);
+  async getWorkspaceAccessLevel(): Promise<string> {
+    const [element] = await this.cardElement.$x(
+      WorkspaceCardSelector.accessLevelXpath
+    );
     return getPropValue<string>(element, 'innerText');
   }
 
@@ -117,11 +131,16 @@ export default class WorkspaceCard extends CardBase {
    * Find element with specified workspace name on the page.
    * @param {string} workspaceName
    */
-  async getWorkspaceNameLink(workspaceName: string) : Promise<ElementHandle> {
-    return this.page.waitForXPath(this.workspaceNameLinkSelector(workspaceName), {visible: true});
+  async getWorkspaceNameLink(workspaceName: string): Promise<ElementHandle> {
+    return this.page.waitForXPath(
+      this.workspaceNameLinkSelector(workspaceName),
+      { visible: true }
+    );
   }
 
-  async getWorkspaceMatchAccessLevel(level: WorkspaceAccessLevel = WorkspaceAccessLevel.Owner): Promise<WorkspaceCard[]> {
+  async getWorkspaceMatchAccessLevel(
+    level: WorkspaceAccessLevel = WorkspaceAccessLevel.Owner
+  ): Promise<WorkspaceCard[]> {
     const matchWorkspaceArray: WorkspaceCard[] = [];
     const allWorkspaceCards = await WorkspaceCard.findAllCards(this.page);
     for (const card of allWorkspaceCards) {
@@ -137,11 +156,15 @@ export default class WorkspaceCard extends CardBase {
    * Click workspace name link in Workspace Card.
    * @param {boolean} waitForDataPage Waiting for Data page load and ready after click on Workspace name link.
    */
-  async clickWorkspaceName(waitForDataPage: boolean = true): Promise<string> {
-    const [elemt] = await this.asElementHandle().$x(`.//*[${WorkspaceCardSelector.cardNameXpath}]`);
+  async clickWorkspaceName(waitForDataPage = true): Promise<string> {
+    const [elemt] = await this.asElementHandle().$x(
+      `.//*[${WorkspaceCardSelector.cardNameXpath}]`
+    );
     const name = await getPropValue<string>(elemt, 'textContent');
     await Promise.all([
-      this.page.waitForNavigation({waitUntil: ['domcontentloaded', 'networkidle0']}),
+      this.page.waitForNavigation({
+        waitUntil: ['domcontentloaded', 'networkidle0'],
+      }),
       elemt.click(),
     ]);
     if (waitForDataPage) {
@@ -157,7 +180,6 @@ export default class WorkspaceCard extends CardBase {
   }
 
   private workspaceNameLinkSelector(workspaceName: string): string {
-    return `//*[@role='button'][./*[${WorkspaceCardSelector.cardNameXpath} and normalize-space(text())="${workspaceName}"]]`
+    return `//*[@role='button'][./*[${WorkspaceCardSelector.cardNameXpath} and normalize-space(text())="${workspaceName}"]]`;
   }
-
 }

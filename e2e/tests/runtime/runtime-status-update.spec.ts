@@ -2,12 +2,12 @@ import HelpSidebar from 'app/component/help-sidebar';
 import RuntimePanel, {
   ComputeType,
   RuntimePreset,
-  StartStopIconState
+  StartStopIconState,
 } from 'app/component/runtime-panel';
-import {config} from 'resources/workbench-config';
-import {createWorkspace, signIn} from 'utils/test-utils';
+import { config } from 'resources/workbench-config';
+import { createWorkspace, signIn } from 'utils/test-utils';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
-import {makeRandomName} from 'utils/str-utils';
+import { makeRandomName } from 'utils/str-utils';
 import NotebookPreviewPage from 'app/page/notebook-preview-page';
 
 // This one is going to take a long time.
@@ -24,7 +24,7 @@ describe.skip('Updating runtime parameters', () => {
     await page.waitForTimeout(2000);
   });
 
-  test('Switch from GCE to dataproc', async() => {
+  test('Switch from GCE to dataproc', async () => {
     // Open the runtime panel
     const helpSidebar = new HelpSidebar(page);
     await helpSidebar.toggleRuntimePanel();
@@ -46,19 +46,33 @@ describe.skip('Updating runtime parameters', () => {
     const notebook = await dataPage.createNotebook(notebookName);
 
     // Run some Python commands to validate the VM configuration
-    const cpusOutputText = await notebook.runCodeCell(1, {codeFile: 'resources/python-code/count-cpus.py'});
+    const cpusOutputText = await notebook.runCodeCell(1, {
+      codeFile: 'resources/python-code/count-cpus.py',
+    });
     // Default CPU count is 4
     expect(parseInt(cpusOutputText, 10)).toBe(4);
     // This gets the amount of memory available to Python in bytes
-    const memoryOutputText = await notebook.runCodeCell(2, {codeFile: 'resources/python-code/count-memory.py'});
+    const memoryOutputText = await notebook.runCodeCell(2, {
+      codeFile: 'resources/python-code/count-memory.py',
+    });
     // Default memory is 15 gibibytes, we'll check that it is between 14 billion and 16 billion bytes
-    expect(parseInt(memoryOutputText, 10)).toBeGreaterThanOrEqual(14 * 1000 * 1000 * 1000);
-    expect(parseInt(memoryOutputText, 10)).toBeLessThanOrEqual(16 * 1000 * 1000 * 1000);
+    expect(parseInt(memoryOutputText, 10)).toBeGreaterThanOrEqual(
+      14 * 1000 * 1000 * 1000
+    );
+    expect(parseInt(memoryOutputText, 10)).toBeLessThanOrEqual(
+      16 * 1000 * 1000 * 1000
+    );
     // This gets the disk space in bytes
-    const diskOutputText = await notebook.runCodeCell(3, {codeFile: 'resources/python-code/count-disk-space.py'});
+    const diskOutputText = await notebook.runCodeCell(3, {
+      codeFile: 'resources/python-code/count-disk-space.py',
+    });
     // Default disk is 50 gibibytes, we'll check that it is between 45 and 55 billion bytes
-    expect(parseInt(diskOutputText, 10)).toBeGreaterThanOrEqual(45 * 1000 * 1000 * 1000);
-    expect(parseInt(diskOutputText, 10)).toBeLessThanOrEqual(55 * 1000 * 1000 * 1000);
+    expect(parseInt(diskOutputText, 10)).toBeGreaterThanOrEqual(
+      45 * 1000 * 1000 * 1000
+    );
+    expect(parseInt(diskOutputText, 10)).toBeLessThanOrEqual(
+      55 * 1000 * 1000 * 1000
+    );
 
     // Open runtime panel
     await helpSidebar.toggleRuntimePanel();
@@ -85,9 +99,11 @@ describe.skip('Updating runtime parameters', () => {
     await notebookPreviewPage.openEditMode(notebookName);
 
     // Run notebook to validate runtime settings
-    const workersOutputText = await notebook.runCodeCell(1, {codeFile: 'resources/python-code/count-workers.py'});
+    const workersOutputText = await notebook.runCodeCell(1, {
+      codeFile: 'resources/python-code/count-workers.py',
+    });
     // Spark config always seems to start at this and then scale if you need additional threads.
-    expect(workersOutputText).toBe('\'2\'');
+    expect(workersOutputText).toBe("'2'");
 
     // Open runtime panel
     await helpSidebar.toggleRuntimePanel();
@@ -115,7 +131,7 @@ describe.skip('Updating runtime parameters', () => {
     expect(await runtimePanel.getWorkerDisk()).toBe(60);
   });
 
-  test('Switch from dataproc to GCE', async() => {
+  test('Switch from dataproc to GCE', async () => {
     // Open the runtime panel
     const helpSidebar = new HelpSidebar(page);
     await helpSidebar.toggleRuntimePanel();
@@ -130,7 +146,7 @@ describe.skip('Updating runtime parameters', () => {
 
     // Wait until status shows green in side-nav
     await page.waitForTimeout(2000);
-    await helpSidebar.toggleRuntimePanel();;
+    await helpSidebar.toggleRuntimePanel();
     await runtimePanel.waitForStartStopIconState(StartStopIconState.Starting);
     await runtimePanel.waitForStartStopIconState(StartStopIconState.Running);
 
@@ -140,9 +156,11 @@ describe.skip('Updating runtime parameters', () => {
     const notebook = await dataPage.createNotebook(notebookName);
 
     // Run notebook to validate runtime settings
-    const workersOutputText = await notebook.runCodeCell(1, {codeFile: 'resources/python-code/count-workers.py'});
+    const workersOutputText = await notebook.runCodeCell(1, {
+      codeFile: 'resources/python-code/count-workers.py',
+    });
     // Spark config always seems to start at this and then scale if you need additional threads.
-    expect(workersOutputText).toBe('\'2\'');
+    expect(workersOutputText).toBe("'2'");
 
     // Open runtime panel
     await helpSidebar.toggleRuntimePanel();
@@ -165,17 +183,31 @@ describe.skip('Updating runtime parameters', () => {
     await notebookPreviewPage.openEditMode(notebookName);
 
     // Run notebook to validate runtime settings (cpu, disk, memory)
-    const cpusOutputText = await notebook.runCodeCell(2, {codeFile: 'resources/python-code/count-cpus.py'});
+    const cpusOutputText = await notebook.runCodeCell(2, {
+      codeFile: 'resources/python-code/count-cpus.py',
+    });
     expect(parseInt(cpusOutputText, 10)).toBe(8);
     // This gets the amount of memory available to Python in bytes
-    const memoryOutputText = await notebook.runCodeCell(3, {codeFile: 'resources/python-code/count-memory.py'});
-    expect(parseInt(memoryOutputText, 10)).toBeGreaterThanOrEqual(28 * 1000 * 1000 * 1000);
-    expect(parseInt(memoryOutputText, 10)).toBeLessThanOrEqual(32 * 1000 * 1000 * 1000);
+    const memoryOutputText = await notebook.runCodeCell(3, {
+      codeFile: 'resources/python-code/count-memory.py',
+    });
+    expect(parseInt(memoryOutputText, 10)).toBeGreaterThanOrEqual(
+      28 * 1000 * 1000 * 1000
+    );
+    expect(parseInt(memoryOutputText, 10)).toBeLessThanOrEqual(
+      32 * 1000 * 1000 * 1000
+    );
     // This gets the disk space in bytes
-    const diskOutputText = await notebook.runCodeCell(4, {codeFile: 'resources/python-code/count-disk-space.py'});
+    const diskOutputText = await notebook.runCodeCell(4, {
+      codeFile: 'resources/python-code/count-disk-space.py',
+    });
     // for whatever reason this always comes out at around 52 billion bytes despite definitely asking for 60
-    expect(parseInt(diskOutputText, 10)).toBeGreaterThanOrEqual(50 * 1000 * 1000 * 1000);
-    expect(parseInt(diskOutputText, 10)).toBeLessThanOrEqual(70 * 1000 * 1000 * 1000);
+    expect(parseInt(diskOutputText, 10)).toBeGreaterThanOrEqual(
+      50 * 1000 * 1000 * 1000
+    );
+    expect(parseInt(diskOutputText, 10)).toBeLessThanOrEqual(
+      70 * 1000 * 1000 * 1000
+    );
 
     // Open runtime panel
     await helpSidebar.toggleRuntimePanel();
@@ -202,7 +234,7 @@ describe.skip('Updating runtime parameters', () => {
     expect(await runtimePanel.getDiskGbs()).toBe(60);
   });
 
-  test('Pause and resume', async() => {
+  test('Pause and resume', async () => {
     const helpSidebar = new HelpSidebar(page);
     await helpSidebar.toggleRuntimePanel();
     const runtimePanel = new RuntimePanel(page);

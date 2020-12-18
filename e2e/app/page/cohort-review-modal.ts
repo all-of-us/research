@@ -1,12 +1,11 @@
-import {Page} from 'puppeteer';
+import { Page } from 'puppeteer';
 import Modal from 'app/component/modal';
-import {waitForText, waitWhileLoading} from 'utils/waits-utils';
+import { waitForText, waitWhileLoading } from 'utils/waits-utils';
 import InputNumber from 'app/element/input-number';
 
 const title = 'Create Review Set';
 
 export default class CohortReviewModal extends Modal {
-
   constructor(page: Page, xpath?: string) {
     super(page, xpath);
   }
@@ -21,8 +20,11 @@ export default class CohortReviewModal extends Modal {
   }
 
   async fillInNumberOfPartcipants(numOfparticipants: number): Promise<void> {
-    const input = await InputNumber.findByName(this.page, {name: 'NUMBER OF PARTICIPANTS'}, this);
+    const input = await InputNumber.findByName(
+      this.page,
+      { name: 'NUMBER OF PARTICIPANTS' },
+      this
+    );
     await input.type(numOfparticipants.toString());
   }
-
 }

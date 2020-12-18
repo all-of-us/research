@@ -1,10 +1,8 @@
 import CreateAccountPage from 'app/page/create-account-page';
 import GoogleLoginPage from 'app/page/google-login';
-import {getPropValue} from 'utils/element-utils';
-
+import { getPropValue } from 'utils/element-utils';
 
 describe('User registration tests:', () => {
-
   test('Can register new user', async () => {
     // Load the landing page for login.
     const loginPage = new GoogleLoginPage(page);
@@ -44,7 +42,9 @@ describe('User registration tests:', () => {
 
     // "Resend Instructions" link exists
     const linkSelector = '//a[text()="Resend Instructions"]';
-    const resendInstrButton = await page.waitForXPath(linkSelector, {visible: true});
+    const resendInstrButton = await page.waitForXPath(linkSelector, {
+      visible: true,
+    });
     expect(resendInstrButton).toBeTruthy();
 
     // Displayed texts checks
@@ -56,12 +56,14 @@ describe('User registration tests:', () => {
       textsArray.push(await getPropValue<string>(elemt, 'textContent'));
     }
     expect(textsArray).toContain('Congratulations!');
-    expect(textsArray).toContain('Your All of Us research account has been created!');
+    expect(textsArray).toContain(
+      'Your All of Us research account has been created!'
+    );
     expect(textsArray).toContain(`${userId}@fake-research-aou.org`);
 
-    const note = 'Please note: For full access to the Research Workbench data and tools, you\'ll be required to complete the necessary registration steps.';
+    const note =
+      'Please note: For full access to the Research Workbench data and tools,' +
+      "you'll be required to complete the necessary registration steps.";
     expect(textsArray).toContain(note);
   });
-
-
 });

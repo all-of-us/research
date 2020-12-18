@@ -6,7 +6,7 @@ export interface XPathOptions {
   ancestorLevel?: number;
   iconShape?: string;
   startsWith?: string;
-  dataTestId? : string;
+  dataTestId?: string;
   id?: string;
 }
 

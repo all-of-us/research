@@ -1,10 +1,10 @@
 import * as fs from 'fs';
-import {ElementHandle, Frame, Page} from 'puppeteer';
-import {getPropValue} from 'utils/element-utils';
-import {waitForDocumentTitle, waitWhileLoading} from 'utils/waits-utils';
-import {ResourceCard} from 'app/text-labels';
+import { ElementHandle, Frame, Page } from 'puppeteer';
+import { getPropValue } from 'utils/element-utils';
+import { waitForDocumentTitle, waitWhileLoading } from 'utils/waits-utils';
+import { ResourceCard } from 'app/text-labels';
 import AuthenticatedPage from './authenticated-page';
-import NotebookCell, {CellType} from './notebook-cell';
+import NotebookCell, { CellType } from './notebook-cell';
 import NotebookDownloadModal from './notebook-download-modal';
 import WorkspaceAnalysisPage from './workspace-analysis-page';
 
@@ -28,7 +28,7 @@ enum Xpath {
 }
 
 export enum Mode {
-  Command= 'command_mode',
+  Command = 'command_mode',
   Edit = 'edit_mode',
 }
 
@@ -38,8 +38,7 @@ export enum KernelStatus {
 }
 
 export default class NotebookPage extends AuthenticatedPage {
-
-  constructor(page: Page, private readonly documentTitle) {
+  constructor(page: Page, private readonly documentTitle: string) {
     super(page);
   }
 
@@ -48,8 +47,10 @@ export default class NotebookPage extends AuthenticatedPage {
     try {
       await this.findRunButton(120000);
     } catch (err) {
-      console.log(`Reloading "${this.documentTitle}" because cannot find the Run button`);
-      await this.page.reload({waitUntil: ['networkidle0', 'load']});
+      console.log(
+        `Reloading "${this.documentTitle}" because cannot find the Run button`
+      );
+      await this.page.reload({ waitUntil: ['networkidle0', 'load'] });
     }
     await this.waitForKernelIdle(180000); // 3 minutes
     return true;
@@ -61,8 +62,12 @@ export default class NotebookPage extends AuthenticatedPage {
    */
   async goAnalysisPage(): Promise<WorkspaceAnalysisPage> {
     const selector = '//a[text()="Notebooks"]';
-    const navPromise = this.page.waitForNavigation({ waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
-    await this.page.waitForXPath(selector, {visible: true}).then( (link) => link.click());
+    const navPromise = this.page.waitForNavigation({
+      waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
+    });
+    await this.page
+      .waitForXPath(selector, { visible: true })
+      .then((link) => link.click());
     await navPromise;
     await waitWhileLoading(this.page);
     const analysisPage = new WorkspaceAnalysisPage(this.page);
@@ -85,24 +90,33 @@ export default class NotebookPage extends AuthenticatedPage {
    */
   async save(): Promise<void> {
     const frame = await this.getIFrame();
-    const saveButton = await frame.waitForSelector(CssSelector.saveNotebookButton, {visible: true});
+    const saveButton = await frame.waitForSelector(
+      CssSelector.saveNotebookButton,
+      { visible: true }
+    );
     await saveButton.click();
     await saveButton.dispose();
   }
 
-  private async downloadAs(formatXpath: string): Promise<NotebookDownloadModal> {
+  private async downloadAs(
+    formatXpath: string
+  ): Promise<NotebookDownloadModal> {
     const frame = await this.getIFrame();
 
-    await (await frame.waitForXPath(Xpath.fileMenuDropdown, {visible: true})).click();
-    await (await frame.waitForXPath(Xpath.downloadMenuDropdown, {visible: true})).hover();
-    await (await frame.waitForXPath(formatXpath, {visible: true})).click();
+    await (
+      await frame.waitForXPath(Xpath.fileMenuDropdown, { visible: true })
+    ).click();
+    await (
+      await frame.waitForXPath(Xpath.downloadMenuDropdown, { visible: true })
+    ).hover();
+    await (await frame.waitForXPath(formatXpath, { visible: true })).click();
 
     const modal = new NotebookDownloadModal(this.page, frame);
     return await modal.waitForLoad();
   }
 
   async downloadAsIpynb(): Promise<NotebookDownloadModal> {
-    return this.downloadAs(Xpath.downloadIpynbButton)
+    return this.downloadAs(Xpath.downloadIpynbButton);
   }
 
   async downloadAsMarkdown(): Promise<NotebookDownloadModal> {
@@ -119,9 +133,18 @@ export default class NotebookPage extends AuthenticatedPage {
     const frame = await this.getIFrame();
     try {
       await Promise.all([
-        frame.waitForSelector(idleIconSelector, {visible: true, timeout: timeOut}),
-        frame.waitForSelector(notifSelector, {hidden: true, timeout: timeOut}),
-        frame.waitForSelector(mathJaxMessage, {hidden: true, timeout: timeOut}),
+        frame.waitForSelector(idleIconSelector, {
+          visible: true,
+          timeout: timeOut,
+        }),
+        frame.waitForSelector(notifSelector, {
+          hidden: true,
+          timeout: timeOut,
+        }),
+        frame.waitForSelector(mathJaxMessage, {
+          hidden: true,
+          timeout: timeOut,
+        }),
       ]);
     } catch (e) {
       console.error(`Notebook kernel is: ${await this.kernelStatus()}`);
@@ -131,20 +154,24 @@ export default class NotebookPage extends AuthenticatedPage {
 
   async kernelStatus(): Promise<KernelStatus | string> {
     const frame = await this.getIFrame();
-    const elemt = await frame.waitForSelector(CssSelector.kernelIcon, {visible: true});
+    const elemt = await frame.waitForSelector(CssSelector.kernelIcon, {
+      visible: true,
+    });
     const value = await getPropValue<string>(elemt, 'title');
     await elemt.dispose();
-    Object.keys(KernelStatus).forEach(key => {
+    Object.keys(KernelStatus).forEach((key) => {
       if (KernelStatus[key] === value) {
         return key;
       }
-    })
+    });
     return value;
   }
 
   async getKernelName(): Promise<string> {
     const frame = await this.getIFrame();
-    const elemt = await frame.waitForSelector(CssSelector.kernelName, {visible: true});
+    const elemt = await frame.waitForSelector(CssSelector.kernelName, {
+      visible: true,
+    });
     const value = await getPropValue<string>(elemt, 'textContent');
     await elemt.dispose();
     return value.trim();
@@ -155,7 +182,10 @@ export default class NotebookPage extends AuthenticatedPage {
    * @param {number} cellIndex Code Cell index. (first index is 1)
    * @param {CellType} cellType: Code or Markdown cell. Default value is Code cell.
    */
-  async findCell(cellIndex: number, cellType: CellType = CellType.Code): Promise<NotebookCell> {
+  async findCell(
+    cellIndex: number,
+    cellType: CellType = CellType.Code
+  ): Promise<NotebookCell> {
     const cell = new NotebookCell(this.page, cellType, cellIndex);
     return cell;
   }
@@ -164,7 +194,9 @@ export default class NotebookPage extends AuthenticatedPage {
    * Find the last cell.
    * @param {CellType} cellType: Code or Markdown cell. Default value is Code cell.
    */
-  async findLastCell(cellType: CellType = CellType.Code): Promise<NotebookCell | null> {
+  async findLastCell(
+    cellType: CellType = CellType.Code
+  ): Promise<NotebookCell | null> {
     const cell = new NotebookCell(this.page, cellType);
     await cell.getLastCell();
     return cell;
@@ -181,12 +213,26 @@ export default class NotebookPage extends AuthenticatedPage {
    *  {boolean} markdownWorkaround Convert to Markdown before typing (default false)
    */
   async runCodeCell(
-      cellIndex: number,
-      opts: { code?: string, codeFile?: string, timeOut?: number, markdownWorkaround?: boolean } = {}): Promise<string> {
-    const cell = cellIndex === -1 ? await this.findLastCell() : await this.findCell(cellIndex);
+    cellIndex: number,
+    opts: {
+      code?: string;
+      codeFile?: string;
+      timeOut?: number;
+      markdownWorkaround?: boolean;
+    } = {}
+  ): Promise<string> {
+    const cell =
+      cellIndex === -1
+        ? await this.findLastCell()
+        : await this.findCell(cellIndex);
     const inputCell = await cell.focus();
 
-    const {code, codeFile, timeOut = 120000, markdownWorkaround = false} = opts;
+    const {
+      code,
+      codeFile,
+      timeOut = 120000,
+      markdownWorkaround = false,
+    } = opts;
 
     let codeToRun;
     if (code !== undefined) {
@@ -223,7 +269,10 @@ export default class NotebookPage extends AuthenticatedPage {
    * @param {number} cellIndex Code Cell index. (first index is 1)
    * @param {CellType} cellType: Markdown or Code. Default value is Code cell.
    */
-  async getCellInputOutput(cellIndex: number, cellType: CellType = CellType.Code): Promise<[string, string]> {
+  async getCellInputOutput(
+    cellIndex: number,
+    cellType: CellType = CellType.Code
+  ): Promise<[string, string]> {
     const cell = await this.findCell(cellIndex, cellType);
     const code = await cell.getInputText();
     const output = await cell.waitForOutput(1000);
@@ -245,7 +294,10 @@ export default class NotebookPage extends AuthenticatedPage {
 
   private async findRunButton(timeout?: number): Promise<ElementHandle> {
     const frame = await this.getIFrame();
-    return frame.waitForSelector(CssSelector.runCellButton, {visible: true, timeout});
+    return frame.waitForSelector(CssSelector.runCellButton, {
+      visible: true,
+      timeout,
+    });
   }
 
   // ****************************************************************************
@@ -274,12 +326,16 @@ export default class NotebookPage extends AuthenticatedPage {
     // Press Esc key to activate command mode
     if (mode === Mode.Command) {
       await this.page.keyboard.press('Escape');
-      await this.getIFrame().then(frame => frame.waitForSelector('body.notebook_app.command_mode'));
+      await this.getIFrame().then((frame) =>
+        frame.waitForSelector('body.notebook_app.command_mode')
+      );
       return;
     }
     // Press Enter key to activate edit mode
     await this.page.keyboard.press('Enter');
-    await this.getIFrame().then(frame => frame.waitForSelector('body.notebook_app.edit_mode'));
+    await this.getIFrame().then((frame) =>
+      frame.waitForSelector('body.notebook_app.edit_mode')
+    );
     return;
   }
 
@@ -310,8 +366,7 @@ export default class NotebookPage extends AuthenticatedPage {
   private async runCommand(keyboardCommand: string): Promise<void> {
     await this.page.bringToFront();
     await this.page.keyboard.down(keyboardCommand);
-    await this.page.keyboard.press('Enter', {delay: 20});
+    await this.page.keyboard.press('Enter', { delay: 20 });
     await this.page.keyboard.up(keyboardCommand);
   }
-
 }

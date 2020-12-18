@@ -1,24 +1,23 @@
-import {Page} from 'puppeteer';
-import {Option} from 'app/text-labels';
+import { Page } from 'puppeteer';
+import { Option } from 'app/text-labels';
 import Link from 'app/element/link';
-import {getPropValue} from 'utils/element-utils';
+import { getPropValue } from 'utils/element-utils';
 import Container from 'app/container';
 
 export const snowmanIconXpath = '//clr-icon[@shape="ellipsis-vertical"]';
 const defaultXpath = '//*[@id="popup-root"]';
 
 export default class SnowmanMenu extends Container {
-
   constructor(page: Page, xpath: string = defaultXpath) {
     super(page, xpath);
   }
 
-   /**
-    *  Get texts of all visible options.
-    */
+  /**
+   *  Get texts of all visible options.
+   */
   async getAllOptionTexts(): Promise<string[]> {
     const selector = `${this.getXpath()}//*[@role='button']/text()`;
-    await this.page.waitForXPath(selector, {visible: true});
+    await this.page.waitForXPath(selector, { visible: true });
     const elements = await this.page.$x(selector);
     const actionTextsArray = [];
     for (const elem of elements) {
@@ -33,13 +32,16 @@ export default class SnowmanMenu extends Container {
    * @param {Option} option
    * @param opt
    */
-  async select(option: Option, opt: { waitForNav?: boolean } = {}): Promise<void> {
+  async select(
+    option: Option,
+    opt: { waitForNav?: boolean } = {}
+  ): Promise<void> {
     const { waitForNav = true } = opt;
     const link = this.findOptionLink(option);
     // Triggers page navigation event.
     if (waitForNav) {
       await Promise.all([
-        this.page.waitForNavigation({waitUntil: ['load', 'networkidle0']}),
+        this.page.waitForNavigation({ waitUntil: ['load', 'networkidle0'] }),
         link.click(),
       ]);
     } else {
@@ -66,11 +68,10 @@ export default class SnowmanMenu extends Container {
 
   async existsMenu(): Promise<boolean> {
     try {
-      await this.page.waitForXPath(this.getXpath(), {visible: true});
+      await this.page.waitForXPath(this.getXpath(), { visible: true });
       return true;
     } catch (err) {
       return false;
     }
   }
-
 }

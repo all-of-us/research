@@ -4,7 +4,7 @@
     "allowUnreachableCode": false,
     "suppressExcessPropertyErrors": false,
     "moduleResolution": "node",
-    "module": "ES2015",
+    "module": "commonjs",
     "importHelpers": true,
     "sourceMap": true,
     "declaration": false,
@@ -22,15 +22,10 @@
     "checkJs": true,
     "baseUrl": "./",
     "rootDir": "./",
-    "typeRoots": [
-      "./node_modules/@types"
-    ],
-    "lib": [
-      "ES2017",
-      "dom"
-    ],
+    "typeRoots": ["./node_modules/@types"],
+    "lib": ["ES2017", "dom"],
     "esModuleInterop": true
   },
   "inclue": ["./app/**/*", "./tests/**/*", "./utils/**/*"],
-  "exclude": [ "./tsc-out", "./node_modules" ]
+  "exclude": ["./tsc-out", "./node_modules"]
 }

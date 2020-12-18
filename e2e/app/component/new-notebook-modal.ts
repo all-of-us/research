@@ -1,18 +1,21 @@
-import {Page} from 'puppeteer';
-import {savePageToFile, takeScreenshot} from 'utils/save-file-utils';
-import {waitForPropertyExists, waitForText, waitWhileLoading} from 'utils/waits-utils';
+import { Page } from 'puppeteer';
+import { savePageToFile, takeScreenshot } from 'utils/save-file-utils';
+import {
+  waitForPropertyExists,
+  waitForText,
+  waitWhileLoading,
+} from 'utils/waits-utils';
 import RadioButton from 'app/element/radiobutton';
-import {Language, LinkText} from 'app/text-labels';
+import { Language, LinkText } from 'app/text-labels';
 import Button from 'app/element/button';
 import Textbox from 'app/element/textbox';
-import {waitUntilChanged} from 'utils/element-utils';
+import { waitUntilChanged } from 'utils/element-utils';
 import Textarea from 'app/element/textarea';
 import Modal from './modal';
 
 const modalTitle = 'New Notebook';
 
 export default class NewNotebookModal extends Modal {
-
   constructor(page: Page, xpath?: string) {
     super(page, xpath);
   }
@@ -20,7 +23,7 @@ export default class NewNotebookModal extends Modal {
   async waitForLoad(): Promise<this> {
     try {
       await super.waitForLoad();
-      await waitForText(this.page, modalTitle, {xpath: this.getXpath()});
+      await waitForText(this.page, modalTitle, { xpath: this.getXpath() });
     } catch (e) {
       await savePageToFile(this.page);
       await takeScreenshot(this.page);
@@ -38,35 +41,47 @@ export default class NewNotebookModal extends Modal {
    * @param {Language} language Notebook language.
    */
   async fillInModal(notebookName: string, language: Language): Promise<void> {
-    await this.name().then( (textbox) => textbox.type(notebookName));
-    const radio = language === Language.Python ? this.getPythonRadioButton() : this.getRRadioButton();
+    await this.name().then((textbox) => textbox.type(notebookName));
+    const radio =
+      language === Language.Python
+        ? this.getPythonRadioButton()
+        : this.getRRadioButton();
     await radio.select();
-    return this.clickButton(LinkText.CreateNotebook, {waitForClose: true, waitForNav: true});
+    return this.clickButton(LinkText.CreateNotebook, {
+      waitForClose: true,
+      waitForNav: true,
+    });
   }
 
   async name(): Promise<Textbox> {
-    return Textbox.findByName(this.page, {name: 'Name:'});
+    return Textbox.findByName(this.page, { name: 'Name:' });
   }
 
   getPythonRadioButton(): RadioButton {
-    const selector = '//*[@role="dialog"]//label[contains(normalize-space(),"Python 3")]//input[@type="radio"]';
+    const selector =
+      '//*[@role="dialog"]//label[contains(normalize-space(),"Python 3")]//input[@type="radio"]';
     return new RadioButton(this.page, selector);
   }
 
   getRRadioButton(): RadioButton {
-    const selector = '//*[@role="dialog"]//label[contains(normalize-space(),"R")]//input[@type="radio"]';
+    const selector =
+      '//*[@role="dialog"]//label[contains(normalize-space(),"R")]//input[@type="radio"]';
     return new RadioButton(this.page, selector);
   }
 
   async createNotebookButton(): Promise<Button> {
-    return Button.findByName(this.page, {name: LinkText.CreateNotebook});
+    return Button.findByName(this.page, { name: LinkText.CreateNotebook });
   }
 
   /**
    * Click 'See Code Preview' button. Returns code contents.
    */
   async previewCode(): Promise<string> {
-    const previewButton = await Button.findByName(this.page, {name: LinkText.SeeCodePreview}, this);
+    const previewButton = await Button.findByName(
+      this.page,
+      { name: LinkText.SeeCodePreview },
+      this
+    );
     const element = await previewButton.asElementHandle();
     await previewButton.click();
     await waitUntilChanged(this.page, element);
@@ -79,6 +94,4 @@ export default class NewNotebookModal extends Modal {
     await waitForPropertyExists(this.page, selector, 'disabled');
     return previewTextArea.getTextContent();
   }
-
-
 }

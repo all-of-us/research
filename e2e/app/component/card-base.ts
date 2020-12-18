@@ -1,8 +1,7 @@
-import {ElementHandle, Page} from 'puppeteer';
-import {Option} from 'app/text-labels';
+import { ElementHandle, Page } from 'puppeteer';
+import { Option } from 'app/text-labels';
 import Container from 'app/container';
-import SnowmanMenu, {snowmanIconXpath} from './snowman-menu';
-
+import SnowmanMenu, { snowmanIconXpath } from './snowman-menu';
 
 export default abstract class CardBase extends Container {
   protected cardElement: ElementHandle;
@@ -28,9 +27,10 @@ export default abstract class CardBase extends Container {
     return new SnowmanMenu(this.page);
   }
 
-  async selectSnowmanMenu(option: Option, opt: { waitForNav?: boolean } = {}): Promise<void> {
-    return this.getSnowmanMenu().then(menu => menu.select(option, opt));
+  async selectSnowmanMenu(
+    option: Option,
+    opt: { waitForNav?: boolean } = {}
+  ): Promise<void> {
+    return this.getSnowmanMenu().then((menu) => menu.select(option, opt));
   }
-
-
 }

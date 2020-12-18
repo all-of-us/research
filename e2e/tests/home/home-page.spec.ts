@@ -1,16 +1,14 @@
 import BaseElement from 'app/element/base-element';
 import HomePage from 'app/page/home-page';
 import WorkspaceCard from 'app/component/workspace-card';
-import {signIn} from 'utils/test-utils';
+import { signIn } from 'utils/test-utils';
 
 describe('Home page ui tests', () => {
-
   beforeEach(async () => {
     await signIn(page);
   });
 
   test('Check visibility of Workspace cards', async () => {
-
     await checkCreateNewWorkspaceLink();
 
     const allCards = await WorkspaceCard.findAllCards(page);
@@ -41,10 +39,11 @@ describe('Home page ui tests', () => {
       // Assumption: test user is workspace Owner.
       // Check Workspace Actions snowman menu displayes the right set of options.
       const links = await snowmanMenu.getAllOptionTexts();
-      expect(links).toEqual(expect.arrayContaining(['Share', 'Edit', 'Duplicate', 'Delete']));
+      expect(links).toEqual(
+        expect.arrayContaining(['Share', 'Edit', 'Duplicate', 'Delete'])
+      );
     }
   });
-
 });
 
 async function checkCreateNewWorkspaceLink(): Promise<void> {

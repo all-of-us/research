@@ -1,9 +1,8 @@
-const PuppeteerEnvironment = require('jest-environment-puppeteer');
-const fs = require('fs-extra');
+import PuppeteerEnvironment from 'jest-environment-puppeteer';
+import fs from 'fs-extra';
 require('jest-circus');
 
 class PuppeteerCustomEnvironment extends PuppeteerEnvironment {
-
   async setup() {
     await super.setup();
   }
@@ -18,12 +17,14 @@ class PuppeteerCustomEnvironment extends PuppeteerEnvironment {
   // 20201103_084435
   localDateTimeString() {
     const localTime = new Date();
-    const fakeUtcTime = new Date(localTime.getTime() - (localTime.getTimezoneOffset() * 60000));
+    const fakeUtcTime = new Date(
+      localTime.getTime() - localTime.getTimezoneOffset() * 60000
+    );
     return fakeUtcTime
-        .toISOString()
-        .replace(/[-:]/g,'')
-        .replace('T', '_')
-        .slice(0, 15);
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace('T', '_')
+      .slice(0, 15);
   }
 
   // Take a screenshot right after failure
@@ -39,8 +40,8 @@ class PuppeteerCustomEnvironment extends PuppeteerEnvironment {
           testName = event.test.name.replace(/\W/g, '-');
         }
 
-        const screenshotDir = `logs/screenshot`;
-        const htmlDir = `logs/html`;
+        const screenshotDir = 'logs/screenshot';
+        const htmlDir = 'logs/html';
         await fs.ensureDir(screenshotDir);
         await fs.ensureDir(htmlDir);
 
@@ -55,29 +56,27 @@ class PuppeteerCustomEnvironment extends PuppeteerEnvironment {
       default:
         break;
     }
-
   }
 
   async takeScreenshot(filePath) {
-    await this.global.page.screenshot({path: filePath, fullPage: true});
+    await this.global.page.screenshot({ path: filePath, fullPage: true });
     console.info(`Saved screenshot: ${filePath}`);
   }
 
-  async savePageToFile(htmlFile) {
+  async savePageToFile(htmlFile): Promise<boolean> {
     const htmlContent = await this.global.page.content();
     return new Promise((resolve, reject) => {
-      fs.writeFile(htmlFile, htmlContent, 'utf8', error => {
+      fs.writeFile(htmlFile, htmlContent, 'utf8', (error) => {
         if (error) {
-          console.error(`Failed to save html file. ` + error);
-          reject(false);
+          console.error('Failed to save html file. ' + error);
+          reject(error);
         } else {
           console.info('Saved html file: ' + htmlFile);
           resolve(true);
         }
-      })
+      });
     });
   }
-
 }
 
 module.exports = PuppeteerCustomEnvironment;

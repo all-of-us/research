@@ -1,7 +1,7 @@
-import ProfilePage, {MissingErrorAlias} from 'app/page/profile-page';
-import {signIn} from 'utils/test-utils';
-import navigation, {NavLink} from 'app/component/navigation';
-import {makeString, makeUrl} from 'utils/str-utils';
+import ProfilePage, { MissingErrorAlias } from 'app/page/profile-page';
+import { signIn } from 'utils/test-utils';
+import navigation, { NavLink } from 'app/component/navigation';
+import { makeString, makeUrl } from 'utils/str-utils';
 import Button from 'app/element/button';
 
 describe('Profile', () => {
@@ -10,7 +10,7 @@ describe('Profile', () => {
 
   async function waitForSaveButton(isActive: boolean): Promise<Button> {
     const button = await profilePage.getSaveProfileButton();
-    const isCursorEnabled = ! (await button.isCursorNotAllowed());
+    const isCursorEnabled = !(await button.isCursorNotAllowed());
     expect(isCursorEnabled).toBe(isActive);
     return button;
   }
@@ -25,7 +25,6 @@ describe('Profile', () => {
   async function isMissingErrorPresent(fieldText: string): Promise<boolean> {
     return isDivWithTextPresent(`${fieldText} can't be blank`);
   }
-
 
   beforeEach(async () => {
     await signIn(page);
@@ -94,7 +93,9 @@ describe('Profile', () => {
     expect(await firstName.getValue()).toBe(testTextFirstName);
     expect(await lastName.getValue()).toBe(testTextLastName);
     expect(await url.getValue()).toBe(testTextURL);
-    expect(await researchBackground.getValue()).toBe(testTextResearchBackground);
+    expect(await researchBackground.getValue()).toBe(
+      testTextResearchBackground
+    );
     expect(await address1.getValue()).toBe(testTextAddress1);
     expect(await address2.getValue()).toBe(testTextAddress2);
     expect(await city.getValue()).toBe(testTextCity);
@@ -111,14 +112,18 @@ describe('Profile', () => {
 
     // save button is enabled and no error message is displayed
     await waitForSaveButton(true);
-    expect(await isMissingErrorPresent(MissingErrorAlias.ResearchBackground)).toBeFalsy();
+    expect(
+      await isMissingErrorPresent(MissingErrorAlias.ResearchBackground)
+    ).toBeFalsy();
 
     // remove text from Research Background textarea
     await researchBackground.clear();
 
     // save button is disabled and error message is displayed
     await waitForSaveButton(false);
-    expect(await isMissingErrorPresent(MissingErrorAlias.ResearchBackground)).toBeTruthy();
+    expect(
+      await isMissingErrorPresent(MissingErrorAlias.ResearchBackground)
+    ).toBeTruthy();
   });
 
   test('Each missing required field individually disables the save button', async () => {
@@ -135,15 +140,18 @@ describe('Profile', () => {
 
     const testText = makeString(10);
 
-    for (const {element, missingError} of [
-      {element: firstName, missingError: MissingErrorAlias.FirstName},
-      {element: lastName, missingError: MissingErrorAlias.LastName},
-      {element: researchBackground, missingError: MissingErrorAlias.ResearchBackground},
-      {element: address1, missingError: MissingErrorAlias.Address1},
-      {element: city, missingError: MissingErrorAlias.City},
-      {element: state, missingError: MissingErrorAlias.State},
-      {element: zip, missingError: MissingErrorAlias.Zip},
-      {element: country, missingError: MissingErrorAlias.Country},
+    for (const { element, missingError } of [
+      { element: firstName, missingError: MissingErrorAlias.FirstName },
+      { element: lastName, missingError: MissingErrorAlias.LastName },
+      {
+        element: researchBackground,
+        missingError: MissingErrorAlias.ResearchBackground,
+      },
+      { element: address1, missingError: MissingErrorAlias.Address1 },
+      { element: city, missingError: MissingErrorAlias.City },
+      { element: state, missingError: MissingErrorAlias.State },
+      { element: zip, missingError: MissingErrorAlias.Zip },
+      { element: country, missingError: MissingErrorAlias.Country },
     ]) {
       const originalValue = await element.getValue();
 
@@ -175,7 +183,7 @@ describe('Profile', () => {
       'http://',
       'https://broad    institute.org',
       '*http://google.com/',
-    ]
+    ];
 
     await url.type(validUrl);
 
@@ -191,6 +199,4 @@ describe('Profile', () => {
       await url.type(validUrl);
     }
   });
-
-
 });

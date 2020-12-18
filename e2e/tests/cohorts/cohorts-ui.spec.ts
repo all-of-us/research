@@ -1,12 +1,11 @@
 import CohortBuildPage from 'app/page/cohort-build-page';
-import {PhysicalMeasurementsCriteria} from 'app/page/criteria-search-page';
+import { PhysicalMeasurementsCriteria } from 'app/page/criteria-search-page';
 import WorkspaceAboutPage from 'app/page/workspace-about-page';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
-import {findOrCreateWorkspace, signIn} from 'utils/test-utils';
-import {TabLabels} from 'app/page/workspace-base';
+import { findOrCreateWorkspace, signIn } from 'utils/test-utils';
+import { TabLabels } from 'app/page/workspace-base';
 
 describe('Cohorts UI tests', () => {
-
   beforeEach(async () => {
     await signIn(page);
   });
@@ -33,13 +32,18 @@ describe('Cohorts UI tests', () => {
 
     // Include Participants Group 1
     const group1 = cohortPage.findIncludeParticipantsGroup('Group 1');
-    const group1Count = await group1.includePhysicalMeasurement(PhysicalMeasurementsCriteria.Weight, 190);
+    const group1Count = await group1.includePhysicalMeasurement(
+      PhysicalMeasurementsCriteria.Weight,
+      190
+    );
     // Checking Group 1 Count.
     expect(group1Count).toEqual(await group1.getGroupCount());
 
     // Cannot verify graphical charts display, but we can check charts points existance.
-    const chartPointsSelector = '//*[@class="highcharts-root"]//*[@x and @y and @width and @height and contains(@class, "highcharts-point")]';
-    await page.waitForXPath(chartPointsSelector, {visible: true});
+    const chartPointsSelector =
+      '//*[@class="highcharts-root"]//*[@x and @y and' +
+      '@width and @height and contains(@class, "highcharts-point")]';
+    await page.waitForXPath(chartPointsSelector, { visible: true });
 
     // Copy button is disabled
     const copyButton = await cohortPage.getCopyButton();
@@ -53,13 +57,15 @@ describe('Cohorts UI tests', () => {
     const exportButton = await cohortPage.getExportButton();
     expect(await exportButton.isDisabled()).toBe(true);
 
-    await dataPage.openAboutPage({waitPageChange: false});
+    await dataPage.openAboutPage({ waitPageChange: false });
 
     // Don't save. Confirm Discard Changes
     const modalTextContent = await cohortPage.discardChangesConfirmationDialog();
     // Verify dialog content text
     expect(modalTextContent).toContain('Warning!');
-    const warningText = 'Your cohort has not been saved. If you’d like to save your cohort criteria, please click CANCEL and click CREATE COHORT to save your criteria.';
+    const warningText =
+      'Your cohort has not been saved. ' +
+      'If you’d like to save your cohort criteria, please click CANCEL and click CREATE COHORT to save your criteria.';
     expect(modalTextContent).toContain(warningText);
 
     // Check ABOUT tab is open
@@ -68,6 +74,4 @@ describe('Cohorts UI tests', () => {
     const isOpen = await aboutPage.isOpen(TabLabels.About);
     expect(isOpen).toBe(true);
   });
-
-
 });

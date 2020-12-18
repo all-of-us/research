@@ -1,17 +1,20 @@
 import Container from 'app/container';
 import BaseElement from 'app/element/base-element';
-import {buildXPath} from 'app/xpath-builders';
-import {ElementType, XPathOptions} from 'app/xpath-options';
-import {Page} from 'puppeteer';
-import {getPropValue} from 'utils/element-utils';
+import { buildXPath } from 'app/xpath-builders';
+import { ElementType, XPathOptions } from 'app/xpath-options';
+import { Page } from 'puppeteer';
+import { getPropValue } from 'utils/element-utils';
 
 export default class SelectMenu extends Container {
-
-  static async findByName(page: Page, xOpt: XPathOptions = {}, container?: Container): Promise<SelectMenu> {
+  static async findByName(
+    page: Page,
+    xOpt: XPathOptions = {},
+    container?: Container
+  ): Promise<SelectMenu> {
     xOpt.type = ElementType.Dropdown;
     const menuXpath = buildXPath(xOpt, container);
     const selectMenu = new SelectMenu(page, menuXpath);
-    await page.waitForXPath(menuXpath, {visible: true});
+    await page.waitForXPath(menuXpath, { visible: true });
     return selectMenu;
   }
 
@@ -24,12 +27,14 @@ export default class SelectMenu extends Container {
    * @param {string} textValue Partial or full string to click in Select.
    * @param {number} maxAttempts Default try count is 2.
    */
-  async clickMenuItem(textValue: string, maxAttempts: number = 2): Promise<void> {
-
+  async clickMenuItem(textValue: string, maxAttempts = 2): Promise<void> {
     const clickText = async () => {
       await this.open(2);
-      const selector = this.xpath + `//li[contains(normalize-space(text()), "${textValue}")]`;
-      const selectValue = await this.page.waitForXPath(selector, {visible: true});
+      const selector =
+        this.xpath + `//li[contains(normalize-space(text()), "${textValue}")]`;
+      const selectValue = await this.page.waitForXPath(selector, {
+        visible: true,
+      });
       const baseElement = BaseElement.asBaseElement(this.page, selectValue);
       const textContent = await baseElement.getTextContent(); // get full text
       await selectValue.click();
@@ -60,7 +65,9 @@ export default class SelectMenu extends Container {
    */
   async getSelectedValue(): Promise<string> {
     const selector = this.xpath + '/label';
-    const displayedValue = await this.page.waitForXPath(selector, { visible: true });
+    const displayedValue = await this.page.waitForXPath(selector, {
+      visible: true,
+    });
     return getPropValue<string>(displayedValue, 'innerText');
   }
 
@@ -68,7 +75,7 @@ export default class SelectMenu extends Container {
    * Open Select dropdown.
    * @param {number} maxAttempts Default is 1.
    */
-  private async open(maxAttempts: number = 1): Promise<void> {
+  private async open(maxAttempts = 1): Promise<void> {
     const click = async () => {
       await this.toggle();
       const opened = await this.isOpen();
@@ -86,16 +93,20 @@ export default class SelectMenu extends Container {
 
   private async toggle(): Promise<void> {
     const selector = this.xpath + '/*[@class="p-dropdown-trigger"]';
-    const dropdownTrigger = await this.page.waitForXPath(selector, { visible: true });
+    const dropdownTrigger = await this.page.waitForXPath(selector, {
+      visible: true,
+    });
     await dropdownTrigger.hover();
     await dropdownTrigger.click();
     await dropdownTrigger.dispose();
   }
 
   private async isOpen(): Promise<boolean> {
-    const selector = this.xpath + '/*[contains(concat(" ", normalize-space(@class), " "), " p-dropdown-panel ")]';
+    const selector =
+      this.xpath +
+      '/*[contains(concat(" ", normalize-space(@class), " "), " p-dropdown-panel ")]';
     try {
-      const panel = await this.page.waitForXPath(selector, {visible: true});
+      const panel = await this.page.waitForXPath(selector, { visible: true });
       const classNameString = await getPropValue<string>(panel, 'className');
       const splits = classNameString.toString().split(' ');
       await panel.dispose();
@@ -106,11 +117,12 @@ export default class SelectMenu extends Container {
   }
 
   private async waitUntilDropdownClosed() {
-    const xpath = this.xpath + '/*[contains(concat(" ", normalize-space(@class), " "), " p-input-overlay-visible ")]';
-    await this.page.waitForXPath(xpath, {hidden: true}).catch((err) => {
+    const xpath =
+      this.xpath +
+      '/*[contains(concat(" ", normalize-space(@class), " "), " p-input-overlay-visible ")]';
+    await this.page.waitForXPath(xpath, { hidden: true }).catch((err) => {
       console.error('Select dropdown is not closed.');
       throw err;
-    })
+    });
   }
-
 }

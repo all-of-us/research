@@ -1,15 +1,14 @@
-import {Page} from 'puppeteer';
+import { Page } from 'puppeteer';
 import HelpSidebar from 'app/component/help-sidebar';
 import SelectMenu from 'app/component/select-menu';
 import Table from 'app/component/table';
 import Button from 'app/element/button';
 import ClrIconLink from 'app/element/clr-icon-link';
 import Textbox from 'app/element/textbox';
-import {waitForNumericalString, waitWhileLoading} from 'utils/waits-utils';
-import {LinkText} from 'app/text-labels';
-import {getPropValue} from 'utils/element-utils';
+import { waitForNumericalString, waitWhileLoading } from 'utils/waits-utils';
+import { LinkText } from 'app/text-labels';
+import { getPropValue } from 'utils/element-utils';
 import AuthenticatedPage from './authenticated-page';
-
 
 export enum PhysicalMeasurementsCriteria {
   BloodPressure = 'Blood Pressure',
@@ -53,7 +52,6 @@ export enum FilterSign {
   Between = 'Between',
 }
 
-
 export default class CriteriaSearchPage extends AuthenticatedPage {
   private containerXpath = '//*[@id="criteria-search-container"]';
 
@@ -63,20 +61,31 @@ export default class CriteriaSearchPage extends AuthenticatedPage {
 
   async isLoaded(): Promise<boolean> {
     await Promise.all([
-      this.page.waitForXPath('//*[@id="criteria-search-container"]', {visible: true}),
+      this.page.waitForXPath('//*[@id="criteria-search-container"]', {
+        visible: true,
+      }),
       // this.page.waitForXPath('//*[@role="button"]/img[@alt="Go back"]', {visible: true})
     ]);
     await waitWhileLoading(this.page);
     return true;
   }
 
-
-  async waitForPhysicalMeasurementCriteriaLink(criteriaType: PhysicalMeasurementsCriteria): Promise<ClrIconLink> {
-    return ClrIconLink.findByName(this.page, {name: criteriaType, iconShape: 'slider', ancestorLevel: 2});
+  async waitForPhysicalMeasurementCriteriaLink(
+    criteriaType: PhysicalMeasurementsCriteria
+  ): Promise<ClrIconLink> {
+    return ClrIconLink.findByName(this.page, {
+      name: criteriaType,
+      iconShape: 'slider',
+      ancestorLevel: 2,
+    });
   }
 
   async waitForVisitsCriteriaLink(criteriaType: Visits): Promise<ClrIconLink> {
-    return ClrIconLink.findByName(this.page, {startsWith: criteriaType, iconShape: 'plus-circle', ancestorLevel: 1});
+    return ClrIconLink.findByName(this.page, {
+      startsWith: criteriaType,
+      iconShape: 'plus-circle',
+      ancestorLevel: 1,
+    });
   }
 
   /**
@@ -85,19 +94,25 @@ export default class CriteriaSearchPage extends AuthenticatedPage {
    * @param {FilterSign}  filterSign
    * @param {number} filterValue
    */
-  async filterPhysicalMeasurementValue(criteriaName: PhysicalMeasurementsCriteria,
-                                       filterSign: FilterSign,
-                                       filterValue: number): Promise<string> {
-
+  async filterPhysicalMeasurementValue(
+    criteriaName: PhysicalMeasurementsCriteria,
+    filterSign: FilterSign,
+    filterValue: number
+  ): Promise<string> {
     await waitWhileLoading(this.page);
-    const link = await this.waitForPhysicalMeasurementCriteriaLink(criteriaName);
+    const link = await this.waitForPhysicalMeasurementCriteriaLink(
+      criteriaName
+    );
     await link.click();
-    
+
     // Delay to make sure correct sidebar content is showing
     await this.page.waitForTimeout(1000);
 
     const helpSidebar = new HelpSidebar(this.page);
-    const participantResult = await helpSidebar.getPhysicalMeasurementParticipantResult(filterSign, filterValue);
+    const participantResult = await helpSidebar.getPhysicalMeasurementParticipantResult(
+      filterSign,
+      filterValue
+    );
     // return participants count for comparing
     return participantResult;
   }
@@ -106,7 +121,9 @@ export default class CriteriaSearchPage extends AuthenticatedPage {
    * Click FINISH button.
    */
   async clickFinishButton(): Promise<void> {
-    return Button.findByName(this.page, {normalizeSpace: LinkText.FinishAndReview}).then(button => button.click());
+    return Button.findByName(this.page, {
+      normalizeSpace: LinkText.FinishAndReview,
+    }).then((button) => button.click());
   }
 
   async waitForParticipantResult(): Promise<string> {
@@ -120,17 +137,28 @@ export default class CriteriaSearchPage extends AuthenticatedPage {
 
   async searchCriteria(searchWord: string): Promise<Table> {
     const resultsTable = this.getConditionSearchResultsTable();
-    const searchFilterTextbox = await Textbox.findByName(this.page, {containsText: 'by code or description'});
+    const searchFilterTextbox = await Textbox.findByName(this.page, {
+      containsText: 'by code or description',
+    });
     await searchFilterTextbox.type(searchWord);
     await searchFilterTextbox.pressReturn();
     await waitWhileLoading(this.page);
     return resultsTable;
   }
 
-  async addAgeModifier(filterSign: FilterSign, filterValue: number): Promise<string> {
-    const selectMenu = await SelectMenu.findByName(this.page, {name: 'Age At Event', ancestorLevel: 2});
+  async addAgeModifier(
+    filterSign: FilterSign,
+    filterValue: number
+  ): Promise<string> {
+    const selectMenu = await SelectMenu.findByName(this.page, {
+      name: 'Age At Event',
+      ancestorLevel: 2,
+    });
     await selectMenu.clickMenuItem(filterSign);
-    const numberField = await this.page.waitForXPath(`${this.containerXpath}//input[@type="number"]`, {visible: true});
+    const numberField = await this.page.waitForXPath(
+      `${this.containerXpath}//input[@type="number"]`,
+      { visible: true }
+    );
     // Issue with Puppeteer type() function: typing value in this textbox doesn't always trigger change event. workaround is needed.
     // Error: "Sorry, the request cannot be completed. Please try again or contact Support in the left hand navigation."
     await numberField.focus();
@@ -139,15 +167,21 @@ export default class CriteriaSearchPage extends AuthenticatedPage {
     await numberField.press('Tab', { delay: 200 });
 
     let participantResult;
-    await Button.findByName(this.page, {name: LinkText.Calculate}).then(button => button.click());
+    await Button.findByName(this.page, {
+      name: LinkText.Calculate,
+    }).then((button) => button.click());
     try {
       participantResult = await this.waitForParticipantResult();
     } catch (e) {
       // Retry one more time.
-      await Button.findByName(this.page, {name: LinkText.Calculate}).then(button => button.click());
+      await Button.findByName(this.page, {
+        name: LinkText.Calculate,
+      }).then((button) => button.click());
       participantResult = await this.waitForParticipantResult();
     }
-    console.debug(`Age Modifier: ${filterSign} ${filterValue}  => number of participants: ${participantResult}`);
+    console.debug(
+      `Age Modifier: ${filterSign} ${filterValue}  => number of participants: ${participantResult}`
+    );
     return participantResult;
   }
 
@@ -158,16 +192,28 @@ export default class CriteriaSearchPage extends AuthenticatedPage {
   }
 
   getResultsTable(): Table {
-    return new Table(this.page, `//table[@data-test-id="list-search-results-table"]`)
+    return new Table(
+      this.page,
+      '//table[@data-test-id="list-search-results-table"]'
+    );
   }
 
-  async resultsTableSelectRow(rowIndex: number = 1,
-                            selectionColumnIndex = 1): Promise<{name: string, code: string; vocabulary: string; rollUpCount: string}> {
+  async resultsTableSelectRow(
+    rowIndex = 1,
+    selectionColumnIndex = 1
+  ): Promise<{
+    name: string;
+    code: string;
+    vocabulary: string;
+    rollUpCount: string;
+  }> {
     const resultsTable = this.getResultsTable();
 
     // Name column #1
     const nameCell = await resultsTable.getCell(rowIndex, 1);
-    const nameElem = (await nameCell.$x('.//div[@data-test-id="name-column-value"]'))[0];
+    const nameElem = (
+      await nameCell.$x('.//div[@data-test-id="name-column-value"]')
+    )[0];
     const nameValue = await getPropValue<string>(nameElem, 'textContent');
 
     // Code column #2
@@ -176,17 +222,30 @@ export default class CriteriaSearchPage extends AuthenticatedPage {
 
     // Vocabulary column #3
     const vocabularyCell = await resultsTable.getCell(rowIndex, 3);
-    const vocabValue = await getPropValue<string>(vocabularyCell, 'textContent');
+    const vocabValue = await getPropValue<string>(
+      vocabularyCell,
+      'textContent'
+    );
 
     // Roll-up Count column #6
     const rollUpCountCell = await resultsTable.getCell(rowIndex, 6);
-    const rollUpCountValue = await getPropValue<string>(rollUpCountCell, 'textContent');
+    const rollUpCountValue = await getPropValue<string>(
+      rollUpCountCell,
+      'textContent'
+    );
 
-    const selectCheckCell = await resultsTable.getCell(rowIndex, selectionColumnIndex);
+    const selectCheckCell = await resultsTable.getCell(
+      rowIndex,
+      selectionColumnIndex
+    );
     const elemt = (await selectCheckCell.$x('.//*[@shape="plus-circle"]'))[0];
     await elemt.click();
 
-    return { name: nameValue, code: codeValue, vocabulary: vocabValue, rollUpCount: rollUpCountValue };
+    return {
+      name: nameValue,
+      code: codeValue,
+      vocabulary: vocabValue,
+      rollUpCount: rollUpCountValue,
+    };
   }
-
 }

@@ -1,28 +1,32 @@
-import {ElementHandle, Page} from 'puppeteer';
-import {FieldSelector} from 'app/page/cohort-build-page';
+import { ElementHandle, Page } from 'puppeteer';
+import { FieldSelector } from 'app/page/cohort-build-page';
 import Modal from 'app/component/modal';
-import {waitForNumericalString, waitForText, waitWhileLoading} from 'utils/waits-utils';
+import {
+  waitForNumericalString,
+  waitForText,
+  waitWhileLoading,
+} from 'utils/waits-utils';
 import CohortSearchPage from 'app/page/cohort-search-page';
-import CriteriaSearchPage, {FilterSign, PhysicalMeasurementsCriteria} from 'app/page/criteria-search-page';
+import CriteriaSearchPage, {
+  FilterSign,
+  PhysicalMeasurementsCriteria,
+} from 'app/page/criteria-search-page';
 import TieredMenu from 'app/component/tiered-menu';
-import {LinkText} from 'app/text-labels';
-import {snowmanIconXpath} from 'app/component/snowman-menu';
+import { LinkText } from 'app/text-labels';
+import { snowmanIconXpath } from 'app/component/snowman-menu';
 import Button from 'app/element/button';
 import HelpSidebar from 'app/component/help-sidebar';
 
 enum GroupMenuOption {
-   EditGroupName  = 'Edit group name',
-   SuppressGroupFromTotalCount = 'Suppress group from total count',
-   DeleteGroup = 'Delete group',
+  EditGroupName = 'Edit group name',
+  SuppressGroupFromTotalCount = 'Suppress group from total count',
+  DeleteGroup = 'Delete group',
 }
 
 export default class CohortParticipantsGroup {
-
   private rootXpath: string;
 
-  constructor(private readonly page: Page) {
-
-  }
+  constructor(private readonly page: Page) {}
 
   setXpath(xpath: string): void {
     this.rootXpath = xpath;
@@ -42,8 +46,9 @@ export default class CohortParticipantsGroup {
 
   async clickSnowmanIcon(): Promise<void> {
     const iconXpath = `${this.rootXpath}${snowmanIconXpath}`;
-    await this.page.waitForXPath(iconXpath, {visible: true})
-       .then(icon => icon.click());
+    await this.page
+      .waitForXPath(iconXpath, { visible: true })
+      .then((icon) => icon.click());
   }
 
   /**
@@ -66,7 +71,7 @@ export default class CohortParticipantsGroup {
     const modal = new Modal(this.page);
     const textbox = await modal.waitForTextbox('New Name:');
     await textbox.type(newGroupName);
-    await modal.clickButton(LinkText.Rename, {waitForClose: true});
+    await modal.clickButton(LinkText.Rename, { waitForClose: true });
   }
 
   /**
@@ -85,11 +90,18 @@ export default class CohortParticipantsGroup {
     return this.getGroupCriteriasList();
   }
 
-  async includePhysicalMeasurement(criteriaName: PhysicalMeasurementsCriteria, value: number): Promise<string> {
+  async includePhysicalMeasurement(
+    criteriaName: PhysicalMeasurementsCriteria,
+    value: number
+  ): Promise<string> {
     await this.clickCriteriaMenuItems(['Physical Measurements']);
     const searchPage = new CriteriaSearchPage(this.page);
     await searchPage.waitForLoad();
-    return searchPage.filterPhysicalMeasurementValue(criteriaName, FilterSign.GreaterThanOrEqualTo, value);
+    return searchPage.filterPhysicalMeasurementValue(
+      criteriaName,
+      FilterSign.GreaterThanOrEqualTo,
+      value
+    );
   }
 
   async includeDemographicsDeceased(): Promise<string> {
@@ -144,7 +156,10 @@ export default class CohortParticipantsGroup {
   }
 
   private async openTieredMenu(): Promise<TieredMenu> {
-    const addCriteriaButton = await this.page.waitForXPath(this.getAddCriteriaButtonXpath(), {visible: true});
+    const addCriteriaButton = await this.page.waitForXPath(
+      this.getAddCriteriaButtonXpath(),
+      { visible: true }
+    );
     await addCriteriaButton.click(); // Click dropdown trigger to open menu
     return new TieredMenu(this.page);
   }
@@ -155,7 +170,9 @@ export default class CohortParticipantsGroup {
   }
 
   async viewAndSaveCriteria(): Promise<void> {
-    const finishAndReviewButton = await Button.findByName(this.page, {name: LinkText.FinishAndReview});
+    const finishAndReviewButton = await Button.findByName(this.page, {
+      name: LinkText.FinishAndReview,
+    });
     await finishAndReviewButton.waitUntilEnabled();
     await finishAndReviewButton.click();
 
@@ -163,5 +180,4 @@ export default class CohortParticipantsGroup {
     const helpSidebar = new HelpSidebar(this.page);
     await helpSidebar.clickSaveCriteriaButton();
   }
-
 }

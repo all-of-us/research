@@ -1,11 +1,10 @@
 import DataResourceCard from 'app/component/data-resource-card';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
-import {ResourceCard} from 'app/text-labels';
-import {makeRandomName} from 'utils/str-utils';
-import {findOrCreateWorkspace, signIn} from 'utils/test-utils';
+import { ResourceCard } from 'app/text-labels';
+import { makeRandomName } from 'utils/str-utils';
+import { findOrCreateWorkspace, signIn } from 'utils/test-utils';
 
 describe('Dataset test', () => {
-
   beforeEach(async () => {
     await signIn(page);
   });
@@ -34,26 +33,42 @@ describe('Dataset test', () => {
 
     // Verify create successful
     const resourceCard = new DataResourceCard(page);
-    const dataSetExists = await resourceCard.cardExists(datasetName, ResourceCard.Dataset);
+    const dataSetExists = await resourceCard.cardExists(
+      datasetName,
+      ResourceCard.Dataset
+    );
     expect(dataSetExists).toBe(true);
 
     // Rename Dataset
     const newDatasetName = makeRandomName();
-    await dataPage.renameResource(datasetName, newDatasetName, ResourceCard.Dataset);
+    await dataPage.renameResource(
+      datasetName,
+      newDatasetName,
+      ResourceCard.Dataset
+    );
 
     await dataPage.openDatasetsSubtab();
 
     // Verify rename successful
-    const newDatasetExists = await resourceCard.cardExists(newDatasetName, ResourceCard.Dataset);
+    const newDatasetExists = await resourceCard.cardExists(
+      newDatasetName,
+      ResourceCard.Dataset
+    );
     expect(newDatasetExists).toBe(true);
 
-    const oldDatasetExists = await resourceCard.cardExists(datasetName, ResourceCard.Dataset);
+    const oldDatasetExists = await resourceCard.cardExists(
+      datasetName,
+      ResourceCard.Dataset
+    );
     expect(oldDatasetExists).toBe(false);
 
     // Delete Dataset
-    const textContent = await dataPage.deleteResource(newDatasetName, ResourceCard.Dataset);
-    expect(textContent).toContain(`Are you sure you want to delete Dataset: ${newDatasetName}?`);
+    const textContent = await dataPage.deleteResource(
+      newDatasetName,
+      ResourceCard.Dataset
+    );
+    expect(textContent).toContain(
+      `Are you sure you want to delete Dataset: ${newDatasetName}?`
+    );
   });
-
-
 });

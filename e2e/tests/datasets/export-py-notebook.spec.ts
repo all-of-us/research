@@ -2,22 +2,21 @@ import DataResourceCard from 'app/component/data-resource-card';
 import ExportToNotebookModal from 'app/component/export-to-notebook-modal';
 import NotebookPreviewPage from 'app/page/notebook-preview-page';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
-import {Option, ResourceCard} from 'app/text-labels';
-import {makeRandomName} from 'utils/str-utils';
-import {findOrCreateWorkspace, signIn} from 'utils/test-utils';
-import {waitForText, waitWhileLoading} from 'utils/waits-utils';
+import { Option, ResourceCard } from 'app/text-labels';
+import { makeRandomName } from 'utils/str-utils';
+import { findOrCreateWorkspace, signIn } from 'utils/test-utils';
+import { waitForText, waitWhileLoading } from 'utils/waits-utils';
 
 describe('Create Dataset', () => {
-
   beforeEach(async () => {
     await signIn(page);
   });
 
-   /**
-    * Create new Dataset, export to notebook in Python language
-    * Finally delete Dataset.
-    */
-   // disabled temporarily to merge fitbit concept sets, will fix with RW-5932
+  /**
+   * Create new Dataset, export to notebook in Python language
+   * Finally delete Dataset.
+   */
+  // disabled temporarily to merge fitbit concept sets, will fix with RW-5932
   xtest('Export dataset to notebook in Python language', async () => {
     const workspaceCard = await findOrCreateWorkspace(page);
     await workspaceCard.clickWorkspaceName();
@@ -36,16 +35,23 @@ describe('Create Dataset', () => {
 
     const saveModal = await datasetBuildPage.clickSaveAndAnalyzeButton();
     const newNotebookName = makeRandomName();
-    const newDatasetName = await saveModal.saveDataset({exportToNotebook: true, notebookName: newNotebookName});
+    const newDatasetName = await saveModal.saveDataset({
+      exportToNotebook: true,
+      notebookName: newNotebookName,
+    });
     await waitWhileLoading(page);
 
     // Verify Notebook preview. Not going to start the Jupyter notebook.
     const notebookPreviewPage = new NotebookPreviewPage(page);
     await notebookPreviewPage.waitForLoad();
     const currentPageUrl = page.url();
-    expect(currentPageUrl).toContain(`notebooks/preview/${newNotebookName}.ipynb`);
+    expect(currentPageUrl).toContain(
+      `notebooks/preview/${newNotebookName}.ipynb`
+    );
 
-    const previewTextVisible = await waitForText(page, 'Preview (Read-Only)', {xpath: '//*[text()="Preview (Read-Only)"]'});
+    const previewTextVisible = await waitForText(page, 'Preview (Read-Only)', {
+      xpath: '//*[text()="Preview (Read-Only)"]',
+    });
     expect(previewTextVisible).toBe(true);
 
     const code = await notebookPreviewPage.getFormattedCode();
@@ -57,7 +63,10 @@ describe('Create Dataset', () => {
 
     // Verify new notebook exists.
     const resourceCard = new DataResourceCard(page);
-    const notebookExists = await resourceCard.cardExists(newNotebookName, ResourceCard.Notebook);
+    const notebookExists = await resourceCard.cardExists(
+      newNotebookName,
+      ResourceCard.Notebook
+    );
     expect(notebookExists).toBe(true);
 
     const origCardsCount = (await DataResourceCard.findAllCards(page)).length;
@@ -82,7 +91,7 @@ describe('Create Dataset', () => {
    */
   // disabled temporarily to merge fitbit concept sets, will fix with RW-5932
   xtest('Export dataset to notebook thru snowman menu', async () => {
-    await findOrCreateWorkspace(page).then(card => card.clickWorkspaceName());
+    await findOrCreateWorkspace(page).then((card) => card.clickWorkspaceName());
 
     // Click Add Datasets button.
     const dataPage = new WorkspaceDataPage(page);
@@ -91,12 +100,19 @@ describe('Create Dataset', () => {
     await datasetBuildPage.selectCohorts(['All Participants']);
     await datasetBuildPage.selectConceptSets(['Demographics']);
     const saveModal = await datasetBuildPage.clickSaveAndAnalyzeButton();
-    const datasetName = await saveModal.saveDataset({exportToNotebook: false});
+    const datasetName = await saveModal.saveDataset({
+      exportToNotebook: false,
+    });
     await waitWhileLoading(page);
 
     const resourceCard = new DataResourceCard(page);
-    const datasetCard = await resourceCard.findCard(datasetName, ResourceCard.Dataset);
-    await datasetCard.selectSnowmanMenu(Option.exportToNotebook, {waitForNav: false});
+    const datasetCard = await resourceCard.findCard(
+      datasetName,
+      ResourceCard.Dataset
+    );
+    await datasetCard.selectSnowmanMenu(Option.exportToNotebook, {
+      waitForNav: false,
+    });
 
     const exportModal = new ExportToNotebookModal(page);
     await exportModal.waitForLoad();
@@ -120,5 +136,4 @@ describe('Create Dataset', () => {
     await analysisPage.openDatasetsSubtab();
     await analysisPage.deleteResource(datasetName, ResourceCard.Dataset);
   });
-
 });

@@ -1,20 +1,18 @@
-import {createWorkspace, isValidDate, signIn} from 'utils/test-utils';
-import {Option, LinkText, ResourceCard} from 'app/text-labels';
-import {makeRandomName} from 'utils/str-utils';
+import { createWorkspace, isValidDate, signIn } from 'utils/test-utils';
+import { Option, LinkText, ResourceCard } from 'app/text-labels';
+import { makeRandomName } from 'utils/str-utils';
 import CohortBuildPage from 'app/page/cohort-build-page';
 import CohortParticipantDetailPage from 'app/page/cohort-participant-detail-page';
 import CohortReviewModal from 'app/page/cohort-review-modal';
 import CohortReviewPage from 'app/page/cohort-review-page';
 import DataResourceCard from 'app/component/data-resource-card';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
-import {waitForText, waitWhileLoading} from 'utils/waits-utils';
-import {getPropValue} from 'utils/element-utils';
-import SidebarContent, {ReviewStatus} from 'app/component/sidebar-content';
+import { waitForText, waitWhileLoading } from 'utils/waits-utils';
+import { getPropValue } from 'utils/element-utils';
+import SidebarContent, { ReviewStatus } from 'app/component/sidebar-content';
 import AnnotationFieldModal from 'app/component/annotation-field-modal';
 
-
 describe('Cohort review tests', () => {
-
   beforeEach(async () => {
     await signIn(page);
   });
@@ -30,7 +28,7 @@ describe('Cohort review tests', () => {
   test('Create Cohort and a Review Set for 100 participants', async () => {
     const reviewSetNumberOfParticipants = 100;
 
-    await createWorkspace(page).then(card => card.clickWorkspaceName());
+    await createWorkspace(page).then((card) => card.clickWorkspaceName());
 
     const dataPage = new WorkspaceDataPage(page);
     const cohortCard = await dataPage.createCohort();
@@ -41,7 +39,9 @@ describe('Cohort review tests', () => {
     const modal = new CohortReviewModal(page);
     await modal.fillInNumberOfPartcipants(reviewSetNumberOfParticipants);
     await modal.clickButton(LinkText.CreateSet);
-    console.log(`Created Review Set with ${reviewSetNumberOfParticipants} participants.`);
+    console.log(
+      `Created Review Set with ${reviewSetNumberOfParticipants} participants.`
+    );
 
     const cohortReviewPage = new CohortReviewPage(page);
     await cohortReviewPage.waitForLoad();
@@ -56,7 +56,16 @@ describe('Cohort review tests', () => {
     expect(Number(records[2])).toEqual(reviewSetNumberOfParticipants);
 
     // Verify table column names match.
-    const columns = ['Participant ID', 'Date of Birth', 'Deceased', 'Sex at Birth', 'Gender', 'Race', 'Ethnicity', 'Status'];
+    const columns = [
+      'Participant ID',
+      'Date of Birth',
+      'Deceased',
+      'Sex at Birth',
+      'Gender',
+      'Race',
+      'Ethnicity',
+      'Status',
+    ];
     const columnNames = await participantsTable.getColumnNames();
     expect(columnNames).toHaveLength(columns.length);
     expect(columnNames.sort()).toEqual(columns.sort());
@@ -69,52 +78,60 @@ describe('Cohort review tests', () => {
 
     // Check table row link navigation works. Click ParticipantId link in the second row.
     const dataTablepid1 = await cohortReviewPage.clickParticipantLink(2);
-    
+
     // Not checking anything in Participant Detail page.
     const participantDetailPage = new CohortParticipantDetailPage(page);
-     await participantDetailPage.waitForLoad();
+    await participantDetailPage.waitForLoad();
 
     // click on the pen icon to open the participant
-     await participantDetailPage.clickPenIconHelpSideBar();
+    await participantDetailPage.clickPenIconHelpSideBar();
     // confirm that the sidebar-content opened
-    
+
     const sidebarContent = new SidebarContent(page);
-    const reviewParticipantid1 = await sidebarContent.getParticipantID(); 
+    const reviewParticipantid1 = await sidebarContent.getParticipantID();
     console.log(`reviewParticipantid1: ${reviewParticipantid1}`);
     expect(dataTablepid1).toEqual(reviewParticipantid1);
-    
+
     // select review status from dropdown option
-    const participantStatus1 = await sidebarContent.selectReviewStatus(ReviewStatus.Excluded);
-    
-    // click on the plus-icon next to annotations 
-    await sidebarContent.getAnnotationsButton().then(btn => btn.click());
+    const participantStatus1 = await sidebarContent.selectReviewStatus(
+      ReviewStatus.Excluded
+    );
+
+    // click on the plus-icon next to annotations
+    await sidebarContent.getAnnotationsButton().then((btn) => btn.click());
     // the annotations modal displays
-    const annotationFieldModal = new AnnotationFieldModal(page);    
+    const annotationFieldModal = new AnnotationFieldModal(page);
     // click cancel button onthe annotation modal
-    await annotationFieldModal.cancelAnnotationButton().then(btn => btn.click());
-    // close the sidebar content 
+    await annotationFieldModal
+      .cancelAnnotationButton()
+      .then((btn) => btn.click());
+    // close the sidebar content
     await participantDetailPage.clickPenIconHelpSideBar();
 
     // navigate to the next participant
     await participantDetailPage.goToTheNextParticipant();
     await participantDetailPage.waitForLoad();
-   
+
     // get the participant ID on the detail page
     const detailPageParticipantid = await participantDetailPage.getParticipantIDnum();
-     // click on the pen icon to open the sidebar
+    // click on the pen icon to open the sidebar
     await participantDetailPage.clickPenIconHelpSideBar();
-    await waitWhileLoading(page); 
+    await waitWhileLoading(page);
     // get the participant ID on the sidebar content
-    const reviewParticipantid2 = await sidebarContent.getParticipantID(); 
+    const reviewParticipantid2 = await sidebarContent.getParticipantID();
     console.log(`reviewParticipantid2: ${reviewParticipantid2}`);
     // validate that the participant ID on detail page and the sidebar content match
     expect(detailPageParticipantid).toEqual(reviewParticipantid2);
 
     // select a review status
-    const participantStatus2 = await sidebarContent.selectReviewStatus(ReviewStatus.Included);
+    const participantStatus2 = await sidebarContent.selectReviewStatus(
+      ReviewStatus.Included
+    );
 
     // navigate to review set page and check if the status column is displaying the review status for both participants
-    await participantDetailPage.getBackToReviewSetButton().then(btn => btn.click());
+    await participantDetailPage
+      .getBackToReviewSetButton()
+      .then((btn) => btn.click());
     await waitWhileLoading(page);
 
     // Get the status of participant1
@@ -130,7 +147,9 @@ describe('Cohort review tests', () => {
     console.log(`${reviewParticipantid2}: ${statusValue2}`);
 
     // return to cohort review page
-    await cohortReviewPage.getBackToCohortButton().then(btn => btn.clickAndWait());
+    await cohortReviewPage
+      .getBackToCohortButton()
+      .then((btn) => btn.clickAndWait());
 
     // Land on Cohort Build page
     const cohortBuildPage = new CohortBuildPage(page);
@@ -139,24 +158,36 @@ describe('Cohort review tests', () => {
     // Land on the Data Page & click the Cohort Reviews SubTab
     await dataPage.openCohortReviewsSubtab();
 
-    // Rename Cohort Review 
+    // Rename Cohort Review
     const newCohortReviewName = makeRandomName();
-    await dataPage.renameResource(cohortName, newCohortReviewName, ResourceCard.CohortReview);
+    await dataPage.renameResource(
+      cohortName,
+      newCohortReviewName,
+      ResourceCard.CohortReview
+    );
 
     // Verify Rename Cohort Review is successful.
-    expect(await DataResourceCard.findCard(page, newCohortReviewName)).toBeTruthy();
+    expect(
+      await DataResourceCard.findCard(page, newCohortReviewName)
+    ).toBeTruthy();
 
-     // Delete Cohort Review
-     const modalTextContent = await dataPage.deleteResource(newCohortReviewName, ResourceCard.CohortReview);
+    // Delete Cohort Review
+    const modalTextContent = await dataPage.deleteResource(
+      newCohortReviewName,
+      ResourceCard.CohortReview
+    );
 
-     // Verify Delete Cohort Review dialog content text
-     expect(modalTextContent).toContain(`Are you sure you want to delete Cohort Review: ${newCohortReviewName}?`);
- 
-     // Verify Delete Cohort Review successful.
-     expect(await DataResourceCard.findCard(page, newCohortReviewName, 5000)).toBeFalsy();
+    // Verify Delete Cohort Review dialog content text
+    expect(modalTextContent).toContain(
+      `Are you sure you want to delete Cohort Review: ${newCohortReviewName}?`
+    );
 
-     // Delete workspace
+    // Verify Delete Cohort Review successful.
+    expect(
+      await DataResourceCard.findCard(page, newCohortReviewName, 5000)
+    ).toBeFalsy();
+
+    // Delete workspace
     await dataPage.deleteWorkspace();
   });
-
 });

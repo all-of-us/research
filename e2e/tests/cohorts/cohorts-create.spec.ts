@@ -1,18 +1,19 @@
 import HelpSidebar from 'app/component/help-sidebar';
-import {FilterSign, PhysicalMeasurementsCriteria} from 'app/page/criteria-search-page';
+import {
+  FilterSign,
+  PhysicalMeasurementsCriteria,
+} from 'app/page/criteria-search-page';
 import DataResourceCard from 'app/component/data-resource-card';
 import Button from 'app/element/button';
 import ClrIconLink from 'app/element/clr-icon-link';
 import Link from 'app/element/link';
-import {Option, LinkText, ResourceCard} from 'app/text-labels';
-import CohortBuildPage, {FieldSelector} from 'app/page/cohort-build-page';
+import { Option, LinkText, ResourceCard } from 'app/text-labels';
+import CohortBuildPage, { FieldSelector } from 'app/page/cohort-build-page';
 import WorkspaceDataPage from 'app/page/workspace-data-page';
-import {findOrCreateWorkspace, signIn} from 'utils/test-utils';
-import {waitForText, waitWhileLoading} from 'utils/waits-utils';
-
+import { findOrCreateWorkspace, signIn } from 'utils/test-utils';
+import { waitForText, waitWhileLoading } from 'utils/waits-utils';
 
 describe('User can create new Cohorts', () => {
-
   beforeEach(async () => {
     await signIn(page);
   });
@@ -26,7 +27,6 @@ describe('User can create new Cohorts', () => {
    * Renaming Group 1 and 2 names.
    */
   test('Add Cohort of Physical Measurements BMI', async () => {
-
     const workspaceCard = await findOrCreateWorkspace(page);
     await workspaceCard.clickWorkspaceName();
 
@@ -43,12 +43,19 @@ describe('User can create new Cohorts', () => {
 
     // Include Participants Group 1.
     const group1 = cohortPage.findIncludeParticipantsGroup('Group 1');
-    const group1Count = await group1.includePhysicalMeasurement(PhysicalMeasurementsCriteria.BMI, 30);
+    const group1Count = await group1.includePhysicalMeasurement(
+      PhysicalMeasurementsCriteria.BMI,
+      30
+    );
 
     // Checking Group 1 Count. should match Group 1 participants count.
-    const group1CountInt = Number((await group1.getGroupCount()).replace(/,/g, ''));
+    const group1CountInt = Number(
+      (await group1.getGroupCount()).replace(/,/g, '')
+    );
     expect(group1CountInt).toBeGreaterThan(1);
-    console.log('Group 1: Physical Measurement -> BMI count: ' + group1CountInt);
+    console.log(
+      'Group 1: Physical Measurement -> BMI count: ' + group1CountInt
+    );
 
     // Checking Total Count: should match Group 1 participants count.
     const totalCount = await cohortPage.getTotalCount();
@@ -73,9 +80,14 @@ describe('User can create new Cohorts', () => {
     console.log(`Created Cohort "${cohortName}"`);
 
     // Open Cohort details.
-    const cohortLink = await Link.findByName(page, {name: cohortName});
+    const cohortLink = await Link.findByName(page, { name: cohortName });
     await cohortLink.clickAndWait();
-    await waitForText(page, newTotalCount, {xpath: FieldSelector.TotalCount}, 60000);
+    await waitForText(
+      page,
+      newTotalCount,
+      { xpath: FieldSelector.TotalCount },
+      60000
+    );
 
     // Modify Cohort: Edit Group 1 name successfully.
     const newName1 = 'Group 1: BMI';
@@ -99,7 +111,9 @@ describe('User can create new Cohorts', () => {
     // Clean up: delete cohort
     const modalContent = await cohortPage.deleteCohort();
     // Verify dialog content text
-    expect(modalContent).toContain(`Are you sure you want to delete Cohort: ${cohortName}?`);
+    expect(modalContent).toContain(
+      `Are you sure you want to delete Cohort: ${cohortName}?`
+    );
     console.log(`Deleted Cohort "${cohortName}"`);
   });
 
@@ -113,7 +127,6 @@ describe('User can create new Cohorts', () => {
    * Delete cohort.
    */
   test('Add Cohort of EKG condition with modifiers', async () => {
-
     const workspaceCard = await findOrCreateWorkspace(page);
     await workspaceCard.clickWorkspaceName();
 
@@ -147,11 +160,17 @@ describe('User can create new Cohorts', () => {
 
     // Add the condition in first row. We don't know what the condition name is, so we get the cell value first.
     const nameValue = await search2ResultsTable.getCellValue(1, 1);
-    const addIcon = await ClrIconLink.findByName(page, {containsText: nameValue, iconShape: 'plus-circle'}, search2ResultsTable);
+    const addIcon = await ClrIconLink.findByName(
+      page,
+      { containsText: nameValue, iconShape: 'plus-circle' },
+      search2ResultsTable
+    );
     await addIcon.click();
 
     // Click Finish & Review button to open selection list and add modifier
-    const finishAndReviewButton = await Button.findByName(page, {name: LinkText.FinishAndReview});
+    const finishAndReviewButton = await Button.findByName(page, {
+      name: LinkText.FinishAndReview,
+    });
     await finishAndReviewButton.waitUntilEnabled();
     await finishAndReviewButton.click();
 
@@ -195,21 +214,28 @@ describe('User can create new Cohorts', () => {
     // Duplicate cohort using Ellipsis menu.
     const origCardsCount = (await DataResourceCard.findAllCards(page)).length;
     cohortCard = await DataResourceCard.findCard(page, cohortName);
-    await cohortCard.selectSnowmanMenu(Option.Duplicate, {waitForNav: false});
+    await cohortCard.selectSnowmanMenu(Option.Duplicate, { waitForNav: false });
     await waitWhileLoading(page);
     const newCardsCount = (await DataResourceCard.findAllCards(page)).length;
     // cards count increase by 1.
     expect(newCardsCount).toBe(origCardsCount + 1);
 
     // Delete duplicated cohort.
-    let modalTextContent = await dataPage.deleteResource(`Duplicate of ${cohortName}`, ResourceCard.Cohort);
-    expect(modalTextContent).toContain(`Are you sure you want to delete Cohort: Duplicate of ${cohortName}?`);
+    let modalTextContent = await dataPage.deleteResource(
+      `Duplicate of ${cohortName}`,
+      ResourceCard.Cohort
+    );
+    expect(modalTextContent).toContain(
+      `Are you sure you want to delete Cohort: Duplicate of ${cohortName}?`
+    );
 
     // Delete new cohort.
-    modalTextContent = await dataPage.deleteResource(cohortName, ResourceCard.Cohort);
-    expect(modalTextContent).toContain(`Are you sure you want to delete Cohort: ${cohortName}?`);
-
+    modalTextContent = await dataPage.deleteResource(
+      cohortName,
+      ResourceCard.Cohort
+    );
+    expect(modalTextContent).toContain(
+      `Are you sure you want to delete Cohort: ${cohortName}?`
+    );
   });
-
-
 });
