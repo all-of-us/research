@@ -75,7 +75,7 @@ export async function waitForNumericalString(page: Page, xpath: string, timeout?
   const numbers =  await page.waitForFunction( xpathSelector => {
     const node = document.evaluate(xpathSelector, document.body, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     if (node !== null) {
-      const txt = node.textContent.trim();
+      const txt = node.textContent!.trim();
       const re = new RegExp(/\d{1,3}(,?\d{3})*/);
       if (re.test(txt)) { // Match only numbers with comma
         return re.exec(txt)[0];
@@ -84,7 +84,7 @@ export async function waitForNumericalString(page: Page, xpath: string, timeout?
     return false;
   }, {timeout}, xpath);
 
-  return (await numbers.jsonValue()).toString();
+  return (await numbers.jsonValue() as string);
 }
 
 export async function waitForPropertyNotExists(page: Page,
@@ -106,7 +106,10 @@ export async function waitForPropertyExists(page: Page, xpathSelector: string, p
   try {
     await page.waitForFunction((xpath, prop) => {
       const element = document.evaluate(xpath, document.body, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-      return element[prop] !== null;
+      if (element !== null) {
+        return element[prop] !== null;
+      }
+      return false;
     }, {}, xpathSelector, propertyName);
     return true;
   } catch (err) {
@@ -169,7 +172,7 @@ export async function waitForAttributeEquality(page: Page,
                                                selector: {xpath?: string, css?: string},
                                                attribute: string,
                                                value: string,
-                                               timeout?: number): Promise<boolean> {
+                                               timeout?: number): Promise<boolean | undefined> {
   if (selector.css !== undefined) {
     try {
       const jsHandle = await page.waitForFunction((css, attributeName, attributeValue) => {
@@ -184,7 +187,8 @@ export async function waitForAttributeEquality(page: Page,
       console.error(`Wait for element matching CSS="${selector.css}" attribute:${attribute} value:${value} failed. ${e}`);
       throw e;
     }
-  } else {
+  }
+  if (selector.xpath !== undefined) {
     try {
       const jsHandle = await page.waitForFunction((xpath, attributeName, attributeValue) => {
         const element: any = document.evaluate(xpath, document.body, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
@@ -226,26 +230,27 @@ export async function waitForNumberElements(page: Page,
 export async function waitForText(page: Page,
                                   textSubstr: string,
                                   selector: {xpath?: string, css?: string} = {css: 'body'},
-                                  timeout?: number): Promise<boolean> {
+                                  timeout?: number): Promise<boolean | undefined> {
   if (selector.css !== undefined) {
     try {
          // wait for visible then compare texts
       await page.waitForSelector(selector.css, {visible: true, timeout});
       const jsHandle = await page.waitForFunction((css, expText) => {
         const element = document.querySelector(css);
-        return element && element.textContent.includes(expText);
+        return element!.textContent!.includes(expText);
       }, {timeout}, selector.css, textSubstr);
       return (await jsHandle.jsonValue()) as boolean;
     } catch (e) {
       console.error(`Wait for element matching CSS=${selector.css} contains "${textSubstr}" text failed. ${e}`);
       throw e;
     }
-  } else {
+  }
+  if (selector.xpath !== undefined) {
     try {
       await page.waitForXPath(selector.xpath, {visible: true, timeout});
       const jsHandle = await page.waitForFunction((xpath, expText) => {
         const element = document.evaluate(xpath, document.body, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-        return element && element.textContent.includes(expText);
+        return element!.textContent!.includes(expText);
       }, {timeout}, selector.xpath, textSubstr);
       return (await jsHandle.jsonValue()) as boolean;
     } catch (e) {

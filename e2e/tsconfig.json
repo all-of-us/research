@@ -20,7 +20,8 @@
     "outDir": "./tsc-out",
     "allowJs": true,
     "checkJs": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
+    "rootDir": "./",
     "typeRoots": [
       "./node_modules/@types"
     ],
@@ -30,6 +31,6 @@
     ],
     "esModuleInterop": true
   },
-  "inclue": ["/*"],
-  "exclude": [ "tsc-out", "node_modules" ]
+  "inclue": ["./app/**/*", "./tests/**/*", "./utils/**/*"],
+  "exclude": [ "./tsc-out", "./node_modules" ]
 }

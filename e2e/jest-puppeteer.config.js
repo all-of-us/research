@@ -36,6 +36,7 @@ const CI_SWITCHES = fp.concat(
 );
 
 const SWITCHES = (process.env.CI === 'true') ? CI_SWITCHES : DEFAULT_SWITCHES;
+const isCognito = process.env.INCOGNITO || true;
 
 module.exports = {
   launch: {
@@ -46,6 +47,6 @@ module.exports = {
     args: SWITCHES, // Chrome switches to pass to the browser instance
   },
   browser: 'chromium',
-  browserContext: (process.env.INCOGNITO || true) ? 'incognito' : 'default',
+  browserContext: isCognito ? 'incognito' : 'default',
   exitOnPageError: false,
 };
