@@ -13,7 +13,6 @@ import org.pmiops.workbench.config.CacheSpringConfiguration;
 import org.pmiops.workbench.config.WorkbenchConfig;
 import org.pmiops.workbench.db.dao.CdrVersionDao;
 import org.pmiops.workbench.db.model.DbCdrVersion;
-import org.pmiops.workbench.exceptions.ServerErrorException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -50,7 +49,7 @@ public class CdrDbConfig {
 
     private boolean finishedInitialization = false;
 
-    private final Long defaultCdrVersionId;
+    //    private final Long defaultCdrVersionId;
 
     @Autowired
     public CdrDataSource(
@@ -69,7 +68,7 @@ public class CdrDbConfig {
       // server in order for it to be used.
       // TODO: find a way to make sure CDR versions aren't shown in the UI until they are in use by
       // all servers.
-      Long defaultId = null;
+      //      Long defaultId = null;
       Map<Object, Object> cdrVersionDataSourceMap = new HashMap<>();
       for (DbCdrVersion cdrVersion : cdrVersionDao.findAll()) {
         int slashIndex = originalDbUrl.lastIndexOf('/');
@@ -109,20 +108,20 @@ public class CdrDbConfig {
                   + "this should only happen within tests");
         }
         cdrVersionDataSourceMap.put(cdrVersion.getCdrVersionId(), dataSource);
-        if (cdrVersion.getIsDefault()) {
-          if (defaultId != null) {
-            throw new ServerErrorException(
-                String.format(
-                    "Multiple CDR versions are marked as the default: %d, %d",
-                    defaultId, cdrVersion.getCdrVersionId()));
-          }
-          defaultId = cdrVersion.getCdrVersionId();
-        }
+        //        if (cdrVersion.getIsDefault()) {
+        //          if (defaultId != null) {
+        //            throw new ServerErrorException(
+        //                String.format(
+        //                    "Multiple CDR versions are marked as the default: %d, %d",
+        //                    defaultId, cdrVersion.getCdrVersionId()));
+        //          }
+        //          defaultId = cdrVersion.getCdrVersionId();
+        //        }
       }
-      if (defaultId == null) {
-        throw new ServerErrorException("Default CDR version not found!");
-      }
-      this.defaultCdrVersionId = defaultId;
+      //      if (defaultId == null) {
+      //        throw new ServerErrorException("Default CDR version not found!");
+      //      }
+      //      this.defaultCdrVersionId = defaultId;
       setTargetDataSources(cdrVersionDataSourceMap);
       afterPropertiesSet();
     }
@@ -135,17 +134,17 @@ public class CdrDbConfig {
     @Override
     protected Object determineCurrentLookupKey() {
       DbCdrVersion cdrVersion = CdrVersionContext.getCdrVersion();
-      if (cdrVersion == null) {
-        if (finishedInitialization) {
-          throw new ServerErrorException("No CDR version specified!");
-        }
-        // While Spring beans are being initialized, this method can be called
-        // in the course of attempting to determine metadata about the data source.
-        // Return the the default CDR version for configuring metadata.
-        // After Spring beans are finished being initialized, init() will
-        // be called and we will start requiring clients to specify a CDR version.
-        return defaultCdrVersionId;
-      }
+      //      if (cdrVersion == null) {
+      //        if (finishedInitialization) {
+      //          throw new ServerErrorException("No CDR version specified!");
+      //        }
+      //        // While Spring beans are being initialized, this method can be called
+      //        // in the course of attempting to determine metadata about the data source.
+      //        // Return the the default CDR version for configuring metadata.
+      //        // After Spring beans are finished being initialized, init() will
+      //        // be called and we will start requiring clients to specify a CDR version.
+      //        return defaultCdrVersionId;
+      //      }
       return cdrVersion.getCdrVersionId();
     }
   }
