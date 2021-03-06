@@ -114,13 +114,12 @@ public class OfflineRdrExportController implements OfflineRdrExportApiDelegate {
       throws IOException {
     List<String> idsAsString = ids.stream().map(id -> id.toString()).collect(Collectors.toList());
     Gson gson = new Gson();
-    String daysJson = gson.toJson(ids);
+    String idsJson = gson.toJson(ids);
     try (CloudTasksClient client = CloudTasksClient.create()) {
-      String commaSepList = String.join(IDS_STRING_SPLIT, idsAsString);
       AppEngineHttpRequest req =
           AppEngineHttpRequest.newBuilder()
               .setRelativeUri(taskUri)
-              .setBody(ByteString.copyFromUtf8(daysJson))
+              .setBody(ByteString.copyFromUtf8(idsJson))
               .setHttpMethod(HttpMethod.POST)
               .putHeaders("Content-type", "application/json")
               .build();
