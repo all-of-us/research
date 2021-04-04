@@ -24,7 +24,10 @@ import org.pmiops.workbench.firecloud.api.BillingApi;
 import org.pmiops.workbench.firecloud.api.GroupsApi;
 import org.pmiops.workbench.firecloud.api.NihApi;
 import org.pmiops.workbench.firecloud.api.ProfileApi;
+import org.pmiops.workbench.firecloud.api.ServicePerimetersApi;
 import org.pmiops.workbench.firecloud.api.StatusApi;
+import org.pmiops.workbench.firecloud.model.FirecloudBillingProjectStatus;
+import org.pmiops.workbench.firecloud.model.FirecloudBillingProjectStatus.CreationStatusEnum;
 import org.pmiops.workbench.firecloud.model.FirecloudCreateRawlsBillingProjectFullRequest;
 import org.pmiops.workbench.firecloud.model.FirecloudManagedGroupWithMembers;
 import org.pmiops.workbench.firecloud.model.FirecloudNihStatus;
@@ -54,6 +57,7 @@ public class FireCloudServiceImplTest {
   @MockBean private NihApi nihApi;
   @MockBean private ProfileApi profileApi;
   @MockBean private StatusApi statusApi;
+  @MockBean private ServicePerimetersApi servicePerimetersApi;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -166,10 +170,11 @@ public class FireCloudServiceImplTest {
   }
 
   @Test
-  public void testCreateAllOfUsBillingProject() throws Exception {
+  public void testCreateAllOfUsBillingProjectInPerimeter() throws Exception {
     final String servicePerimeter = "a-cloud-with-a-fence-around-it";
     // confirm that this value is no longer how we choose perimeters
     workbenchConfig.firecloud.vpcServicePerimeterName = "something else";
+    workbenchConfig.featureFlags.enableLazyPerimeterAssignment = false;
 
     service.createAllOfUsBillingProject("project-name", servicePerimeter);
 
@@ -186,6 +191,55 @@ public class FireCloudServiceImplTest {
     assertThat(request.getBillingAccount()).isEqualTo("billingAccounts/test-billing-account");
     assertThat(request.getEnableFlowLogs()).isTrue();
     assertThat(request.getHighSecurityNetwork()).isTrue();
+
     assertThat(request.getServicePerimeter()).isEqualTo(servicePerimeter);
+  }
+
+  @Test
+  public void testCreateAllOfUsBillingProjectWithoutPerimeter() throws Exception {
+    workbenchConfig.featureFlags.enableLazyPerimeterAssignment = true;
+
+    service.createAllOfUsBillingProject("project-name");
+
+    ArgumentCaptor<FirecloudCreateRawlsBillingProjectFullRequest> captor =
+        ArgumentCaptor.forClass(FirecloudCreateRawlsBillingProjectFullRequest.class);
+    verify(billingApi).createBillingProjectFull(captor.capture());
+    FirecloudCreateRawlsBillingProjectFullRequest request = captor.getValue();
+
+    // N.B. FireCloudServiceImpl doesn't add the project prefix; this is done by callers such
+    // as BillingProjectBufferService.
+    assertThat(request.getProjectName()).isEqualTo("project-name");
+    // FireCloudServiceImpl always adds the "billingAccounts/" prefix to the billing account
+    // from config.
+    assertThat(request.getBillingAccount()).isEqualTo("billingAccounts/test-billing-account");
+    assertThat(request.getEnableFlowLogs()).isTrue();
+    assertThat(request.getHighSecurityNetwork()).isTrue();
+
+    assertThat(request.getServicePerimeter()).isNull();
+  }
+
+  @Test
+  public void testAddProjectToServicePerimeter() throws ApiException {
+    final String servicePerimeter = "a-cloud-with-a-fence-around-it";
+    final String projectName = "The Alan Parsons Project";
+
+    when(billingApi.billingProjectStatus(projectName))
+        .thenReturn(
+            new FirecloudBillingProjectStatus()
+                .projectName(projectName)
+                .creationStatus(CreationStatusEnum.READY));
+
+    service.addProjectToServicePerimeter(servicePerimeter, projectName);
+
+    ArgumentCaptor<String> projectNameCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> servicePerimeterCaptor = ArgumentCaptor.forClass(String.class);
+    verify(servicePerimetersApi)
+        .addProjectToServicePerimeter(
+            servicePerimeterCaptor.capture(), projectNameCaptor.capture());
+    String invokedPerimeterName = servicePerimeterCaptor.getValue();
+    String invokedProjectName = projectNameCaptor.getValue();
+
+    assertThat(invokedPerimeterName).isEqualTo(servicePerimeter);
+    assertThat(invokedProjectName).isEqualTo(projectName);
   }
 }

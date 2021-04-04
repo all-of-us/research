@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -269,7 +270,6 @@ public class BillingProjectBufferServiceTest {
 
   @Test
   public void fillBuffer_prefixName() {
-    workbenchConfig.billing.projectNamePrefix = "test-prefix-";
     billingProjectBufferService.bufferBillingProjects();
 
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
@@ -644,7 +644,9 @@ public class BillingProjectBufferServiceTest {
   }
 
   @Test
-  public void assignBillingProject() {
+  public void assignBillingProjectWithPerimeter() {
+    workbenchConfig.featureFlags.enableLazyPerimeterAssignment = false;
+
     DbBillingProjectBufferEntry entry = new DbBillingProjectBufferEntry();
     entry.setStatusEnum(BufferEntryStatus.AVAILABLE, this::getCurrentTimestamp);
     entry.setFireCloudProjectName("test-project-name");
@@ -658,14 +660,71 @@ public class BillingProjectBufferServiceTest {
     DbBillingProjectBufferEntry assignedEntry =
         billingProjectBufferService.assignBillingProject(user, registeredTier);
 
-    ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> secondCaptor = ArgumentCaptor.forClass(String.class);
-    verify(mockFireCloudService).addOwnerToBillingProject(captor.capture(), secondCaptor.capture());
-    String invokedEmail = captor.getValue();
-    String invokedProjectName = secondCaptor.getValue();
+    // verify addOwnerToBillingProject() arguments
+
+    ArgumentCaptor<String> userEmailCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> projectNameCaptor1 = ArgumentCaptor.forClass(String.class);
+    verify(mockFireCloudService)
+        .addOwnerToBillingProject(userEmailCaptor.capture(), projectNameCaptor1.capture());
+    String invokedEmail = userEmailCaptor.getValue();
+    String invokedProjectName1 = projectNameCaptor1.getValue();
 
     assertThat(invokedEmail).isEqualTo("fake-email@aou.org");
-    assertThat(invokedProjectName).isEqualTo("test-project-name");
+    assertThat(invokedProjectName1).isEqualTo("test-project-name");
+
+    // verify that addProjectToServicePerimeter() is not called
+
+    verify(mockFireCloudService, never()).addProjectToServicePerimeter(anyString(), anyString());
+
+    assertThat(billingProjectBufferEntryDao.findOne(assignedEntry.getId()).getStatusEnum())
+        .isEqualTo(BufferEntryStatus.ASSIGNED);
+  }
+
+  // assign a billing project which is not already in a service perimeter
+  // and therefore needs to be added to one
+
+  @Test
+  public void assignBillingProjectAddingPerimeter() {
+    workbenchConfig.featureFlags.enableLazyPerimeterAssignment = true;
+
+    DbBillingProjectBufferEntry entry = new DbBillingProjectBufferEntry();
+    entry.setStatusEnum(BufferEntryStatus.AVAILABLE, this::getCurrentTimestamp);
+    entry.setFireCloudProjectName("test-project-name");
+    entry.setCreationTime(getCurrentTimestamp());
+    entry.setInServicePerimeter(false);
+    billingProjectBufferEntryDao.save(entry);
+
+    DbUser user = mock(DbUser.class);
+    doReturn("fake-email@aou.org").when(user).getUsername();
+
+    DbBillingProjectBufferEntry assignedEntry =
+        billingProjectBufferService.assignBillingProject(user);
+
+    // verify addOwnerToBillingProject() arguments
+
+    ArgumentCaptor<String> userEmailCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> projectNameCaptor1 = ArgumentCaptor.forClass(String.class);
+    verify(mockFireCloudService)
+        .addOwnerToBillingProject(userEmailCaptor.capture(), projectNameCaptor1.capture());
+    String invokedEmail = userEmailCaptor.getValue();
+    String invokedProjectName1 = projectNameCaptor1.getValue();
+
+    assertThat(invokedEmail).isEqualTo("fake-email@aou.org");
+    assertThat(invokedProjectName1).isEqualTo("test-project-name");
+
+    // verify addProjectToServicePerimeter() arguments
+
+    ArgumentCaptor<String> servicePerimeterCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> projectNameCaptor2 = ArgumentCaptor.forClass(String.class);
+
+    verify(mockFireCloudService)
+        .addProjectToServicePerimeter(
+            servicePerimeterCaptor.capture(), projectNameCaptor2.capture());
+    String invokedPerimeterName = servicePerimeterCaptor.getValue();
+    String invokedProjectName2 = projectNameCaptor2.getValue();
+
+    assertThat(invokedPerimeterName).isEqualTo("we have secured the perimeter");
+    assertThat(invokedProjectName2).isEqualTo("test-project-name");
 
     assertThat(billingProjectBufferEntryDao.findOne(assignedEntry.getId()).getStatusEnum())
         .isEqualTo(BufferEntryStatus.ASSIGNED);

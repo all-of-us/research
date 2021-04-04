@@ -142,7 +142,8 @@ public class BillingProjectBufferService implements GaugeDataCollector {
     // more context.
     bufferEntry.setLastSyncRequestTime(Timestamp.from(clock.instant()));
     bufferEntry.setStatusEnum(BufferEntryStatus.CREATING, this::getCurrentTimestamp);
-    bufferEntry.setAccessTier(accessTier);
+    bufferEntry.setInServicePerimeter(
+        !workbenchConfigProvider.get().featureFlags.enableLazyPerimeterAssignment);
     return billingProjectBufferEntryDao.save(bufferEntry);
   }
 
@@ -269,6 +270,14 @@ public class BillingProjectBufferService implements GaugeDataCollector {
 
     fireCloudService.addOwnerToBillingProject(
         dbUser.getUsername(), bufferEntry.getFireCloudProjectName());
+
+    if (workbenchConfigProvider.get().featureFlags.enableLazyPerimeterAssignment
+        && bufferEntry.needsPerimeterAssignment()) {
+      fireCloudService.addProjectToServicePerimeter(
+          workbenchConfigProvider.get().firecloud.vpcServicePerimeterName,
+          bufferEntry.getFireCloudProjectName());
+    }
+
     bufferEntry.setStatusEnum(BufferEntryStatus.ASSIGNED, this::getCurrentTimestamp);
     bufferEntry.setAssignedUser(dbUser);
 

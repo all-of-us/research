@@ -118,7 +118,8 @@
     "enableEventDateModifier": false,
     "enableResearchPurposePrompt": false,
     "enableReportingUploadCron": true,
-    "enableRasLoginGovLinking": false
+    "enableRasLoginGovLinking": false,
+    "enableLazyPerimeterAssignment": false
   },
   "actionAudit": {
     "logName": "workbench-action-audit-preprod",

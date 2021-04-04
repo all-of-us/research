@@ -277,6 +277,13 @@ public class WorkbenchConfig {
     public boolean enableReportingUploadCron;
     // If true, user account setup requires linking eRA commons via RAS instead of Shibboleth.
     public boolean enableRasLoginGovLinking;
+    // Whether users should be able to customize notebook runtime settings.
+    public boolean enableCustomRuntimes;
+    // Handles the timing of adding billing projects to a VPC Service Perimeter / Tier.
+    // False: add all projects to the Registered Tier perimeter when they are created in the Billing
+    // Buffer.
+    // True: add projects to a perimeter at workspace creation time, enabling multi-tier.
+    public boolean enableLazyPerimeterAssignment;
   }
 
   public static class ActionAuditConfig {
