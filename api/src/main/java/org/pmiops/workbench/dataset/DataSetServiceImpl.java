@@ -722,7 +722,7 @@ public class DataSetServiceImpl implements DataSetService, GaugeDataCollector {
   public List<String> generateCodeCells(
       KernelTypeEnum kernelTypeEnum,
       String dataSetName,
-      String cdrVersionName,
+      DbCdrVersion cdrVersion,
       String qualifier,
       Map<String, QueryJobConfiguration> queryJobConfigurationMap) {
     String prerequisites;
@@ -746,7 +746,7 @@ public class DataSetServiceImpl implements DataSetService, GaugeDataCollector {
                         entry.getValue(),
                         Domain.fromValue(entry.getKey()),
                         dataSetName,
-                        cdrVersionName,
+                        cdrVersion,
                         qualifier,
                         kernelTypeEnum))
         .collect(Collectors.toList());
@@ -1117,7 +1117,7 @@ public class DataSetServiceImpl implements DataSetService, GaugeDataCollector {
       QueryJobConfiguration queryJobConfiguration,
       Domain domain,
       String dataSetName,
-      String cdrVersionName,
+      DbCdrVersion cdrVersion,
       String qualifier,
       KernelTypeEnum kernelTypeEnum) {
 
@@ -1129,13 +1129,27 @@ public class DataSetServiceImpl implements DataSetService, GaugeDataCollector {
     String descriptiveComment =
         String.format(
             "# This query represents dataset \"%s\" for domain \"%s\" and was generated for %s",
-            dataSetName, domainAsString, cdrVersionName);
+            dataSetName, domainAsString, cdrVersion.getName());
+
+    String cdrVersionCheck;
     String sqlSection;
     String dataFrameSection;
     String displayHeadSection;
 
     switch (kernelTypeEnum) {
       case PYTHON:
+        cdrVersionCheck =
+            String.format(
+                "notebook_cdr = '%s.%s'\n"
+                    + "runtime_cdr = os.environ[\"WORKSPACE_CDR\"]\n"
+                    + "if runtime_cdr != notebook_cdr:\n"
+                    + "    print((\"WARNING: CDR Version mismatch - your query is running in a workspace with a different \"\n"
+                    + "          \"CDR version ({runtime_cdr}) from the one where it was first generated. This may \"\n"
+                    + "          \"result in the query becoming invalid or inaccurate if the CDR schema has changed.\\n\\n\"\n"
+                    + "          \"If you've reviewed the query for correct performance, you can remove \"\n"
+                    + "          \"this warning by updating the version number in the notebook_cdr variable above \"\n"
+                    + "          \"to {runtime_cdr}.\").format(runtime_cdr=runtime_cdr))\n",
+                cdrVersion.getBigqueryProject(), cdrVersion.getBigqueryDataset());
         sqlSection =
             namespace
                 + "sql = \"\"\""
@@ -1149,6 +1163,22 @@ public class DataSetServiceImpl implements DataSetService, GaugeDataCollector {
         displayHeadSection = namespace + "df.head(5)";
         break;
       case R:
+        cdrVersionCheck =
+            String.format(
+                "notebook_cdr <- '%s.%s'\n"
+                    + "runtime_cdr <- Sys.getenv(\"WORKSPACE_CDR\")\n"
+                    + "\n"
+                    + "if(runtime_cdr != notebook_cdr) {\n"
+                    + "    writeLines(c(\n"
+                    + "        paste(\"WARNING: CDR Version mismatch - your query is running in a workspace with a different\",\n"
+                    + "            \"CDR version (\", runtime_cdr,\") from the one where it was first generated. This may\",\n"
+                    + "            \"result in the query becoming invalid or inaccurate if the CDR schema has changed.\"),\n"
+                    + "        \"\",\n"
+                    + "        paste(\"If you've reviewed the query for correct performance, you can remove\",\n"
+                    + "          \"this warning by updating the version number in the notebook_cdr variable above\",\n"
+                    + "          \"to\", runtime_cdr, \".\")))\n"
+                    + "}",
+                cdrVersion.getBigqueryProject(), cdrVersion.getBigqueryDataset());
         sqlSection =
             namespace
                 + "sql <- paste(\""
@@ -1168,7 +1198,9 @@ public class DataSetServiceImpl implements DataSetService, GaugeDataCollector {
         throw new BadRequestException("Language " + kernelTypeEnum.toString() + " not supported.");
     }
 
-    return descriptiveComment
+    return cdrVersionCheck
+        + "\n\n"
+        + descriptiveComment
         + "\n"
         + sqlSection
         + "\n\n"

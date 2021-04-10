@@ -180,7 +180,7 @@ public class DataSetController implements DataSetApiDelegate {
             dataSetService.generateCodeCells(
                 kernelTypeEnum,
                 dataSetRequest.getName(),
-                dbWorkspace.getCdrVersion().getName(),
+                dbWorkspace.getCdrVersion(),
                 qualifier,
                 bigQueryJobConfigsByDomain));
     final String generatedCode = String.join("\n\n", codeCells);
@@ -345,7 +345,7 @@ public class DataSetController implements DataSetApiDelegate {
         dataSetService.generateCodeCells(
             dataSetExportRequest.getKernelType(),
             dataSetExportRequest.getDataSetRequest().getName(),
-            dbWorkspace.getCdrVersion().getName(),
+            dbWorkspace.getCdrVersion(),
             qualifier,
             queriesByDomain);
 
