@@ -38,7 +38,6 @@ bq --quiet --project_id=$BQ_PROJECT query --nouse_legacy_sql \
     has_hierarchy       INT64,
     has_ancestor_data   INT64,
     path                STRING,
-    synonyms            STRING,
     full_text           STRING,
     display_synonyms    STRING
 )"
@@ -5813,13 +5812,12 @@ WHERE REGEXP_CONTAINS(name, r'[\"]')"
 
 
 ###############################################
-# FULL_TEXT and SYNONYMS
+# FULL_TEXT
 ###############################################
-echo "FULL_TEXT and SYNONYMS - adding data"
+echo "FULL_TEXT - adding data"
 bq --quiet --project_id=$BQ_PROJECT query --nouse_legacy_sql \
 "UPDATE \`$BQ_PROJECT.$BQ_DATASET.cb_criteria\` x
 SET   x.full_text = y.full_text
-    , x.synonyms = y.full_text
     , x.display_synonyms = y.display_synonyms
 FROM
     (
@@ -5849,7 +5847,6 @@ echo "FULL_TEXT - add [rank1]"
 bq --quiet --project_id=$BQ_PROJECT query --nouse_legacy_sql \
 "UPDATE \`$BQ_PROJECT.$BQ_DATASET.cb_criteria\` x
 SET x.full_text = CONCAT(x.full_text, '|', y.rnk)
-   ,x.synonyms = CONCAT(x.full_text, '|', y.rnk)
 FROM
     (
         SELECT MIN(id) as id, CONCAT('[', LOWER(domain_id), '_rank1]') as rnk
