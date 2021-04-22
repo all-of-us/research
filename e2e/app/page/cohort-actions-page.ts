@@ -1,9 +1,11 @@
 import { Page } from 'puppeteer';
-import { waitForDocumentTitle, waitWhileLoading } from 'utils/waits-utils';
+import { waitForDocumentTitle, waitForNumericalString, waitWhileLoading } from 'utils/waits-utils';
 import Button from 'app/element/button';
 import { LinkText } from 'app/text-labels';
 import AuthenticatedPage from './authenticated-page';
 import DatasetBuildPage from './dataset-build-page';
+import Link from 'app/element/link';
+import CohortBuildPage, { FieldSelector } from './cohort-build-page';
 
 const PageTitle = 'Cohort Actions';
 
@@ -38,5 +40,15 @@ export default class CohortActionsPage extends AuthenticatedPage {
 
   getCreateDatasetButton(): Button {
     return Button.findByName(this.page, { name: LinkText.CreateDataset });
+  }
+
+  // Click cohort link. Open cohort build page.
+  async openCohort(cohortName: string): Promise<CohortBuildPage> {
+    const cohortLink = Link.findByName(this.page, { name: cohortName });
+    await cohortLink.clickAndWait();
+    await waitForNumericalString(this.page, FieldSelector.TotalCount, 60000);
+    const cohortBuildPage = new CohortBuildPage(this.page);
+    await cohortBuildPage.waitForLoad();
+    return cohortBuildPage;
   }
 }

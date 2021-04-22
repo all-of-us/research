@@ -54,8 +54,6 @@ describe('Dataset test', () => {
 
     // Save new cohort.
     const cohortName = await cohortBuildPage.saveCohortAs();
-    await waitForText(page, 'Cohort Saved Successfully');
-    console.log(`Created Cohort "${cohortName}"`);
 
     await dataPage.openDataPage();
 

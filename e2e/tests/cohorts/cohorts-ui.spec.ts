@@ -10,7 +10,8 @@ describe('Cohorts UI tests', () => {
     await signInWithAccessToken(page);
   });
 
-  const workspace = 'e2eCohortsUITest';
+  const workspace = 'e2eCohortsPageUITest';
+
   /**
    * Test:
    * Add criteria in Group 1: Physical Measurements criteria => Weight (>= 190kg).
@@ -22,6 +23,7 @@ describe('Cohorts UI tests', () => {
 
     // Wait for the Data page.
     const dataPage = new WorkspaceDataPage(page);
+    await dataPage.waitForLoad();
 
     const addCohortsButton = dataPage.getAddCohortsButton();
     await addCohortsButton.clickAndWait();
@@ -36,7 +38,7 @@ describe('Cohorts UI tests', () => {
     // Checking Group 1 Count.
     expect(group1Count).toEqual(await group1.getGroupCount());
 
-    // Cannot verify graphical charts display, but we can check charts points existance.
+    // Cannot verify graphical charts display, but we can check charts points existence.
     const chartPointsSelector =
       '//*[@class="highcharts-root"]//*[@x and @y and @width and @height and contains(@class, "highcharts-point")]';
     await page.waitForXPath(chartPointsSelector, { visible: true });
@@ -53,9 +55,10 @@ describe('Cohorts UI tests', () => {
     const exportButton = cohortPage.getExportButton();
     expect(await exportButton.isDisabled()).toBe(true);
 
+    // Navigate away to About page
     await dataPage.openAboutPage({ waitPageChange: false });
 
-    // Don't save. Confirm Discard Changes
+    // Confirm Discard Changes
     const modalTextContent = await cohortPage.discardChangesConfirmationDialog();
     // Verify dialog content text
     expect(modalTextContent).toContain('Warning!');

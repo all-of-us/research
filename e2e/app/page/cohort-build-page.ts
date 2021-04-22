@@ -4,7 +4,7 @@ import Button from 'app/element/button';
 import ClrIconLink from 'app/element/clr-icon-link';
 import { ElementType } from 'app/xpath-options';
 import { makeRandomName } from 'utils/str-utils';
-import { waitForDocumentTitle, waitForNumericalString, waitWhileLoading } from 'utils/waits-utils';
+import { waitForDocumentTitle, waitForNumericalString, waitForText, waitWhileLoading } from 'utils/waits-utils';
 import { buildXPath } from 'app/xpath-builders';
 import { LinkText, MenuOption } from 'app/text-labels';
 import Modal from 'app/modal/modal';
@@ -62,7 +62,8 @@ export default class CohortBuildPage extends AuthenticatedPage {
 
     await modal.clickButton(LinkText.Save, { waitForClose: true, timeout: 2 * 60 * 1000 });
     await waitWhileLoading(this.page);
-
+    await waitForText(page, 'Cohort Saved Successfully');
+    console.log(`Created Cohort: "${cohortName}"`);
     return cohortName;
   }
 
@@ -81,6 +82,7 @@ export default class CohortBuildPage extends AuthenticatedPage {
     const contentText = await modal.getTextContent();
     await modal.clickButton(LinkText.DeleteCohort, { waitForClose: true });
     await waitWhileLoading(this.page);
+    console.log(`Delete Confirmation modal:\n${contentText}`);
     return contentText;
   }
 
@@ -151,6 +153,15 @@ export default class CohortBuildPage extends AuthenticatedPage {
   findExcludeParticipantsGroup(groupName: string): CohortParticipantsGroup {
     const group = new CohortParticipantsGroup(this.page);
     group.setXpath(`//*[@id="list-exclude-groups"]//*[normalize-space()="${groupName}"]`);
+    return group;
+  }
+
+  findIncludeParticipantsEmptyGroup(): CohortParticipantsGroup {
+    const group = new CohortParticipantsGroup(this.page);
+    group.setXpath(
+      '//*[@id="list-include-groups"]' +
+        '/div[./*[normalize-space()="Add Criteria"]/button and not(@data-test-id="item-list")]//div[text() > 0]'
+    );
     return group;
   }
 }

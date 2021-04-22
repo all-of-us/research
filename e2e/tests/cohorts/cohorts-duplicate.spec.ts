@@ -1,5 +1,5 @@
 import ReviewCriteriaSidebar from 'app/component/review-criteria-sidebar';
-import { FilterSign } from 'app/page/criteria-search-page';
+import {FilterSign, PhysicalMeasurementsCriteria} from 'app/page/criteria-search-page';
 import DataResourceCard from 'app/component/data-resource-card';
 import ClrIconLink from 'app/element/clr-icon-link';
 import { MenuOption, ResourceCard } from 'app/text-labels';
@@ -91,8 +91,6 @@ describe('Cohorts', () => {
 
     // Save new cohort - click Create Cohort button
     const cohortName = await cohortBuildPage.saveCohortAs();
-    await waitForText(page, 'Cohort Saved Successfully');
-    console.log(`Created Cohort "${cohortName}"`);
 
     // Navigate to the data page, find the new cohort.
     await page.goto(workspaceDataUrl);
@@ -158,3 +156,45 @@ describe('Cohorts', () => {
     expect(await DataResourceCard.findCard(page, `${cohortName}`, 5000)).toBeFalsy();
   });
 });
+
+
+/**
+ * Create a new Cohorts:
+ *  Add criteria in Group 1: Physical Measurements criteria => BMI (>= 30).
+ *  Add criteria in Group 2: Demographics => Deceased.
+ */
+async function createCohorts(): Promise<string> {
+  const dataPage = new WorkspaceDataPage(page);
+  await dataPage.waitForLoad();
+
+  // Click Add Cohorts button.
+  const cohortPage = await dataPage.clickAddCohortsButton();
+
+  // Add BMI in Include Participants Group 1.
+  const group1 = cohortPage.findIncludeParticipantsGroup('Group 1');
+  const group1Count = await group1.includePhysicalMeasurement(PhysicalMeasurementsCriteria.BMI, 30);
+
+  // Checking Group 1 Count: Should be greater than 1.
+  const group1CountInt = Number((await group1.getGroupCount()).replace(/,/g, ''));
+  expect(group1CountInt).toBeGreaterThan(1);
+
+  // Checking Total Count: should match Group 1 participants count.
+  const totalCount = await cohortPage.getTotalCount();
+  expect(group1Count).toEqual(totalCount);
+  console.log(`Group 1: Physical Measurement -> BMI count: ${group1CountInt}`);
+
+  // Exclude Group 2: Demographics Deceased
+  // Select menu Demographics -> Deceased
+  const excludeGroup2 = cohortPage.findExcludeParticipantsGroup('Group 2');
+  const excludeGroupCount = Number((await excludeGroup2.includeDemographicsDeceased()).replace(/,/g, ''));
+  expect(excludeGroupCount).toBeGreaterThan(1);
+  console.log(`Exclude Participants Group 2: Demographics Deceased Count is ${excludeGroupCount}`);
+
+  // Compare the new Total Count with the old Total Count.
+  const newTotalCount = await cohortPage.getTotalCount();
+  console.log(`New Total Count: ${newTotalCount}`);
+
+  // Save new cohort - click Create Cohort button
+  const cohortName = await cohortPage.saveCohortAs();
+  return cohortName;
+}

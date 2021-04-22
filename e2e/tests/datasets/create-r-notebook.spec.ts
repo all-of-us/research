@@ -45,8 +45,6 @@ describe('Create dataset and export to notebook at same time', () => {
 
     // Save new Cohort.
     const newCohortName = await cohortBuildPage.saveCohortAs();
-    await waitForText(page, 'Cohort Saved Successfully');
-    console.log(`Created Cohort "${newCohortName}"`);
 
     const cohortActionsPage = new CohortActionsPage(page);
     await cohortActionsPage.clickCreateDatasetButton();
