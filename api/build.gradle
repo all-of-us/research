@@ -46,10 +46,9 @@ buildscript {
     // to match the modules imported by the Swagger codegen templates, and (2) some template files
     // are overridden with forked templates within this repo; they will likely need to be re-copied from
     // the newer release version and have AoU-specific modifications re-applied.
-    classpath 'net.ltgt.gradle:gradle-apt-plugin:0.21'
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$project.ext.KOTLIN_VERSION"
     classpath "org.jetbrains.kotlin:kotlin-noarg:$project.ext.KOTLIN_VERSION"
-    classpath 'org.owasp:dependency-check-gradle:6.0.1'
+    classpath 'org.owasp:dependency-check-gradle:6.1.6'
     classpath "org.springframework.boot:spring-boot-gradle-plugin:$project.ext.SPRING_BOOT_VERSION"
   }
 }
@@ -61,11 +60,11 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'kotlin'
-apply plugin: 'net.ltgt.apt-idea'
 apply plugin: 'org.hidetake.swagger.generator'
 apply plugin: 'org.owasp.dependencycheck'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'war'
+apply plugin: 'io.spring.dependency-management'
 
 // Artifact configurations derived from base configs. Configuration names
 // are concatenated by the Java plugin.
@@ -83,7 +82,7 @@ configurations {
   __swaggerCodegenV2__
   __swaggerCodegenV3__
 
-  generatedImplementation {
+  generatedCompile {
     exclude group: 'com.google.guava', module:'guava-jdk5'
   }
 }
@@ -260,7 +259,7 @@ sourceSets {
   // SorceSets added by Java plugin. These share a namespace with the ones users create.
   //
   generated {
-    compileClasspath = configurations.generatedImplementation
+    compileClasspath = configurations.generatedCompile
     java {
       srcDir SWAGGER_2_CODEGEN_DIR
       srcDir SWAGGER_3_CODEGEN_DIR
@@ -358,6 +357,9 @@ clean.doFirst {
 
 repositories {
   mavenCentral()
+  maven {
+    url "https://plugins.gradle.org/m2/"
+  }
 }
 
 // To show the dependency tree, try: ./project.rb gradle dependencies --configuration compile
@@ -490,7 +492,9 @@ dependencies {
   testImplementation "com.google.appengine:appengine-tools-sdk:$project.ext.GAE_VERSION"
   testImplementation 'com.google.truth:truth:0.42'
   testImplementation 'com.google.truth.extensions:truth-java8-extension:1.0.1'
-  testImplementation "org.springframework.boot:spring-boot-starter-test:$project.ext.SPRING_BOOT_VERSION"
+  testImplementation("org.springframework.boot:spring-boot-starter-test:$project.ext.SPRING_BOOT_VERSION") {
+    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+  }
   testImplementation 'com.h2database:h2:1.4.194'
   testImplementation 'org.liquibase:liquibase-core:3.5.3'
   testImplementation 'org.bitbucket.radistao.test:before-after-spring-test-runner:0.1.0'
@@ -501,6 +505,8 @@ dependencies {
 
   // Use Mockito for testing only.
   testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$project.ext.MOCKITO_KOTLIN_VERSION"
+  implementation 'org.springframework.boot:spring-boot-starter-validation'
+  implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 }
 
 tasks.compileJava {
