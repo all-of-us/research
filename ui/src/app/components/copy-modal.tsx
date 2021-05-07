@@ -1,4 +1,5 @@
 import * as fp from 'lodash/fp';
+import * as PropTypes from 'prop-types';
 import * as React from 'react';
 
 import { Button } from 'app/components/buttons';
@@ -385,6 +386,24 @@ class CopyModalComponent extends React.Component<Props, State> {
 }
 
 const CopyModal = fp.flow(withCdrVersions())(CopyModalComponent);
+
+function allResourceTypes() {
+  return Object.keys(ResourceType).map(k => ResourceType[k]);
+}
+
+CopyModal.propTypes = {
+  // hmm, not sure how to make interfaces work
+  // cdrVersionTiersResponse: PropTypes.instanceof(CdrVersionTiersResponse).isRequired,
+  fromWorkspaceNamespace: PropTypes.string.isRequired,
+  fromWorkspaceFirecloudName: PropTypes.string.isRequired,
+  fromResourceName: PropTypes.string.isRequired,
+  fromCdrVersionId: PropTypes.string.isRequired,
+  fromAccessTierShortName: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onCopy: PropTypes.func.isRequired,
+  resourceType: PropTypes.oneOf(allResourceTypes()).isRequired,
+  saveFunction: PropTypes.func.isRequired,
+};
 
 export {
   CopyModal,
