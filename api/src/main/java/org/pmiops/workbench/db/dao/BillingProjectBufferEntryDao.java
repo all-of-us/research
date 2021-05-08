@@ -55,15 +55,27 @@ public interface BillingProjectBufferEntryDao
         DbStorageEnums.billingProjectBufferEntryStatusToStorage(status), accessTier);
   }
 
-  interface ProjectCountByStatusAndTier {
-    long getNumProjects();
+  class ProjectCountByStatusAndTier {
+    private final long numProjects;
+    private final short status;
+    private final DbAccessTier accessTier;
 
-    short getStatus();
+    public ProjectCountByStatusAndTier(long numProjects, short status, DbAccessTier accessTier) {
+      this.numProjects = numProjects;
+      this.status = status;
+      this.accessTier = accessTier;
+    }
 
-    DbAccessTier getAccessTier();
+    public long getNumProjects() {
+      return numProjects;
+    }
 
-    default BufferEntryStatus getStatusEnum() {
-      return DbStorageEnums.billingProjectBufferEntryStatusFromStorage(getStatus());
+    public DbAccessTier getAccessTier() {
+      return accessTier;
+    }
+
+    public BufferEntryStatus getStatusEnum() {
+      return DbStorageEnums.billingProjectBufferEntryStatusFromStorage(status);
     }
   }
 
