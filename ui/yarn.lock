@@ -6833,6 +6833,11 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
+jssha@~3.2.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/jssha/-/jssha-3.2.0.tgz#88ec50b866dd1411deaddbe6b3e3692e4c710f16"
+  integrity sha512-QuruyBENDWdN4tZwJbQq7/eAK85FqrI4oDbXjy5IBhYD+2pTJyBUWZe8ctWaCkrV0gy6AaelgOZZBMeswEa/6Q==
+
 jsx-ast-utils@^2.2.1, jsx-ast-utils@^2.2.3:
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/jsx-ast-utils/-/jsx-ast-utils-2.2.3.tgz#8a9364e402448a3ce7f14d357738310d9248054f"
@@ -8177,6 +8182,13 @@ osenv@0, osenv@^0.1.4, osenv@^0.1.5:
   dependencies:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.0"
+
+otpauth@6.3.0:
+  version "6.3.0"
+  resolved "https://registry.yarnpkg.com/otpauth/-/otpauth-6.3.0.tgz#75d42c8a9f5a8730f827f137f49aebebda3218b1"
+  integrity sha512-71ZewE4Rwfg7br6Vh1fqEwEabYAaB6rU0AssgjhK8QwUKq3FW42gOxg7rLI4rp1sJPqj4ui34DkrRPQyzF6Rdw==
+  dependencies:
+    jssha "~3.2.0"
 
 outdated-browser-rework@^2.8.0:
   version "2.9.0"
