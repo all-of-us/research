@@ -3,10 +3,9 @@ FROM ubuntu:18.04
 #
 # Development requirements
 #
-
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
-     openjdk-8-jdk \
+     openjdk-11-jdk \
      curl \
      python \
      gcc \
@@ -29,7 +28,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
 
 ENV CLOUD_SDK_VERSION 321.0.0
 ENV PATH /google-cloud-sdk/bin:$PATH

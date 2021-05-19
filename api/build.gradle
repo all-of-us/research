@@ -41,7 +41,7 @@ buildscript {
   // independently from the main project's application code's dependencies
   dependencies {
     classpath 'com.diffplug.spotless:spotless-plugin-gradle:3.23.0'
-    classpath 'com.google.cloud.tools:appengine-gradle-plugin:1.3.5'
+    classpath 'com.google.cloud.tools:appengine-gradle-plugin:2.4.1'
     classpath 'gradle.plugin.org.hidetake:gradle-swagger-generator-plugin:2.18.2'
     // Note: if you plan to upgrade the version of swagger-codegen beyond 2.2.3, be aware of two
     // implicit dependencies: (1) the set of "generatedCompile" Gradle dependencies need to be updated
@@ -61,7 +61,7 @@ buildscript {
 //apply plugin: 'org.springframework.boot:spring-boot-properties-migrator'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.diffplug.gradle.spotless'
-apply plugin: 'com.google.cloud.tools.appengine-standard'  // App Engine tasks
+apply plugin: 'com.google.cloud.tools.appengine-appyaml'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'java'
@@ -70,7 +70,6 @@ apply plugin: 'net.ltgt.apt-idea'
 apply plugin: 'org.hidetake.swagger.generator'
 apply plugin: 'org.owasp.dependencycheck'
 apply plugin: 'org.springframework.boot'
-apply plugin: 'war'
 
 // Artifact configurations derived from base configs. Configuration names
 // are concatenated by the Java plugin.
@@ -225,18 +224,17 @@ swaggerSources {
 //
 
 // Generate AppEngine Cron file
+def workbenchEnv = System.getenv('WORKBENCH_ENV') != null ? System.getenv('WORKBENCH_ENV') : 'local'
 task generate_appengine_cron_yaml(type: Exec) {
   executable "ruby"
-  args = ["libproject/generate_appengine_cron_yaml.rb", System.getenv("WORKBENCH_ENV")]
+  args = ["libproject/generate_appengine_cron_yaml.rb", workbenchEnv]
 }
 
 // Generate AppEngine Web Configration XML file
-task generate_appengine_web_xml(type: Exec) {
+task generate_appengine_yaml(type: Exec) {
   executable "ruby"
-  args "libproject/generate_appengine_web_xml.rb"
+  args "libproject/generate_appengine_yaml.rb"
 }
-
-
 
 // Spotless code linter plugin settings
 spotless {
@@ -351,8 +349,8 @@ project.tasks.ideaModule.dependsOn(generateSwaggerCode)
 // Swagger sources, per the swaggerSources tuple above.
 project.tasks.compileGeneratedJava.dependsOn(generateSwaggerCode)
 
-project.tasks.bootWar.dependsOn(['compileGeneratedJava', 'generate_appengine_web_xml',
-                             'generate_appengine_cron_yaml'])
+project.tasks.bootJar.dependsOn(['compileGeneratedJava', 'generate_appengine_yaml',
+        'generate_appengine_cron_yaml'])
 
 // Clear out generated Java sorces before cleaning the project.
 clean.doFirst {
@@ -410,6 +408,7 @@ dependencies {
   compile "io.opencensus:opencensus-impl:$project.ext.OPENCENSUS_VERSION"
   compile "io.swagger:swagger-annotations:1.5.16"
   compile "javax.inject:javax.inject:1"
+
   compile "joda-time:joda-time:$project.ext.JODA_VERSION"
   compile "org.liquibase:liquibase-core:3.10.0"
   compile "mysql:mysql-connector-java:8.0.16"
@@ -484,17 +483,16 @@ dependencies {
   generatedCompile 'io.swagger.core.v3:swagger-annotations:2.0.0'
   generatedCompile 'io.gsonfire:gson-fire:1.8.3'
   generatedCompile 'org.threeten:threetenbp:1.3.5'
+  generatedCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
 
+  // There is no jdk11, jdk8 still works for java 11.
   implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$project.ext.KOTLIN_VERSION"
-
-  // war plugin. Add this to scope of the compile configuration, but do not include in .war file.
-  providedCompile group: 'javax.servlet', name: 'javax.servlet-api', version:'3.1.0'
 
   __tools__Compile 'commons-cli:commons-cli:1.4'
   __tools__Compile 'com.opencsv:opencsv:4.6'
 
   testCompile 'org.junit.jupiter:junit-jupiter:5.6.1'
-  testCompile 'org.mockito:mockito-core:2.18.3'
+  testCompile 'org.mockito:mockito-core:3.3.3'
   testCompile "com.google.appengine:appengine-api-stubs:$project.ext.GAE_VERSION"
   testCompile "com.google.appengine:appengine-tools-sdk:$project.ext.GAE_VERSION"
   testCompile 'com.google.truth:truth:0.42'
@@ -563,23 +561,37 @@ tasks.withType(Test) {
   maxHeapSize = "2g"
 }
 
-appengine {  // App Engine tasks configuration
-  run {      // local (dev_appserver) configuration (standard environments only)
-    port = 8081                 // default
-    host = "0.0.0.0"
-    // Allows you to attach a debugger on port 8001 when running locally.
-    jvmFlags = ['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8001']
-    // Give dev_appserver 2 minutes to start up when running appengineStart; by
-    // default it will fail after 1 minute. (This is particularly a problem in CircleCI.)
-    startSuccessTimeout = 120
-
-    environment = [GOOGLE_APPLICATION_CREDENTIALS: file("$rootDir/sa-key.json").getAbsolutePath()]
+appengine {
+  tools {
+    cloudSdkHome = "/google-cloud-sdk"
   }
+//  // App Engine tasks configuration
+//  run {
+//    // local (dev_appserver) configuration (standard environments only)
+//    port = 8081                 // default
+//    host = "0.0.0.0"
+//    // Allows you to attach a debugger on port 8001 when running locally.
+//    jvmFlags = ['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8001']
+//    // Give dev_appserver 2 minutes to start up when running appengineStart; by
+//    // default it will fail after 1 minute. (This is particularly a problem in CircleCI.)
+//    startSuccessTimeout = 120
+//
+//    environment = [GOOGLE_APPLICATION_CREDENTIALS: file("$rootDir/sa-key.json").getAbsolutePath()]
+//
+//    // Placeholder value for bring up local server.
+//    projectId = 'all-of-us-local'
+//  }
 
   deploy {   // deploy configuration
     stopPreviousVersion = true  // default - stop the current version
     promote = true              // default - & make this the current version
   }
+}
+
+bootRun {
+  environment = [
+          'GOOGLE_APPLICATION_CREDENTIALS': file("$rootDir/sa-key.json").getAbsolutePath()
+  ]
 }
 
 task startCronEmulator(dependsOn: [':appengine-cron-emulator:jar', 'generate_appengine_cron_yaml']) {
@@ -598,19 +610,18 @@ task startCronEmulator(dependsOn: [':appengine-cron-emulator:jar', 'generate_app
 }
 
 // AppEngine plugin tasks
-project.tasks.appengineRun.dependsOn project.tasks.startCronEmulator
-project.tasks.appengineStart.dependsOn project.tasks.startCronEmulator
-appengineStart {
-  // This task has the side-effect of running a local server, and therefore
-  // should not be cacheable.
-  outputs.upToDateWhen { false }
-}
+bootRun.dependsOn project.tasks.startCronEmulator
+//jettyStart {
+//  // This task has the side-effect of running a local server, and therefore
+//  // should not be cacheable.
+//  outputs.upToDateWhen { false }
+//}
 
 group = 'org.pmiops.allofus.workbench'
 version = '0.1.0'          // Version in generated output
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
 task incrementalHotSwap(type: IncrementalHotSwapTask, dependsOn: 'compileJava') {
   inputDir = sourceSets.main.java.outputDir
@@ -637,7 +648,7 @@ task listProjectAPIs(type: GenerateAPIListingTask)
 // this task is executed.
 //
 // N.B. these properties should be kept roughly in sync with the App Engine configuration
-// XML file under src/main/webapp/WEB-INF/appengine-web.xml
+// yaml file under src/main/webapp/WEB-INF/app.yaml
 def db_host = System.getenv("DB_HOST")
 def db_port = System.getenv("DB_PORT")
 
@@ -843,12 +854,12 @@ task fixDesynchronizedBillingProjectOwners(type: JavaExec) {
 
 compileKotlin {
   kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "11"
   }
 }
 compileTestKotlin {
   kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "11"
   }
 }
 
