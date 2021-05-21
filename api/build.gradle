@@ -565,6 +565,10 @@ tasks.withType(Test) {
 }
 
 appengine {  // App Engine tasks configuration
+  tool {
+    cloudSdkHome = "/google-cloud-sdk"
+    cloudSdkVersion = "341.0.0"
+  }
   run {      // local (dev_appserver) configuration (standard environments only)
     port = 8081                 // default
     host = "0.0.0.0"
