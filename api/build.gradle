@@ -566,7 +566,9 @@ tasks.withType(Test) {
 
 appengine {  // App Engine tasks configuration
   tools {
-    cloudSdkHome = "/google-cloud-sdk"
+    // The SDK file path and version are mapped to
+    // https://github.com/all-of-us/workbench/blob/master/ci/Dockerfile.circle_build#L22-L27
+    cloudSdkHome = "~/google-cloud-sdk"
     cloudSdkVersion = "321.0.0"
   }
   run {      // local (dev_appserver) configuration (standard environments only)
