@@ -67,20 +67,20 @@ def bq_ingest(tier, tier_name, source_project, dataset_name, table_match_filter=
     raise ArgumentError.new("The dataset's access tier '#{dataset_tier}' differs from the requested '#{tier_name}'. Aborting.")
   end
 
-  # Copy through an intermediate project and delete after (include TTL in case later steps fail).
-  # See https://docs.google.com/document/d/1EHw5nisXspJjA9yeZput3W4-vSIcuLBU5dPizTnk1i0/edit
-  common.run_inline %W{bq mk -f --default_table_expiration 7200 --dataset #{ingest_fq_dataset}}
-  common.run_inline %W{./copy-bq-dataset.sh
-      #{source_fq_dataset} #{ingest_fq_dataset} #{source_project}
-      #{table_match_filter} #{table_skip_filter}}
-
-  common.run_inline %W{bq mk -f --dataset #{dest_fq_dataset}}
-  common.run_inline %W{./copy-bq-dataset.sh
-      #{ingest_fq_dataset} #{dest_fq_dataset} #{tier.fetch(:ingest_cdr_project)}
-      #{table_match_filter} #{table_skip_filter}}
-
-  # Delete the intermediate dataset.
-  common.run_inline %W{bq rm -r -f --dataset #{ingest_fq_dataset}}
+#   # Copy through an intermediate project and delete after (include TTL in case later steps fail).
+#   # See https://docs.google.com/document/d/1EHw5nisXspJjA9yeZput3W4-vSIcuLBU5dPizTnk1i0/edit
+#   common.run_inline %W{bq mk -f --default_table_expiration 7200 --dataset #{ingest_fq_dataset}}
+#   common.run_inline %W{./copy-bq-dataset.sh
+#       #{source_fq_dataset} #{ingest_fq_dataset} #{source_project}
+#       #{table_match_filter} #{table_skip_filter}}
+#
+#   common.run_inline %W{bq mk -f --dataset #{dest_fq_dataset}}
+#   common.run_inline %W{./copy-bq-dataset.sh
+#       #{ingest_fq_dataset} #{dest_fq_dataset} #{tier.fetch(:ingest_cdr_project)}
+#       #{table_match_filter} #{table_skip_filter}}
+#
+#   # Delete the intermediate dataset.
+#   common.run_inline %W{bq rm -r -f --dataset #{ingest_fq_dataset}}
 end
 
 def bq_update_acl(fq_dataset)
@@ -169,28 +169,28 @@ def publish_cdr(cmd_name, args)
   service_account_context_for_bq(op.opts.project, env.fetch(:publisher_account)) do
     bq_ingest(tier, op.opts.tier, source_cdr_project, op.opts.bq_dataset, table_match_filter, table_skip_filter)
 
-    bq_update_acl(dest_fq_dataset) do |acl_json, existing_groups, existing_users|
-      auth_domain_group_email = tier.fetch(:auth_domain_group_email)
-      if existing_groups.include?(auth_domain_group_email)
-        common.status "#{auth_domain_group_email} already in ACL, skipping..."
-      else
-        common.status "Adding #{auth_domain_group_email} as a READER..."
-        acl_json["access"].push({
-          "groupByEmail" => auth_domain_group_email,
-          "role" => "READER"
-        })
-      end
-
-      app_sa = "#{op.opts.project}@appspot.gserviceaccount.com"
-      if existing_users.include?(app_sa)
-        common.status "#{app_sa} already in ACL, skipping..."
-      else
-        common.status "Adding #{app_sa} as a READER..."
-        acl_json["access"].push({ "userByEmail" => app_sa, "role" => "READER"})
-      end
-
-      acl_json
-    end
+#     bq_update_acl(dest_fq_dataset) do |acl_json, existing_groups, existing_users|
+#       auth_domain_group_email = tier.fetch(:auth_domain_group_email)
+#       if existing_groups.include?(auth_domain_group_email)
+#         common.status "#{auth_domain_group_email} already in ACL, skipping..."
+#       else
+#         common.status "Adding #{auth_domain_group_email} as a READER..."
+#         acl_json["access"].push({
+#           "groupByEmail" => auth_domain_group_email,
+#           "role" => "READER"
+#         })
+#       end
+#
+#       app_sa = "#{op.opts.project}@appspot.gserviceaccount.com"
+#       if existing_users.include?(app_sa)
+#         common.status "#{app_sa} already in ACL, skipping..."
+#       else
+#         common.status "Adding #{app_sa} as a READER..."
+#         acl_json["access"].push({ "userByEmail" => app_sa, "role" => "READER"})
+#       end
+#
+#       acl_json
+#     end
   end
 end
 
